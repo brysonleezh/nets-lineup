@@ -1,5 +1,7 @@
 # The Archetype Portal for the Brooklyn Nets
 
+**Live app:** [nets-lineup.streamlit.app](https://nets-lineup.streamlit.app)
+
 **Bowen Li** · [bowenli@gmail.com](mailto:bowenli@gmail.com) · +1 (323) 630-5773 · [bl-website-peach.vercel.app](https://bl-website-peach.vercel.app/)
 
 ## Why this idea
