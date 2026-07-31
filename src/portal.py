@@ -218,12 +218,54 @@ with st.sidebar:
     page = st.radio("Navigate", nav_options, label_visibility="collapsed")
     st.divider()
 
-    # Diagnostic Analysis no longer needs this - Layer 1's own quadrant
-    # scatter/table IS the player-selection mechanism for that page now
-    # (click a point). Rookie Slot Query still needs an explicit pick -
-    # scoped to NETS_ROSTER_NCAA_BRIDGE (the 3 zero-NBA-data rookies) only,
-    # not the full roster - see render_rookie_slot_query_page's own note.
-    if page in ("🎯 Building Around Rookie",):
+    # AI-ASSISTED (Claude Code, chat) - Prompt: "在Player Breakdown 添加一个
+    # list可以选择球员 就像 Report Tab那样" (add a player-picker list to Player
+    # Breakdown, like the Report tab has). Diagnostic Analysis already has
+    # TWO click-driven selection inputs (the quadrant chart, the screening
+    # table's photo click - both write into
+    # st.session_state["diag_selected_pid"], see render_diagnostic_analysis's
+    # own note) - this dropdown is a THIRD input into that same slot, not a
+    # replacement for either.
+    # Used: a read-only replica of render_diagnostic_analysis's own chart/
+    # table-click detection (same two session_state/query_param reads,
+    # same priority order - table wins over chart) lives here so the
+    # dropdown's OWN displayed value can be pre-synced to match a fresh
+    # chart/table click before this widget renders. This has to happen
+    # here, not inside render_diagnostic_analysis: a keyed Streamlit
+    # widget's displayed value is fixed at the point in the script where
+    # it's instantiated, and the sidebar always renders before
+    # render_diagnostic_analysis is even called - syncing after the fact
+    # would always lag one rerun behind a chart/table click. The resolved
+    # pid is passed down as `sidebar_pid`, which render_diagnostic_analysis
+    # applies as the final, authoritative override - correct whether it
+    # reflects a synced chart/table click or the user's own fresh pick,
+    # since by construction it's never stale on the render pass it's read.
+    # Not AI: the requirement itself, and "like the Report tab" as the
+    # explicit placement/style precedent - given directly.
+    if page in ("🔍 Player Breakdown",):
+        diag_names = sorted(roster["PLAYER_NAME"].tolist())
+        pid_to_diag_name = dict(zip(roster["PLAYER_ID"].astype(int), roster["PLAYER_NAME"]))
+        default_diag_match = roster.loc[roster["PLAYER_ID"] == DEFAULT_DIAG_PLAYER_ID, "PLAYER_NAME"]
+        default_diag_name = default_diag_match.iloc[0] if len(default_diag_match) else diag_names[0]
+
+        prior_quadrant = st.session_state.get("screening_quadrant")
+        fresh_diag_pid = None
+        if prior_quadrant and prior_quadrant.selection and prior_quadrant.selection.points:
+            cd = prior_quadrant.selection.points[0].get("customdata")
+            if cd:
+                fresh_diag_pid = int(cd[0])
+        query_diag_pid = st.query_params.get("diag_pid")
+        if query_diag_pid is not None:
+            fresh_diag_pid = int(query_diag_pid)  # table click wins over chart click - same priority as render_diagnostic_analysis's own resolution
+
+        if fresh_diag_pid is not None and fresh_diag_pid in pid_to_diag_name:
+            st.session_state["diag_player_select"] = pid_to_diag_name[fresh_diag_pid]
+        elif "diag_player_select" not in st.session_state:
+            st.session_state["diag_player_select"] = default_diag_name
+
+        selected_diag_name = st.selectbox("Player", diag_names, key="diag_player_select")
+        selected_diag_pid = int(roster.loc[roster["PLAYER_NAME"] == selected_diag_name, "PLAYER_ID"].iloc[0])
+    elif page in ("🎯 Building Around Rookie",):
         selected_player = st.selectbox("Rookie", NETS_ROSTER_NCAA_BRIDGE)
     elif page in ("📄 Report",):
         # `roster` here is already merged against `recipes` and dropna'd
@@ -241,7 +283,7 @@ with st.sidebar:
 if page == "📖 The 8 Player Types":
     render_intro_page(roster, labels)
 elif page == "🔍 Player Breakdown":
-    render_diagnostic_analysis(recipes, k, labels, oncourt, bio, roster)
+    render_diagnostic_analysis(recipes, k, labels, oncourt, bio, roster, sidebar_pid=selected_diag_pid)
 elif page == "🎯 Building Around Rookie":
     render_rookie_slot_query_page(selected_player, recipes, k, labels, oncourt)
 elif page == "📄 Report":

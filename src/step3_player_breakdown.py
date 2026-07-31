@@ -2703,7 +2703,7 @@ def render_player_report(player_id, recipes, k, labels, bio, exposure_cache):
     render_section_d(player_id, fit, k, labels, recipes_all)
 
 
-def render_diagnostic_analysis(recipes, k, labels, oncourt, bio, roster):
+def render_diagnostic_analysis(recipes, k, labels, oncourt, bio, roster, sidebar_pid=None):
     st.title("Diagnostic Analysis")
 
     roster_ids = roster["PLAYER_ID"].astype(int).tolist()
@@ -2762,6 +2762,27 @@ def render_diagnostic_analysis(recipes, k, labels, oncourt, bio, roster):
     if query_pid is not None:
         selected_pid = int(query_pid)
         del st.query_params["diag_pid"]
+    # AI-ASSISTED (Claude Code, chat) - Prompt: "在Player Breakdown 添加一个
+    # list可以选择球员 就像 Report Tab那样" (add a player-picker list to Player
+    # Breakdown, like the Report tab has). `sidebar_pid` comes from a new
+    # st.selectbox portal.py's sidebar now renders for this page (mirroring
+    # the Report tab's own sidebar-selectbox pattern) - a THIRD selection
+    # input alongside the chart click and table-photo click above, not a
+    # replacement for either. Applied last and unconditionally (when
+    # present) because portal.py's sidebar code already replicates the same
+    # chart/table-click detection (read-only, no state mutation) BEFORE
+    # this function ever runs, and pre-syncs the dropdown's own displayed
+    # value to match whichever of the two just fired - so by the time
+    # `sidebar_pid` gets here it already correctly reflects either a fresh
+    # chart/table click (synced) or the user's own fresh dropdown pick.
+    # That pre-sync has to happen in portal.py, not here: a keyed Streamlit
+    # widget's displayed value is fixed at the point in the SCRIPT where
+    # it's instantiated, and the sidebar renders before this function is
+    # even called - syncing here would always lag one rerun behind.
+    # Not AI: the requirement itself, and "like the Report tab" as the
+    # placement/style precedent - given directly.
+    if sidebar_pid is not None:
+        selected_pid = sidebar_pid
     st.session_state["diag_selected_pid"] = selected_pid
 
     render_layer1_screening(screening_df, labels, selected_pid)

@@ -90,7 +90,29 @@ def _font_data_uri(path):
 class PDFExportUnavailable(Exception):
     """Raised when Playwright's Chromium can't be launched - the one-time
     `playwright install chromium` setup step (see requirements.txt) wasn't
-    run in this environment."""
+    run in this environment, and no system Chromium was found either (see
+    _system_chromium_path)."""
+
+
+# AI-ASSISTED (Claude Code, chat) - Prompt: a deployed copy of the app hit a
+# pip install failure - `chromium` had been added to requirements.txt, which
+# isn't a real PyPI package (there's no such distribution). The actual gap
+# it was trying to paper over is real, though: `playwright install chromium`
+# downloads Playwright's own managed browser, but Streamlit Community Cloud
+# has no generic "run this shell command after pip install" hook to ever
+# invoke that command - only `packages.txt` (apt, build-time, proper
+# permissions) is available. Moved `chromium` there instead (installs a
+# real system Chromium binary via apt) and added this fallback so build_pdf
+# can launch THAT browser when Playwright's own managed one isn't present -
+# Playwright's launch() accepts any compatible Chromium/Chrome executable
+# via `executable_path`, not just ones it manages itself.
+# Not AI: none - a straightforward wrong-file mistake, fixed by moving the
+# same intent to the right mechanism.
+def _system_chromium_path():
+    for candidate in ("/usr/bin/chromium", "/usr/bin/chromium-browser", "/usr/bin/google-chrome"):
+        if Path(candidate).exists():
+            return candidate
+    return None
 
 
 _JINJA_ENV = jinja2.Environment(loader=jinja2.FileSystemLoader(str(TEMPLATE_DIR)), autoescape=True)
@@ -159,7 +181,18 @@ def build_pdf(report_data: dict) -> bytes:
     html = render_report_html(report_data)
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            # Playwright's own managed browser first (what a local dev
+            # environment that ran `playwright install chromium` has) -
+            # falls back to a system-installed Chromium (packages.txt, see
+            # _system_chromium_path's own note) only if that's missing, so
+            # this same code path works in either environment unchanged.
+            system_path = _system_chromium_path()
+            try:
+                browser = p.chromium.launch()
+            except Exception:
+                if system_path is None:
+                    raise
+                browser = p.chromium.launch(executable_path=system_path)
             try:
                 page = browser.new_page()
                 page.set_content(html, wait_until="networkidle")
@@ -172,5 +205,6 @@ def build_pdf(report_data: dict) -> bytes:
                 browser.close()
     except Exception as e:
         raise PDFExportUnavailable(
-            f"PDF export unavailable ({e}). Run `playwright install chromium` once in this environment."
+            f"PDF export unavailable ({e}). Run `playwright install chromium` once in this environment, "
+            f"or ensure `chromium` is listed in packages.txt for a deployed environment."
         ) from e

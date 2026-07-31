@@ -15,5 +15,5 @@ plotly
 pyarrow
 kaleido
 jinja2
-playwright  # also needs `playwright install chromium` run once per environment (not covered by pip install)
+playwright  # browser binary itself comes from packages.txt's `chromium` (see player_report.py's launch fallback), not `playwright install chromium` - Streamlit Community Cloud has no post-pip-install hook to run that command
 pdf2image  # also needs poppler installed system-wide (pdftoppm/pdftocairo on PATH)
