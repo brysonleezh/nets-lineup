@@ -521,10 +521,28 @@ def _load_season_stints_v2_or_v1(season):
     """The process-metrics-extended stint table only exists for the primary
     season (stints_2025_26_v2.parquet); other seasons fall back to the
     plain stint table (no off_fga/off_tov columns -> C3 degrades further,
-    handled by the caller checking for those columns)."""
+    handled by the caller checking for those columns).
+
+    AI-ASSISTED (Claude Code, chat) - Prompt: a deployed copy of the app
+    crashed with an uncaught FileNotFoundError reading this exact path -
+    neither stint file existed there yet (data/stints/ is gitignored;
+    only stints_2025_26_v2.parquet/stints_2025_26.parquet are meant to be
+    committed for deploy - see .gitignore's own comment). This function
+    picked whichever of v1/v2 *looked* newer without ever checking that
+    EITHER actually exists, unlike its own sibling check for events_path
+    two lines below in every caller - a real gap, not a hypothetical one.
+    Returns (None, path) now instead of letting pd.read_parquet raise, so
+    every caller's existing "gracefully degrade to unavailable" pattern
+    (already used for the missing-events-file case) also covers this.
+    Not AI: the actual missing files were fixed separately (added to
+    .gitignore's exceptions) - this is defense-in-depth for next time,
+    not the deployment fix itself.
+    """
     v2_path = STINTS_DIR / f"stints_{season.replace('-', '_')}_v2.parquet"
     v1_path = STINTS_DIR / f"stints_{season.replace('-', '_')}.parquet"
     path = v2_path if v2_path.exists() else v1_path
+    if not path.exists():
+        return None, path
     return pd.read_parquet(path), path
 
 
@@ -580,6 +598,8 @@ def role_elasticity(player_id, season="2025-26", min_poss=500, db_path=None):
     teammate_id, teammate_min = teammate
 
     stints, path = _load_season_stints_v2_or_v1(season)
+    if stints is None:
+        return {"available": False, "reason": f"no stint data cached for {season} ({path.name} not found)"}
     required = {"off_fga", "off_fgm", "off_fg3a", "off_fg3m", "off_tov", "off_points"}
     if not required.issubset(stints.columns):
         return {"available": False, "reason": f"{path.name} lacks process-metric columns "
@@ -635,6 +655,8 @@ def role_sensitivity_profile(player_id, recipes, k, season="2025-26", min_poss=5
     this season. `min_poss` gates EACH archetype's split independently -
     a player can have some archetypes thin and others not."""
     stints, path = _load_season_stints_v2_or_v1(season)
+    if stints is None:
+        return {"available": False, "reason": f"no stint data cached for {season} ({path.name} not found)"}
     required = {"off_fga", "off_fgm", "off_fg3a", "off_fg3m", "off_tov", "off_points"}
     if not required.issubset(stints.columns):
         return {"available": False, "reason": f"{path.name} lacks process-metric columns "
@@ -820,6 +842,8 @@ def _individual_event_summary(ev_df, player_id, possessions, n_stints):
 # specified directly in the task spec.
 def individual_role_sensitivity_profile(player_id, recipes, k, season="2025-26", min_poss=500):
     stints, path = _load_season_stints_v2_or_v1(season)
+    if stints is None:
+        return {"available": False, "reason": f"no stint data cached for {season} ({path.name} not found)"}
     required = {"off_fga", "off_fgm", "off_fg3a", "off_fg3m", "off_tov", "off_points"}
     if not required.issubset(stints.columns):
         return {"available": False, "reason": f"{path.name} lacks process-metric columns "
@@ -1212,6 +1236,8 @@ def player_game_ids(player_id, season, stints=None):
     vectorized) rather than scanning every box file in raw_cache."""
     if stints is None:
         stints, _ = _load_season_stints_v2_or_v1(season)
+    if stints is None:
+        return []
     off_cols = [f"off_p{i}" for i in range(1, 6)]
     def_cols = [f"def_p{i}" for i in range(1, 6)]
     mask = stints[off_cols].eq(player_id).any(axis=1) | stints[def_cols].eq(player_id).any(axis=1)

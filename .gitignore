@@ -11,7 +11,6 @@ venv/
 .nets/
 .env
 data/**/*.db
-data/stints/
 data/raw_cache/
 
 # Deploy-only, filtered copy of nets_synergy.db (~13MB - just the
@@ -19,6 +18,21 @@ data/raw_cache/
 # see src/pipeline/build_deploy_db.py) - small enough to commit directly,
 # unlike the full 211MB working db above.
 !data/nets_synergy_deploy.db
+
+# data/stints/ is ~296MB total (raw_cache/, games/, other seasons) - almost
+# all of it only used by the offline src/pipeline/ scripts (build_stints.py,
+# fit_rapm.py), never read by the live app. But step2b_player_diagnostics.py's
+# individual_role_sensitivity_profile() (Section D3 "Usage Elasticity", live
+# on both the Player Breakdown page and the PDF report) DOES read two small
+# 2025-26 files directly - confirmed the exact FileNotFoundError from the
+# deployed app traces to this, not assumed. `data/stints/*` (not
+# `data/stints/`) is required here: a directory-level exclusion pattern
+# blocks git from ever looking inside it, so per-file negation below
+# wouldn't take effect - this glob-on-contents form still lets it.
+data/stints/*
+!data/stints/stints_2025_26_v2.parquet
+!data/stints/stints_2025_26.parquet
+!data/stints/events_2025_26.parquet
 AI_USAGE.md
 CLAUDE.md
 DIAGNOSTICS_README.md
