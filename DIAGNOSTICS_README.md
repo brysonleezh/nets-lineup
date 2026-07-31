@@ -812,7 +812,7 @@ imports `step4_report.py`, still has no Streamlit dependency. `collect_report_da
 (`step4_report.py`) builds the report's data contract — a plain nested dict
 matching the spec's own JSON shape (`player`, `season`, `archetypeMix`,
 `purity`, `entropy`, `shotMix`, `playTypes`, `neighbors`, `drift`,
-`environment`, `miscast`, `boxScore`, `recommendations`, `reads`) — by
+`environment`, `miscast`, `boxScore`, `bottomLine`, `reads`) — by
 calling the *exact same* cached loaders every live A-E section already
 uses (`load_mismatch`, `load_teammate_lift`,
 `load_individual_role_sensitivity_cached`, `load_miscasting_cached`,
@@ -823,16 +823,27 @@ before. New pieces beyond a straight reshape:
 - `shotMix`/`playTypes` weren't in the old report at all — adapted from
   `render_player_stats_tab`'s own `dist_pairs`/`pt_top3` logic (same
   source columns, same `PLAYTYPE_LABELS` map, now hoisted to module
-  level so both functions share it).
-- `diagnosisLine`, `reads.styleProfile`, `reads.neighbors`, and the 3
-  `recommendations` are new prose, but built the same way the old
-  `report_summary` paragraph always was — deterministic templates over
-  already-computed numbers, never free text. E.g. `reads.neighbors`
-  reuses Section B's own "stands out most in X" sentence verbatim;
-  `recommendations[1]` (the "worst overlap" lever) is a new function,
-  `_build_recommendation_overlap`, that mirrors `compute_bc_verdict`'s
-  own well-supported-mass + graceful-fallback style, extended to check
-  D1×D2×D3 agreement instead of just D1×D2.
+  level so both functions share it). Section A also renders these same
+  two values a second way — `court_shot_chart_svg`/`playtype_pie_svg`
+  (`report_svg_charts.py`) port the live page's own
+  `build_court_shot_chart`/`build_playtype_pie` geometry to inline SVG,
+  same numbers, same colors, just a spatial/proportional view alongside
+  the compact bars.
+- `diagnosisLine` and all 5 `reads.*` fields (`styleProfile`, `neighbors`,
+  `roleDrift`, `environment`, `miscast` — one per Section A-E) are new
+  prose, but built the same way the old `report_summary` paragraph always
+  was — deterministic templates over already-computed numbers, never free
+  text. E.g. `reads.neighbors` reuses Section B's own "stands out most in
+  X" sentence verbatim; `reads.roleDrift` reuses the most recent
+  transition's own already-built mover/context strings; `reads.environment`
+  concatenates D1/D2/D3's own existing per-panel captions.
+- `bottomLine` (the report's closing "Bottom Line — How To Use Him" panel,
+  3 cards) is a direct synthesis of the 5 `reads.*` sentences above —
+  `_build_bottom_line()` — not an independent prose-generation function.
+  An earlier version instead built 3 tactical "lever" cards from D/E data
+  only (`_build_recommendation_lift`/`_overlap`/`_untapped`, since
+  deleted); replaced because it never touched A/B/C at all and read
+  unclear against the rest of the report.
 - The radar's axis set is **kept dynamic**, not forced to the reference's
   literal 11 named axes — confirmed directly that `player_signature()`'s
   `axis_idx` genuinely varies in length per player (default top-10 by

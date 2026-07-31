@@ -13,3 +13,12 @@ venv/
 data/**/*.db
 data/stints/
 data/raw_cache/
+
+# Deploy-only, filtered copy of nets_synergy.db (~13MB - just the
+# GROUP_QUANTITY=2/2025-26 lineups slice the live app actually queries,
+# see src/pipeline/build_deploy_db.py) - small enough to commit directly,
+# unlike the full 211MB working db above.
+!data/nets_synergy_deploy.db
+AI_USAGE.md
+CLAUDE.md
+DIAGNOSTICS_README.md
