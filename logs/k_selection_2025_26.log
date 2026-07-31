@@ -1,0 +1,32 @@
+Using NumPy backend
+population: 434 rows | MIN>=300 | seasons 2025-26..2025-26
+K=2 seed=0: EV=0.1798 (7 iters, 11s)
+K=3 seed=0: EV=0.3911 (10 iters, 25s)
+K=4 seed=0: EV=0.4787 (10 iters, 35s)
+K=5 seed=0: EV=0.5274 (9 iters, 39s)
+K=6 seed=0: EV=0.5801 (11 iters, 60s)
+K=7 seed=0: EV=0.6223 (15 iters, 104s)
+K=8 seed=0: EV=0.6455 (21 iters, 182s)
+K=9 seed=0: EV=0.6631 (18 iters, 183s)
+K=10 seed=0: EV=0.6840 (15 iters, 185s)
+K=11 seed=0: EV=0.7019 (16 iters, 218s)
+K=12 seed=0: EV=0.7174 (17 iters, 272s)
+
+ k          rss  explained_var  intra_archetype_var  ev_spread  all_converged  max_n_iter  total_seconds  ev_gain  intra_var_change
+ 2 10299.465045       0.179783            23.665148        0.0           True           7      11.273868      NaN               NaN
+ 3  7646.263260       0.391076            19.361045        0.0           True          10      24.809964 0.211293         -4.304104
+ 4  6545.676541       0.478723            18.228687        0.0           True          10      34.876935 0.087647         -1.132358
+ 5  5933.852828       0.527447            17.527586        0.0           True           9      38.533064 0.048724         -0.701101
+ 6  5272.690026       0.580100            16.683492        0.0           True          11      60.042405 0.052653         -0.844094
+ 7  4743.151196       0.622270            16.189097        0.0           True          15     104.402649 0.042171         -0.494395
+ 8  4451.895551       0.645465            15.851774        0.0           True          21     181.649295 0.023195         -0.337323
+ 9  4230.905542       0.663064            15.206929        0.0           True          18     182.760676 0.017599         -0.644845
+10  3968.580501       0.683955            15.040142        0.0           True          15     185.470065 0.020891         -0.166787
+11  3743.359557       0.701891            14.998113        0.0           True          16     218.287764 0.017936         -0.042029
+12  3548.242878       0.717429            14.339612        0.0           True          17     271.702017 0.015538         -0.658501
+
+Per the paper (Section 4.3): the RSS elbow alone tends to land early and understate how many archetypes are needed - read intra_archetype_var instead (where it stops decreasing meaningfully, checking intra_var_change), not ev_gain. Then check ev_spread: a jump means the solution is unstable at that K, which caps K regardless of fit. Final K must also clear Part G.
+saved -> /Users/brycelee/Desktop/Nets/figures/k_selection_2025_26_rss_scree.png
+saved -> /Users/brycelee/Desktop/Nets/figures/k_selection_2025_26_intra_variance.png
+
+pairs_df not supplied - run k_exposure_diagnostic() once the two-man lineup table exists. Do not finalize K on the elbow alone.

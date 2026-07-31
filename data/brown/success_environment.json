@@ -1,0 +1,27 @@
+{
+  "n_pool": 434,
+  "ess_all": 104.48670226123572,
+  "n_pool_positive": 207,
+  "ess_positive": 50.16539348578299,
+  "all_baseline": {
+    "Moussa Cisse": 0.05468134952008243,
+    "Neemias Queta": 0.14658237661381107,
+    "Matisse Thybulle": 0.08776175900054954,
+    "Kam Jones": 0.12919284777616133,
+    "Tony Bradley": 0.11524891521766573,
+    "DeMar DeRozan": 0.08117493425028077,
+    "Luka Don\u010di\u0107": 0.14522167506247627,
+    "Doug McDermott": 0.24013614255897292
+  },
+  "positive_baseline": {
+    "Moussa Cisse": 0.05466753376982544,
+    "Neemias Queta": 0.15698340526317936,
+    "Matisse Thybulle": 0.09424925746460185,
+    "Kam Jones": 0.10426432621859158,
+    "Tony Bradley": 0.1105886119650622,
+    "DeMar DeRozan": 0.07523682190336281,
+    "Luka Don\u010di\u0107": 0.1613306322463576,
+    "Doug McDermott": 0.24267941116901873
+  },
+  "note": "DESCRIPTIVE / evidence synthesis, NOT causal inference - similarity-weighted pooling (Jensen-Shannon distance, power=4.0) across ALL 2025-26 NBA players weighted by stylistic closeness to Brown's own projected archetype vector, not a fixed top-10 comp average - a materially larger and more stable pooled sample than 10 discrete comps."
+}

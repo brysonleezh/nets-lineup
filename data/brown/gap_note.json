@@ -1,0 +1,78 @@
+{
+  "success_pattern_ranked": [
+    [
+      "Luka Don\u010di\u0107",
+      0.016108957183881334
+    ],
+    [
+      "Neemias Queta",
+      0.010401028649368288
+    ],
+    [
+      "Matisse Thybulle",
+      0.006487498464052305
+    ],
+    [
+      "Doug McDermott",
+      0.002543268610045807
+    ],
+    [
+      "Moussa Cisse",
+      -1.3815750256995774e-05
+    ],
+    [
+      "Tony Bradley",
+      -0.004660303252603526
+    ],
+    [
+      "DeMar DeRozan",
+      -0.005938112346917962
+    ],
+    [
+      "Kam Jones",
+      -0.02492852155756975
+    ]
+  ],
+  "roster_supply_count": {
+    "Moussa Cisse": 0,
+    "Neemias Queta": 3,
+    "Matisse Thybulle": 0,
+    "Kam Jones": 4,
+    "Tony Bradley": 0,
+    "DeMar DeRozan": 0,
+    "Luka Don\u010di\u0107": 2,
+    "Doug McDermott": 7
+  },
+  "roster_supply_players": {
+    "Moussa Cisse": [],
+    "Neemias Queta": [
+      "Chaney Johnson",
+      "Day'Ron Sharpe",
+      "Moritz Wagner"
+    ],
+    "Matisse Thybulle": [],
+    "Kam Jones": [
+      "Ben Saraf",
+      "Drake Powell",
+      "Nolan Traore",
+      "Terance Mann"
+    ],
+    "Tony Bradley": [],
+    "DeMar DeRozan": [],
+    "Luka Don\u010di\u0107": [
+      "Julius Randle",
+      "Michael Porter Jr."
+    ],
+    "Doug McDermott": [
+      "Danny Wolf",
+      "E.J. Liddell",
+      "Egor D\u00ebmin",
+      "Josh Minott",
+      "Keon Ellis",
+      "Noah Clowney",
+      "Tyson Etienne"
+    ]
+  },
+  "headline_gap": "Matisse Thybulle-type (archetype 2, elite perimeter defender/high-STL%) is the #3 positive success-pattern archetype (+0.6pp) with ZERO current rotation-eligible players supplying it, while the smallest positive archetype (Doug McDermott-type shooting, +0.3pp) is the most heavily oversupplied (7 of 16 players).",
+  "note": "DESCRIPTIVE gap analysis (success_environment.json is evidence synthesis, not causal) - not a target board; no external candidate pool was provided so no acquisition recommendation is made."
+}

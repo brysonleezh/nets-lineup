@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ player.name }} — Player Diagnosis Report</title>
+<style>
+@font-face { font-family: 'Lato'; font-style: normal; font-weight: 400; src: url({{ fonts.regular }}) format('woff2'); }
+@font-face { font-family: 'Lato'; font-style: normal; font-weight: 700; src: url({{ fonts.bold }}) format('woff2'); }
+@font-face { font-family: 'Lato'; font-style: normal; font-weight: 900; src: url({{ fonts.black }}) format('woff2'); }
+body{margin:0;background:#E7E1D3;font-family:Lato,system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;gap:28px;padding:28px}
+@media print{
+  body{background:none;padding:0;gap:0}
+  @page{size:A4;margin:0}
+  body>div{box-shadow:none !important;page-break-after:always}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<div style="box-sizing:border-box;width:794px;height:1123px;background:#F7F3EC;color:#1F2328;display:flex;flex-direction:column;flex:none;box-shadow:0 2px 12px rgba(0,0,0,.14);padding:34px 38px 0">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:12px;border-bottom:3px solid {{ player.teamColor }}">
+    <div>
+      <div style="font-size:8.5px;letter-spacing:2px;font-weight:700;color:#8D877C">{{ player.rosterLabel|upper }} · PLAYER DIAGNOSIS REPORT</div>
+      <div style="font-size:30px;font-weight:900;letter-spacing:.2px;margin-top:2px">{{ player.name }} <span style="font-size:13px;font-weight:700;color:#8D877C">— {{ "%.0f"|format(archetypeMix[0][1]) }}% {{ archetypeMix[0][0] }}</span></div>
+    </div>
+    <div style="background:{{ player.teamColor }};color:#F7F3EC;font-size:12px;font-weight:900;letter-spacing:1.5px;padding:6px 12px">{{ player.team }}</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #E0D8C5">
+    <img src="{{ player.headshotDataUri }}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;object-position:top center;border:2px solid {{ player.teamColor }};flex:none">
+
+    <div style="font-size:10.5px;line-height:1.6;color:#4A463E">Age {{ player.age }} · {{ player.height }}, {{ player.weight }} lb · {{ player.college }} · {{ player.draft }}<br><b style="color:#1F2328">{{ season.totals.gp }} GP · {{ season.totals.pts }} PTS · {{ season.totals.reb }} REB · {{ season.totals.ast }} AST</b> <span style="color:#8D877C">({{ season.label }} totals · through {{ season.generatedDate }})</span></div>
+    <div style="margin-left:auto;font-size:9.5px;color:#6E685C;max-width:250px;line-height:1.5;text-wrap:pretty;border-left:2px solid #E9A93B;padding-left:10px"><b>Diagnosis:</b> {{ diagnosisLine }}</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:14px 0;border-bottom:1px solid #E0D8C5">
+    <div style="background:#FDFBF5;border:1px solid #E0D8C5;border-radius:6px;padding:11px 13px"><div style="font-size:7.5px;letter-spacing:1.2px;font-weight:700;color:#8D877C">TOP ARCHETYPE</div><div style="font-size:17px;font-weight:900;margin-top:2px">{{ "%.0f"|format(archetypeMix[0][1]) }}%</div><div style="font-size:8.5px;color:#6E685C;margin-top:1px">{{ archetypeMix[0][0] }}</div></div>
+    <div style="background:#FDFBF5;border:1px solid #E0D8C5;border-radius:6px;padding:11px 13px"><div style="font-size:7.5px;letter-spacing:1.2px;font-weight:700;color:#8D877C">PURITY</div><div style="font-size:17px;font-weight:900;margin-top:2px;color:#14603F">{{ purity.pct|ordinal }} pct</div><div style="font-size:8.5px;color:#6E685C;margin-top:1px">entropy {{ "%.2f"|format(entropy.value) }} vs median {{ "%.2f"|format(entropy.median) }}</div></div>
+    <div style="background:#FDFBF5;border:1px solid #E0D8C5;border-radius:6px;padding:11px 13px"><div style="font-size:7.5px;letter-spacing:1.2px;font-weight:700;color:#8D877C">MISCAST SCORE</div><div style="font-size:17px;font-weight:900;margin-top:2px;color:{{ '#C0492F' if miscast.level == 'High' else ('#B07E17' if miscast.level == 'Medium' else '#14603F') }}">{{ miscast.level }}</div><div style="font-size:8.5px;color:#6E685C;margin-top:1px">{{ "%.3f"|format(miscast.js) }} JS · {{ miscast.pct|ordinal }} pct gap</div></div>
+    <div style="background:#FDFBF5;border:1px solid #E0D8C5;border-radius:6px;padding:11px 13px"><div style="font-size:7.5px;letter-spacing:1.2px;font-weight:700;color:#8D877C">ROLE ELASTICITY</div><div style="font-size:17px;font-weight:900;margin-top:2px;color:#B07E17">{{ environment.elasticity.label }}</div><div style="font-size:8.5px;color:#6E685C;margin-top:1px">{{ "%.1f"|format(environment.elasticity.swing) }}pp usage swing · {{ environment.elasticity.pct|ordinal }} pct</div></div>
+  </div>
+  <div style="flex:1;display:flex;gap:26px;padding:16px 0;min-height:0">
+    <div style="flex:1;display:flex;flex-direction:column;gap:14px">
+      <div style="font-size:11.5px;font-weight:700"><span style="color:#0B3D2C;font-weight:900">A</span> · Style profile</div>
+      <div>
+        <div style="font-size:8.5px;letter-spacing:1.2px;font-weight:700;color:#8D877C;margin-bottom:7px">ARCHETYPE MIX</div>
+        <div style="display:flex;flex-direction:column;gap:7px;font-size:9.5px">
+          {% for name, pct in archetypeMix %}
+          <div style="display:flex;align-items:center;gap:7px"><span style="width:100px;flex:none">{{ name|abbreviate_archetype }}</span><div style="flex:1;height:10px;background:#E5DECD;border-radius:2px"><div style="width:{{ "%.0f"|format(pct) }}%;height:10px;background:{{ ARCHETYPE_BAR_GREYS[loop.index0 % 4] }};border-radius:2px"></div></div><b style="width:28px;text-align:right;flex:none">{{ "%.0f"|format(pct) }}%</b></div>
+          {% endfor %}
+        </div>
+      </div>
+      <div style="display:flex;gap:16px">
+        <div style="flex:1"><div style="display:flex;justify-content:space-between"><span style="font-size:8px;letter-spacing:1px;font-weight:700;color:#8D877C">PURITY</span><b style="font-size:11px">{{ "%.0f"|format(purity.value) }}%</b></div><div style="position:relative;height:6px;background:#E5DECD;border-radius:3px;margin-top:5px"><div style="width:{{ "%.0f"|format(purity.value) }}%;height:6px;background:#14603F;border-radius:3px"></div><div style="position:absolute;left:{{ "%.0f"|format(purity.median) }}%;top:-2px;width:1.5px;height:10px;background:#1F2328"></div></div><div style="font-size:7.5px;color:#8D877C;margin-top:3px">median {{ "%.0f"|format(purity.median) }}%</div></div>
+        <div style="flex:1"><div style="display:flex;justify-content:space-between"><span style="font-size:8px;letter-spacing:1px;font-weight:700;color:#8D877C">ENTROPY</span><b style="font-size:11px">{{ "%.2f"|format(entropy.value) }}</b></div><div style="position:relative;height:6px;background:#E5DECD;border-radius:3px;margin-top:5px"><div style="width:{{ "%.0f"|format(entropy.value * 100) }}%;height:6px;background:#E9A93B;border-radius:3px"></div><div style="position:absolute;left:{{ "%.0f"|format(entropy.median * 100) }}%;top:-2px;width:1.5px;height:10px;background:#1F2328"></div></div><div style="font-size:7.5px;color:#8D877C;margin-top:3px">median {{ "%.2f"|format(entropy.median) }}</div></div>
+      </div>
+      <div>
+        <div style="font-size:8.5px;letter-spacing:1.2px;font-weight:700;color:#8D877C;margin-bottom:7px">SHOT DISTANCE MIX</div>
+        <div style="display:flex;height:16px;border-radius:3px;overflow:hidden">
+          {% for label, pct in shotMix %}<div style="width:{{ "%.0f"|format(pct) }}%;background:{{ SHOT_MIX_COLORS[loop.index0] }}"></div>{% endfor %}
+        </div>
+        <div style="display:flex;gap:10px;font-size:7.5px;color:#6E685C;margin-top:5px;flex-wrap:wrap">
+          {% for label, pct in shotMix %}<span><b style="color:{{ SHOT_MIX_COLORS[loop.index0] }}">■</b> {{ label }} {{ "%.0f"|format(pct) }}%</span>{% endfor %}
+        </div>
+      </div>
+      <div>
+        <div style="font-size:8.5px;letter-spacing:1.2px;font-weight:700;color:#8D877C;margin-bottom:7px">PLAY-TYPE USAGE</div>
+        <div style="display:flex;height:16px;border-radius:3px;overflow:hidden">
+          {% for label, pct in playTypes %}<div style="width:{{ "%.1f"|format(pct) }}%;background:{{ PLAY_TYPE_COLORS[loop.index0 % 4] }}"></div>{% endfor %}
+        </div>
+        <div style="display:flex;gap:10px;font-size:7.5px;color:#6E685C;margin-top:5px;flex-wrap:wrap">
+          {% for label, pct in playTypes %}<span><b style="color:{{ PLAY_TYPE_COLORS[loop.index0 % 4] }}">■</b> {{ label }} {{ "%.1f"|format(pct) }}%</span>{% endfor %}
+        </div>
+      </div>
+      <div style="font-size:9.5px;line-height:1.5;color:#1F2328;background:#F0EADB;border-radius:4px;padding:8px 10px;text-wrap:pretty"><b>Read:</b> {{ reads.styleProfile }}</div>
+    </div>
+    <div style="width:1px;background:#E0D8C5"></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:11.5px;font-weight:700"><span style="color:#0B3D2C;font-weight:900">B</span> · vs. style neighbors <span style="font-size:8.5px;color:#8D877C;font-weight:400">(JS-weighted, ESS ≈ {{ "%.0f"|format(neighbors.ess) }})</span></div>
+      {{ radar_svg|safe }}
+      <div style="display:flex;gap:12px;font-size:8.5px;color:#4A463E;justify-content:center;margin-top:-4px"><span><span style="display:inline-block;width:8px;height:8px;background:rgba(11,61,44,.7);border-radius:2px"></span> Him</span><span><span style="display:inline-block;width:8px;height:8px;background:rgba(120,115,105,.5);border-radius:2px"></span> Style neighbors</span></div>
+      <div style="display:flex;flex-direction:column">
+        {% for name, sd, desc in neighbors.topDiffs %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:5.5px 0;border-top:1px solid #E7E0CF;{% if loop.last %}border-bottom:1px solid #E7E0CF;{% endif %}font-size:9.5px"><span>{{ name }}</span><div style="display:flex;align-items:center;gap:7px"><div style="width:86px;height:7px;background:#E5DECD;border-radius:2px"><div style="width:{{ "%.0f"|format((sd|abs / neighbors.topDiffs[0][1]|abs) * 100) }}%;height:7px;background:#0B3D2C;border-radius:2px"></div></div><b style="width:46px;color:#0B3D2C">{{ sd|signed(1) }} SD</b></div></div>
+        {% endfor %}
+      </div>
+      <div style="font-size:9.5px;line-height:1.5;background:#F0EADB;border-radius:4px;padding:8px 10px;text-wrap:pretty"><b>Read:</b> {{ reads.neighbors }}</div>
+    </div>
+  </div>
+  <div style="border-top:1px solid #E0D8C5;padding:9px 0 22px;display:flex;justify-content:space-between;font-size:8px;color:#8D877C;letter-spacing:.5px"><span>{{ player.rosterLabel|upper }} · {{ season.label }} · THROUGH {{ season.totals.gp }} GP</span><span>GENERATED {{ season.generatedDate|upper }} · PAGE 1 OF 2</span></div>
+</div>
+
+<div style="box-sizing:border-box;width:794px;height:1123px;background:#F7F3EC;color:#1F2328;display:flex;flex-direction:column;flex:none;box-shadow:0 2px 12px rgba(0,0,0,.14);padding:34px 38px 0">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:10px;border-bottom:3px solid {{ player.teamColor }}">
+    <span style="font-size:12px;font-weight:900">{{ player.name }} <span style="font-weight:400;color:#8D877C">· role trajectory &amp; deployment</span></span>
+    <span style="font-size:8.5px;letter-spacing:2px;font-weight:700;color:#8D877C">{{ player.rosterLabel|upper }}</span>
+  </div>
+  <div style="padding:14px 0;border-bottom:1px solid #E0D8C5">
+    <div style="font-size:11.5px;font-weight:700;margin-bottom:8px"><span style="color:#0B3D2C;font-weight:900">C</span> · Role drift across seasons</div>
+    {% if drift %}
+    <div style="display:flex;gap:20px;align-items:center">
+      {{ drift_svg|safe }}
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        {% for t in drift.transitions %}
+        <div style="font-size:10px;line-height:1.55;text-wrap:pretty"><b {% if t.severity == 'major' %}style="color:#C0492F"{% endif %}>{{ drift.seasons[loop.index0] }} → {{ drift.seasons[loop.index0 + 1] }} · {{ t.severity }}{% if t.severity == 'major' %} ({{ t.pct|ordinal }} pct){% endif %}.</b> {{ t.mover }}{% if t.context %} {{ t.context }}{% endif %}{% if t.teamChange %}. Coincides with the move to {{ player.team }}{% endif %}.</div>
+        {% endfor %}
+        <div style="font-size:8px;color:#8D877C;line-height:1.5">Features shown moved ≥0.3 SD between seasons; one lens, not proof of causation.</div>
+      </div>
+    </div>
+    {% else %}
+    <div style="font-size:10px;color:#6E685C;line-height:1.55">{{ drift_insufficient_text }}</div>
+    {% endif %}
+  </div>
+  <div style="padding:14px 0;border-bottom:1px solid #E0D8C5">
+    <div style="font-size:11.5px;font-weight:700;margin-bottom:10px"><span style="color:#0B3D2C;font-weight:900">D</span> · Environment — lineups, minutes mix, usage scaling</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px">
+      <div>
+        <div style="font-size:8px;letter-spacing:1px;font-weight:700;color:#8D877C;margin-bottom:6px">D2 · NET-RATING LIFT (BEST / WORST)</div>
+        {{ lift_bars_svg|safe }}
+        <div style="font-size:7.5px;color:#8D877C;margin-top:5px;line-height:1.4">{{ environment.lift_caption }}</div>
+      </div>
+      <div>
+        <div style="font-size:8px;letter-spacing:1px;font-weight:700;color:#8D877C;margin-bottom:6px">D1 · MINUTES VS TYPICAL (PP)</div>
+        {{ minutes_bars_svg|safe }}
+        <div style="font-size:7.5px;color:#8D877C;margin-top:5px;line-height:1.4">Mismatch {{ "%.3f"|format(environment.minutesVsTypical.mismatchJs) }} JS. {{ environment.minutesVsTypical.caption }}</div>
+      </div>
+      <div>
+        <div style="font-size:8px;letter-spacing:1px;font-weight:700;color:#8D877C;margin-bottom:6px">D3 · USAGE ELASTICITY (PP)</div>
+        {{ elasticity_bars_svg|safe }}
+        <div style="display:flex;align-items:center;gap:6px;margin-top:7px"><span style="font-size:8.5px;font-weight:900;background:#E9A93B;border-radius:10px;padding:2px 7px">{{ environment.elasticity.label|upper }}</span><span style="font-size:7.5px;color:#8D877C">{{ "%.1f"|format(environment.elasticity.swing) }}pp swing · {{ environment.elasticity.pct|ordinal }} pct</span></div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:14px 0;border-bottom:1px solid #E0D8C5">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span style="font-size:11.5px;font-weight:700"><span style="color:#0B3D2C;font-weight:900">E</span> · Used vs. produces</span><span style="font-size:9px;color:{{ '#C0492F' if miscast.level == 'High' else '#4A463E' }};font-weight:700">MISCAST: {{ miscast.level|upper }} SCORE · {{ "%.3f"|format(miscast.js) }} JS · {{ miscast.pct|ordinal|upper }} PCT</span></div>
+    <div style="display:flex;gap:22px;align-items:center">
+      {{ dumbbell_svg|safe }}
+      <div style="flex:1;font-size:10px;line-height:1.55;text-wrap:pretty"><b>Used {{ "%.0f"|format(miscast.usedAs[1]) }}% as a {{ miscast.usedAs[0] }}; produces only {{ "%.0f"|format(miscast.producesAs) }}% there.</b> Biggest untapped direction: <b style="color:#0B3D2C">{{ miscast.untapped[0] }} {{ miscast.untapped[1]|signed(1) }}pp</b>{% if miscast.support %} — {{ miscast.support }}{% endif %}. Stylistic-consistency diagnostic, not proof a role change would improve results.</div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;align-items:center">
+    <div style="width:100%;background:{{ player.teamColor }};color:#F7F3EC;border-radius:8px;padding:16px 20px">
+      <div style="font-size:8.5px;letter-spacing:1.8px;font-weight:700;color:#E9A93B">BOTTOM LINE — HOW TO USE HIM</div>
+      <div style="display:flex;gap:20px;margin-top:9px">
+        {% for rec in recommendations %}
+        <div style="flex:1;font-size:9.5px;line-height:1.5;border-left:2px solid #E9A93B;padding-left:10px"><b>{{ rec.title }}</b> {{ rec.body }}</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div style="font-size:7.5px;color:#8D877C;line-height:1.5;padding-top:8px;text-wrap:pretty">Method: mixture-model archetypes; JS-weighted neighbors (ESS ≈ {{ "%.0f"|format(neighbors.ess) }}); lifts are exposure-weighted means, not regressions — read &lt;100-min cells as noise.</div>
+  <div style="border-top:1px solid #E0D8C5;margin-top:8px;padding:9px 0 22px;display:flex;justify-content:space-between;font-size:8px;color:#8D877C;letter-spacing:.5px"><span>{{ player.rosterLabel|upper }} · {{ season.label }} · THROUGH {{ season.totals.gp }} GP</span><span>GENERATED {{ season.generatedDate|upper }} · PAGE 2 OF 2</span></div>
+</div>
+</body>
+</html>

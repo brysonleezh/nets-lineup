@@ -6,3 +6,13 @@ archetypes
 matplotlib
 seaborn
 jupyter
+requests
+lxml
+rich
+streamlit
+plotly
+pyarrow
+kaleido
+jinja2
+playwright  # also needs `playwright install chromium` run once per environment (not covered by pip install)
+pdf2image  # also needs poppler installed system-wide (pdftoppm/pdftocairo on PATH)

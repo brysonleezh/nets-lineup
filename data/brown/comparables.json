@@ -1,0 +1,132 @@
+{
+  "current_nba_comps": [
+    {
+      "PLAYER_ID": 1628369,
+      "PLAYER_NAME": "Jayson Tatum",
+      "TEAM_ABBREVIATION": "BOS",
+      "cosine_sim": 0.987622403042477,
+      "euclidean_dist": 0.10026826520748686
+    },
+    {
+      "PLAYER_ID": 1630163,
+      "PLAYER_NAME": "LaMelo Ball",
+      "TEAM_ABBREVIATION": "CHA",
+      "cosine_sim": 0.9859180426376833,
+      "euclidean_dist": 0.12045123869508431
+    },
+    {
+      "PLAYER_ID": 1628378,
+      "PLAYER_NAME": "Donovan Mitchell",
+      "TEAM_ABBREVIATION": "CLE",
+      "cosine_sim": 0.9837544001004562,
+      "euclidean_dist": 0.1165710683746885
+    },
+    {
+      "PLAYER_ID": 201935,
+      "PLAYER_NAME": "James Harden",
+      "TEAM_ABBREVIATION": "CLE",
+      "cosine_sim": 0.9706330358870005,
+      "euclidean_dist": 0.18145776008768466
+    },
+    {
+      "PLAYER_ID": 1630595,
+      "PLAYER_NAME": "Cade Cunningham",
+      "TEAM_ABBREVIATION": "DET",
+      "cosine_sim": 0.9703813345413347,
+      "euclidean_dist": 0.18635372894390703
+    },
+    {
+      "PLAYER_ID": 1629660,
+      "PLAYER_NAME": "Ty Jerome",
+      "TEAM_ABBREVIATION": "MEM",
+      "cosine_sim": 0.9666035660752317,
+      "euclidean_dist": 0.2958925349196667
+    },
+    {
+      "PLAYER_ID": 1630178,
+      "PLAYER_NAME": "Tyrese Maxey",
+      "TEAM_ABBREVIATION": "PHI",
+      "cosine_sim": 0.9665900117776974,
+      "euclidean_dist": 0.16922896500158371
+    },
+    {
+      "PLAYER_ID": 1630559,
+      "PLAYER_NAME": "Austin Reaves",
+      "TEAM_ABBREVIATION": "LAL",
+      "cosine_sim": 0.9630140639525012,
+      "euclidean_dist": 0.17325341961269922
+    },
+    {
+      "PLAYER_ID": 1629027,
+      "PLAYER_NAME": "Trae Young",
+      "TEAM_ABBREVIATION": "WAS",
+      "cosine_sim": 0.9462567102676726,
+      "euclidean_dist": 0.21403791373919542
+    },
+    {
+      "PLAYER_ID": 1629632,
+      "PLAYER_NAME": "Coby White",
+      "TEAM_ABBREVIATION": "CHA",
+      "cosine_sim": 0.931323148323031,
+      "euclidean_dist": 0.23649052411997445
+    }
+  ],
+  "rookie_season_comps": [
+    {
+      "PLAYER_ID": 1642914,
+      "PLAYER_NAME": "Javon Small",
+      "SEASON": "2025-26",
+      "TEAM_ABBREVIATION": "MEM",
+      "cosine_sim": 0.8359681678669051,
+      "euclidean_dist": 0.349462031896383
+    },
+    {
+      "PLAYER_ID": 1642272,
+      "PLAYER_NAME": "Jared McCain",
+      "SEASON": "2024-25",
+      "TEAM_ABBREVIATION": "PHI",
+      "cosine_sim": 0.8122375570910636,
+      "euclidean_dist": 0.37071108591399027
+    },
+    {
+      "PLAYER_ID": 1642907,
+      "PLAYER_NAME": "Cedric Coward",
+      "SEASON": "2025-26",
+      "TEAM_ABBREVIATION": "MEM",
+      "cosine_sim": 0.7287456157768473,
+      "euclidean_dist": 0.43552795739586947
+    },
+    {
+      "PLAYER_ID": 1642878,
+      "PLAYER_NAME": "Tyrese Proctor",
+      "SEASON": "2025-26",
+      "TEAM_ABBREVIATION": "CLE",
+      "cosine_sim": 0.7035241980649485,
+      "euclidean_dist": 0.45327201091099545
+    },
+    {
+      "PLAYER_ID": 1642264,
+      "PLAYER_NAME": "Stephon Castle",
+      "SEASON": "2024-25",
+      "TEAM_ABBREVIATION": "SAS",
+      "cosine_sim": 0.6978736856821101,
+      "euclidean_dist": 0.45809993255603626
+    },
+    {
+      "PLAYER_ID": 1642844,
+      "PLAYER_NAME": "Dylan Harper",
+      "SEASON": "2025-26",
+      "TEAM_ABBREVIATION": "SAS",
+      "cosine_sim": 0.6924498056752076,
+      "euclidean_dist": 0.45889603578186206
+    },
+    {
+      "PLAYER_ID": 1641705,
+      "PLAYER_NAME": "Victor Wembanyama",
+      "SEASON": "2023-24",
+      "TEAM_ABBREVIATION": "SAS",
+      "cosine_sim": 0.6444114447937602,
+      "euclidean_dist": 0.5230605066114837
+    }
+  ]
+}

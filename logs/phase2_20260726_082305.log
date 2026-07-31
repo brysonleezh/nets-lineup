@@ -1,0 +1,7 @@
+Using NumPy backend
+[08:23:07] phase2_build starting: k=8, min_threshold=300, season_max=2024-25, out_dir=/Users/brycelee/Desktop/Nets/data/basis_train
+dropped 3 row(s) with unresolved missing data (likely a name-join miss)
+population: 3262 rows | MIN>=300 | seasons 2017-18..2024-25
+[08:23:07] population loaded: 3262 rows - starting fit_basis_best_of (this is the long step)
+[08:23:07] fit_basis_best_of: starting 3 seed(s) (0, 1, 2) at k=8, n=3262
+[08:23:07]   seed 0 (1/3) starting...

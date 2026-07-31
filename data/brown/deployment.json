@@ -1,0 +1,206 @@
+{
+  "brown_skill_off": -1.4249656038962373,
+  "brown_skill_def": -0.5699922095520786,
+  "rim_protectors_on_roster": [
+    "Chaney Johnson",
+    "Day'Ron Sharpe",
+    "Moritz Wagner"
+  ],
+  "shooters_on_roster": [
+    "Danny Wolf",
+    "E.J. Liddell",
+    "Egor D\u00ebmin",
+    "Josh Minott",
+    "Keon Ellis",
+    "Noah Clowney",
+    "Tyson Etienne"
+  ],
+  "redundancy_risk_on_roster": [
+    "Ben Saraf",
+    "Drake Powell",
+    "Nolan Traore",
+    "Terance Mann"
+  ],
+  "incompatibility_list": [
+    {
+      "player": "Ben Saraf",
+      "cosine_sim_to_brown": 0.3614108319404288,
+      "inefficient_ballhandler_share": 0.7441879180747811,
+      "reason": "dominant archetype is the low-efficiency ball-handler type (74% share) that Phase B3's pooled evidence associated with WORSE outcomes when paired with Brown's own style, not merely 'another guard'"
+    },
+    {
+      "player": "Drake Powell",
+      "cosine_sim_to_brown": 0.319016674859379,
+      "inefficient_ballhandler_share": 0.3890230062842366,
+      "reason": "dominant archetype is the low-efficiency ball-handler type (39% share) that Phase B3's pooled evidence associated with WORSE outcomes when paired with Brown's own style, not merely 'another guard'"
+    },
+    {
+      "player": "Nolan Traore",
+      "cosine_sim_to_brown": 0.4173461142289741,
+      "inefficient_ballhandler_share": 0.814290861570236,
+      "reason": "dominant archetype is the low-efficiency ball-handler type (81% share) that Phase B3's pooled evidence associated with WORSE outcomes when paired with Brown's own style, not merely 'another guard'"
+    },
+    {
+      "player": "Terance Mann",
+      "cosine_sim_to_brown": 0.341821322188635,
+      "inefficient_ballhandler_share": 0.4012207737172871,
+      "reason": "dominant archetype is the low-efficiency ball-handler type (40% share) that Phase B3's pooled evidence associated with WORSE outcomes when paired with Brown's own style, not merely 'another guard'"
+    }
+  ],
+  "n_units_enumerated": 1820,
+  "n_passing_constraints": 364,
+  "top_10_recommended": [
+    {
+      "players": [
+        "Josh Minott",
+        "Julius Randle",
+        "Keon Ellis",
+        "Moritz Wagner"
+      ],
+      "talent_sum": 3.484127898929314
+    },
+    {
+      "players": [
+        "Day'Ron Sharpe",
+        "Julius Randle",
+        "Keon Ellis",
+        "Moritz Wagner"
+      ],
+      "talent_sum": 3.2815069751231007
+    },
+    {
+      "players": [
+        "Day'Ron Sharpe",
+        "Josh Minott",
+        "Keon Ellis",
+        "Moritz Wagner"
+      ],
+      "talent_sum": 3.003293433931818
+    },
+    {
+      "players": [
+        "Julius Randle",
+        "Keon Ellis",
+        "Michael Porter Jr.",
+        "Moritz Wagner"
+      ],
+      "talent_sum": 2.6169106146541505
+    },
+    {
+      "players": [
+        "Day'Ron Sharpe",
+        "Josh Minott",
+        "Julius Randle",
+        "Moritz Wagner"
+      ],
+      "talent_sum": 2.5528815122823527
+    },
+    {
+      "players": [
+        "Josh Minott",
+        "Keon Ellis",
+        "Michael Porter Jr.",
+        "Moritz Wagner"
+      ],
+      "talent_sum": 2.3386970734628685
+    },
+    {
+      "players": [
+        "E.J. Liddell",
+        "Julius Randle",
+        "Keon Ellis",
+        "Moritz Wagner"
+      ],
+      "talent_sum": 2.3091952191286014
+    },
+    {
+      "players": [
+        "Day'Ron Sharpe",
+        "Keon Ellis",
+        "Michael Porter Jr.",
+        "Moritz Wagner"
+      ],
+      "talent_sum": 2.1360761496566543
+    },
+    {
+      "players": [
+        "E.J. Liddell",
+        "Josh Minott",
+        "Keon Ellis",
+        "Moritz Wagner"
+      ],
+      "talent_sum": 2.0309816779373184
+    },
+    {
+      "players": [
+        "Day'Ron Sharpe",
+        "Josh Minott",
+        "Julius Randle",
+        "Keon Ellis"
+      ],
+      "talent_sum": 1.9440087523417333
+    }
+  ],
+  "near_misses": [
+    {
+      "players": [
+        "Day'Ron Sharpe",
+        "Julius Randle",
+        "Michael Porter Jr.",
+        "Moritz Wagner"
+      ],
+      "talent_sum": 1.6856642280071894,
+      "has_rim_protection": true,
+      "has_shooting": false,
+      "second_guard_redundancy_flag": false
+    },
+    {
+      "players": [
+        "Julius Randle",
+        "Keon Ellis",
+        "Moritz Wagner",
+        "Terance Mann"
+      ],
+      "talent_sum": 1.6666587536090305,
+      "has_rim_protection": true,
+      "has_shooting": true,
+      "second_guard_redundancy_flag": true
+    },
+    {
+      "players": [
+        "Josh Minott",
+        "Keon Ellis",
+        "Moritz Wagner",
+        "Terance Mann"
+      ],
+      "talent_sum": 1.3884452124177475,
+      "has_rim_protection": true,
+      "has_shooting": true,
+      "second_guard_redundancy_flag": true
+    },
+    {
+      "players": [
+        "Josh Minott",
+        "Julius Randle",
+        "Keon Ellis",
+        "Michael Porter Jr."
+      ],
+      "talent_sum": 1.2794123918727835,
+      "has_rim_protection": false,
+      "has_shooting": true,
+      "second_guard_redundancy_flag": false
+    },
+    {
+      "players": [
+        "Day'Ron Sharpe",
+        "Keon Ellis",
+        "Moritz Wagner",
+        "Terance Mann"
+      ],
+      "talent_sum": 1.1858242886115338,
+      "has_rim_protection": true,
+      "has_shooting": true,
+      "second_guard_redundancy_flag": true
+    }
+  ]
+}
