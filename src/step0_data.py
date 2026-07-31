@@ -90,7 +90,29 @@ from rich.table import Table
 from rich.panel import Panel
 from rich import box
 
+# AI-ASSISTED (Claude Code, chat) - Prompt: "if I want to deploy this
+# application on streamlit... could you [build a filtered deploy db]" -
+# nets_synergy.db is 211MB, 95% of it the `lineups` table's 3/4/5-man and
+# pre-2025-26 rows the live app never queries (verified by tracing every
+# live call site, not assumed - see src/pipeline/build_deploy_db.py's own
+# docstring). That full file is intentionally gitignored (too large, and
+# a straight `git push` of a >100MB file is rejected by GitHub outright).
+# A from-scratch git clone (e.g. Streamlit Community Cloud, which has no
+# separate file-upload channel - git IS the only deploy path) would
+# therefore have no database at all unless something else provides one.
+# Falls back to the small, filtered, git-trackable
+# `nets_synergy_deploy.db` (built by build_deploy_db.py, ~13MB, same
+# schema, same tables) ONLY when the full file is absent - a local dev
+# environment or a self-hosted server with the real file copied on
+# separately is completely unaffected by this fallback ever triggering.
+# Not AI: the decision to solve this with a fallback path rather than
+# committing the full 211MB db (impossible without Git LFS) or requiring
+# a manual post-clone step - the user's own call, after asking to verify
+# whether the full db was even needed live in the first place.
+_DEPLOY_DB_PATH = Path(__file__).resolve().parent.parent / "data" / "nets_synergy_deploy.db"
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "nets_synergy.db"
+if not DB_PATH.exists() and _DEPLOY_DB_PATH.exists():
+    DB_PATH = _DEPLOY_DB_PATH
 
 """
 AI MODIFIED (Claude Code)

@@ -71,6 +71,10 @@ body{margin:0;background:#E7E1D3;font-family:Lato,system-ui,sans-serif;display:f
           {% for label, pct in playTypes %}<span><b style="color:{{ PLAY_TYPE_COLORS[loop.index0 % 4] }}">■</b> {{ label }} {{ "%.1f"|format(pct) }}%</span>{% endfor %}
         </div>
       </div>
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div style="flex:none">{{ court_svg|safe }}</div>
+        <div style="flex:none;margin-top:14px">{{ pie_svg|safe }}</div>
+      </div>
       <div style="font-size:9.5px;line-height:1.5;color:#1F2328;background:#F0EADB;border-radius:4px;padding:8px 10px;text-wrap:pretty"><b>Read:</b> {{ reads.styleProfile }}</div>
     </div>
     <div style="width:1px;background:#E0D8C5"></div>
@@ -106,9 +110,8 @@ body{margin:0;background:#E7E1D3;font-family:Lato,system-ui,sans-serif;display:f
         <div style="font-size:8px;color:#8D877C;line-height:1.5">Features shown moved ≥0.3 SD between seasons; one lens, not proof of causation.</div>
       </div>
     </div>
-    {% else %}
-    <div style="font-size:10px;color:#6E685C;line-height:1.55">{{ drift_insufficient_text }}</div>
     {% endif %}
+    <div style="font-size:9.5px;line-height:1.5;color:#1F2328;background:#F0EADB;border-radius:4px;padding:8px 10px;margin-top:10px;text-wrap:pretty"><b>Read:</b> {{ reads.roleDrift }}</div>
   </div>
   <div style="padding:14px 0;border-bottom:1px solid #E0D8C5">
     <div style="font-size:11.5px;font-weight:700;margin-bottom:10px"><span style="color:#0B3D2C;font-weight:900">D</span> · Environment — lineups, minutes mix, usage scaling</div>
@@ -129,20 +132,21 @@ body{margin:0;background:#E7E1D3;font-family:Lato,system-ui,sans-serif;display:f
         <div style="display:flex;align-items:center;gap:6px;margin-top:7px"><span style="font-size:8.5px;font-weight:900;background:#E9A93B;border-radius:10px;padding:2px 7px">{{ environment.elasticity.label|upper }}</span><span style="font-size:7.5px;color:#8D877C">{{ "%.1f"|format(environment.elasticity.swing) }}pp swing · {{ environment.elasticity.pct|ordinal }} pct</span></div>
       </div>
     </div>
+    <div style="font-size:9.5px;line-height:1.5;color:#1F2328;background:#F0EADB;border-radius:4px;padding:8px 10px;margin-top:12px;text-wrap:pretty"><b>Read:</b> {{ reads.environment }}</div>
   </div>
   <div style="padding:14px 0;border-bottom:1px solid #E0D8C5">
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span style="font-size:11.5px;font-weight:700"><span style="color:#0B3D2C;font-weight:900">E</span> · Used vs. produces</span><span style="font-size:9px;color:{{ '#C0492F' if miscast.level == 'High' else '#4A463E' }};font-weight:700">MISCAST: {{ miscast.level|upper }} SCORE · {{ "%.3f"|format(miscast.js) }} JS · {{ miscast.pct|ordinal|upper }} PCT</span></div>
     <div style="display:flex;gap:22px;align-items:center">
       {{ dumbbell_svg|safe }}
-      <div style="flex:1;font-size:10px;line-height:1.55;text-wrap:pretty"><b>Used {{ "%.0f"|format(miscast.usedAs[1]) }}% as a {{ miscast.usedAs[0] }}; produces only {{ "%.0f"|format(miscast.producesAs) }}% there.</b> Biggest untapped direction: <b style="color:#0B3D2C">{{ miscast.untapped[0] }} {{ miscast.untapped[1]|signed(1) }}pp</b>{% if miscast.support %} — {{ miscast.support }}{% endif %}. Stylistic-consistency diagnostic, not proof a role change would improve results.</div>
     </div>
+    <div style="font-size:9.5px;line-height:1.5;color:#1F2328;background:#F0EADB;border-radius:4px;padding:8px 10px;margin-top:10px;text-wrap:pretty"><b>Read:</b> {{ reads.miscast }}</div>
   </div>
   <div style="flex:1;display:flex;align-items:center">
     <div style="width:100%;background:{{ player.teamColor }};color:#F7F3EC;border-radius:8px;padding:16px 20px">
       <div style="font-size:8.5px;letter-spacing:1.8px;font-weight:700;color:#E9A93B">BOTTOM LINE — HOW TO USE HIM</div>
       <div style="display:flex;gap:20px;margin-top:9px">
-        {% for rec in recommendations %}
-        <div style="flex:1;font-size:9.5px;line-height:1.5;border-left:2px solid #E9A93B;padding-left:10px"><b>{{ rec.title }}</b> {{ rec.body }}</div>
+        {% for card in bottomLine %}
+        <div style="flex:1;font-size:9.5px;line-height:1.5;border-left:2px solid #E9A93B;padding-left:10px"><b>{{ card.title }}</b> {{ card.body }}</div>
         {% endfor %}
       </div>
     </div>

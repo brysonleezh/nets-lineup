@@ -128,9 +128,19 @@ def _build_chart_svgs(report_data: dict) -> dict:
     drift = report_data["drift"]
     drift_svg = report_svg_charts.drift_line_svg(drift["seasons"], drift["series"]) if drift else None
 
+    # AI-ASSISTED (Claude Code, chat) - Prompt: "A. style profile, i think we
+    # can include their shot distance court image and play type usage pie
+    # chart since there are still lots of space below" - same shotMix/
+    # playTypes values Section A's compact bars already use, same colors
+    # (SHOT_MIX_COLORS/PLAY_TYPE_COLORS), just a second, spatial/proportional
+    # representation of the identical numbers.
+    court_svg = report_svg_charts.court_shot_chart_svg(report_data["shotMix"], report_data["SHOT_MIX_COLORS"])
+    pie_svg = report_svg_charts.playtype_pie_svg(report_data["playTypes"], report_data["PLAY_TYPE_COLORS"])
+
     return {
         "radar_svg": radar_svg, "lift_bars_svg": lift_bars_svg, "minutes_bars_svg": minutes_bars_svg,
         "elasticity_bars_svg": elasticity_bars_svg, "dumbbell_svg": dumbbell_svg, "drift_svg": drift_svg,
+        "court_svg": court_svg, "pie_svg": pie_svg,
     }
 
 

@@ -26,7 +26,6 @@ import step2b_player_diagnostics as diag2b
 from portal_shared import (
     BASIS_DIR,
     SEASON,
-    DIAG_MASS_THRESHOLD,
     ELASTIC_SPREAD_THRESHOLD_PP,
     CATEGORY_ORDER,
     FEATURE_CATEGORY,
@@ -183,6 +182,49 @@ def _build_style_profile_read(shot_mix, play_types):
     return f"{dominant_pct:.0f}% of his shot attempts come from {dominant_label}, fed primarily by {top3_names}."
 
 
+# AI-ASSISTED (Claude Code, chat) - Prompt: "as for C. Role drift across
+# seasons, D. E. Please all include Read section as like A and B" - three
+# new Read builders (C/D/E), same discipline as the two above: stitch
+# together sentences from values the section's own chart/caption already
+# computed, never a new number. C reuses the MOST RECENT transition's own
+# already-built mover/context/severity strings (transitions_ctx[-1] in
+# collect_report_data) rather than re-deriving a trend - "most recent" is
+# the one most relevant to "how to use him now." D concatenates the 3
+# existing per-panel captions (lift/minutes/elasticity) that already sit
+# under D1-D3 into one paragraph, rather than inventing new cross-panel
+# insight. E is simply the paragraph that already sat inline next to the
+# dumbbell chart, unchanged, moved into a function so it can go through
+# the same reads.* contract and the same "Read:" box styling as A-D
+# (previously it was the one section without either).
+def _build_role_drift_read(drift_ctx, insufficient_text):
+    if drift_ctx is None:
+        return insufficient_text
+    last = drift_ctx["transitions"][-1]
+    seasons = drift_ctx["seasons"]
+    s_old, s_new = seasons[-2], seasons[-1]
+    lead = f"Most recently ({s_old} → {s_new}), his role held stable" if last["severity"] == "stable" else \
+           f"Most recently ({s_old} → {s_new}), his role saw a {last['severity']} shift"
+    return f"{lead}: {last['mover']}{(' ' + last['context']) if last['context'] else ''}."
+
+
+def _build_environment_read(lift_caption, minutes_caption, elasticity):
+    return (
+        f"{lift_caption} {minutes_caption} His usage shows {elasticity['label'].lower()} swings "
+        f"({rsc.signed(elasticity['swing'])}pp) across lineup contexts ({elasticity['pct']:.0f}th pct league-wide)."
+    )
+
+
+def _build_miscast_read(underused, gap_pp, used_name, used_pct, produces_pct, support_text):
+    body = (
+        f"Used {used_pct:.0f}% as a {used_name}; produces only {produces_pct:.0f}% there. "
+        f"Biggest untapped direction: {underused} {rsc.signed(gap_pp)}pp"
+    )
+    if support_text:
+        body += f" — {support_text}"
+    body += ". Stylistic-consistency diagnostic, not proof a role change would improve results."
+    return body
+
+
 def _build_lift_caption(lift_rows):
     """Describes the best/worst archetypes from the SAME lift_rows the D2
     bars actually render (already top-3 + bottom-3, or fewer) - never an
@@ -216,41 +258,44 @@ def _select_dumbbell_rows(arch_names, used, prod, n=5):
     return [(player_report.abbreviate_archetype(arch_names[i]), float(used[i]) * 100, float(prod[i]) * 100) for i in idx]
 
 
-def _build_recommendation_lift(arch_names, lift, n=2):
-    ranked = sorted(range(len(arch_names)), key=lambda i: -lift[i])[:n]
-    names = [player_report.abbreviate_archetype(arch_names[i]) for i in ranked]
-    parts = ", ".join(f"{names[j]} {rsc.signed(lift[ranked[j]])}" for j in range(len(ranked)))
-    return {"title": f"Lean into {' + '.join(names)} lineups.", "body": f"Best lifts: {parts}."}
+# AI-ASSISTED (Claude Code, chat) - Prompt: "as for images I upload to you,
+# i think how to use him format looks like not very clear to me, you can
+# summary all A B C D E read section and summary again here", then "Bottom
+# Line写的再简洁一点 文字过多" (write the Bottom Line more concisely, too much
+# text) - replaces the Bottom Line panel's previous content wholesale: 3
+# tactical "lever" cards built from D/E data only (deleted below, confirmed
+# zero other callers via grep), which never touched A/B/C at all. A first
+# version of the replacement concatenated the FULL reads.* sentences
+# (styleProfile+neighbors, roleDrift+environment, miscast) - correct in
+# substance but far too dense once rendered (one card ran 4 sentences).
+# This version builds deliberately SHORTER, separate fragments straight
+# from the same already-real values (never re-deriving new insight, never
+# a re-parse of the longer reads.* strings, which would be fragile - many
+# archetype abbreviations contain periods, e.g. "Off. Engine"/"Trad. PM",
+# so splitting on "." to shorten an existing sentence isn't safe) - e.g.
+# the C/D card drops the specific box-score mover feature and the D1/D3
+# detail entirely, keeping just the archetype-direction + best/worst-fit
+# lineup fact.
+def _build_bottom_line(shot_mix, play_types, b_top_feat, b_top_dz, drift_ctx,
+                        lift_caption, underused, gap_pp, used_name, used_pct, produces_pct):
+    dominant_label, dominant_pct = max(shot_mix, key=lambda t: t[1])
+    style_body = f"{dominant_pct:.0f}% {dominant_label}, {play_types[0][0]}-heavy. Peaks in {b_top_feat} ({rsc.signed(b_top_dz)} SD)."
 
+    if drift_ctx is None:
+        traj_lead = "Rookie season — no drift history yet."
+    else:
+        last = drift_ctx["transitions"][-1]
+        trend = last["context"].split(",")[0] if last["context"] else last["mover"]
+        traj_lead = f"{last['severity'].capitalize()} shift {trend}."
+    traj_body = f"{traj_lead} {lift_caption}"
 
-def _build_recommendation_overlap(arch_names, diff, lift_res, profile, mass_threshold=DIAG_MASS_THRESHOLD):
-    """Lever 2: the archetype he's simultaneously over-exposed to (D1,
-    diff>0) and gets hurt by (D2, negative well-supported lift) - "worst
-    overlap from D1xD3xD2" per the report spec. Mirrors compute_bc_verdict's
-    own well-supported-mass + graceful-fallback style (portal.py above)."""
-    lift, mass = lift_res["lift"], lift_res["exposure_mass"]
-    well_supported = mass >= mass_threshold
-    candidates = np.where(well_supported & (diff > 0))[0]
-    if len(candidates) == 0:
-        return None
-    worst_idx = int(candidates[np.argmin(lift[candidates])])
-    if lift[worst_idx] >= 0:
-        return None  # over-exposed but not actually hurting him - no real overlap to flag
-    display_name = player_report.abbreviate_archetype(arch_names[worst_idx])
-    body = f"{rsc.signed(diff[worst_idx] * 100)}pp over-exposed there; lift {rsc.signed(lift[worst_idx])}"
-    if profile.get("available"):
-        prof_row = next((p for p in profile["profiles"] if p["archetype_idx"] == worst_idx and p.get("available")), None)
-        if prof_row is not None:
-            body += f" and usage {rsc.signed(prof_row['usage_delta'] * 100)}pp"
-    return {"title": f"Trim {display_name} overlap.", "body": body + "."}
+    opp_body = f"Used {used_pct:.0f}% as {used_name}; produces {produces_pct:.0f}%. Untapped: {underused} {rsc.signed(gap_pp)}pp."
 
-
-def _build_recommendation_untapped(underused, gap_pp, support_text):
-    body = f"{rsc.signed(gap_pp)}pp untapped {underused}"
-    if support_text:
-        body += f"; {support_text}"
-    body += ". Re-measure in 10 games."
-    return {"title": f"Grow the {underused} role.", "body": body}
+    return [
+        {"title": "Style & fit.", "body": style_body},
+        {"title": "Trajectory & deployment.", "body": traj_body},
+        {"title": "Opportunity.", "body": opp_body},
+    ]
 
 
 def collect_report_data(player_id, recipes, k, labels, bio, exposure_cache):
@@ -471,13 +516,17 @@ def collect_report_data(player_id, recipes, k, labels, bio, exposure_cache):
     diagnosis_line = _build_diagnosis_line(arch_names, top_i, own_vals, tercile_word, underused, mc["gap_pp"])
     reads_ctx = {
         "styleProfile": _build_style_profile_read(shot_mix, play_types),
-        "neighbors": f"His signature stands out most in {b_top_feat} ({b_top_dz:+.1f} SD {'above' if b_top_dz > 0 else 'below'} typical).",
+        "neighbors": f"His signature stands out most in {b_top_feat} ({rsc.signed(b_top_dz)} SD {'above' if b_top_dz > 0 else 'below'} typical).",
+        "roleDrift": _build_role_drift_read(drift_ctx, drift_insufficient_text),
+        "environment": _build_environment_read(
+            environment_ctx["lift_caption"], environment_ctx["minutesVsTypical"]["caption"], environment_ctx["elasticity"]),
+        "miscast": _build_miscast_read(
+            underused, mc["gap_pp"], arch_names[used_top_idx],
+            float(used[used_top_idx]) * 100, float(prod[used_top_idx]) * 100, support_text),
     }
-    recommendations = [_build_recommendation_lift(arch_names, lift)]
-    overlap_rec = _build_recommendation_overlap(arch_names, diff, lift_res, profile)
-    if overlap_rec:
-        recommendations.append(overlap_rec)
-    recommendations.append(_build_recommendation_untapped(underused, mc["gap_pp"], support_text))
+    bottom_line = _build_bottom_line(
+        shot_mix, play_types, b_top_feat, b_top_dz, drift_ctx, environment_ctx["lift_caption"],
+        underused, mc["gap_pp"], arch_names[used_top_idx], float(used[used_top_idx]) * 100, float(prod[used_top_idx]) * 100)
 
     return {
         "player": {
@@ -516,7 +565,7 @@ def collect_report_data(player_id, recipes, k, labels, bio, exposure_cache):
             "AST%": float(ff_row["AST%"]), "TRB%": float(ff_row["TRB%"]), "STL%": float(ff_row["STL%"]),
             "BLK%": float(ff_row["BLK%"]), "TOV%": float(ff_row["TOV%"]), "BPM": float(ff_row["BPM"]),
         },
-        "recommendations": recommendations,
+        "bottomLine": bottom_line,
         "reads": reads_ctx,
         "ARCHETYPE_BAR_GREYS": ["#23262B", "#55585E", "#8B8E93", "#C4C1BA"],
         "SHOT_MIX_COLORS": ["#0B3D2C", "#E9A93B", "#E2725B", "#6B8F5E", "#A8A196"],

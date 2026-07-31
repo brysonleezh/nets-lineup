@@ -93,7 +93,24 @@ def load_full_features(season="2025-26"):
     return df[df["SEASON"] == season].reset_index(drop=True)
 
 
-@st.cache_data(show_spinner="Computing league-wide archetype exposures (one-time per season)...")
+# AI-ASSISTED (Claude Code, chat) - Prompt: "每次初次加载的时候速度都会特别慢
+# 怎么解决这个问题", then "如果我后续是要部署怎么解决这个问题" (first load is
+# always especially slow - how to fix; then, a deployment-specific
+# follow-up). Timed every cold-start loader directly rather than guessing:
+# this one function alone took 36.8s of a 38.7s total critical path
+# (everything else <0.5s combined). Two layers, cheapest-first: (1)
+# persist="disk" so a long-running dev server survives restarts without
+# repaying this - the return value is a plain, picklable tuple, safe to
+# serialize, and Streamlit's disk cache lives under ~/.streamlit/cache,
+# outside this repo. (2) Not deployment-robust alone - a fresh
+# container/redeploy has no guarantee that cache survives - so also check
+# for a precomputed file first (src/pipeline/precompute_exposure_cache.py),
+# built the same "precompute offline, ship the file" way as
+# data/basis_2025_26/recipes.csv itself. Falls back to the live ~400-query
+# path (still persisted) if that file hasn't been generated yet, so a fresh
+# clone isn't broken, just slower once - same guard-and-fall-back
+# convention as the Intro page's missing-hull-basis message.
+@st.cache_data(show_spinner="Computing league-wide archetype exposures (one-time per season)...", persist="disk")
 def load_exposure_cache(recipes, k, season):
     """Every league player's own macro archetype exposure this season
     (compute_all_player_exposures) - the genuinely expensive, ~400-query
@@ -104,7 +121,21 @@ def load_exposure_cache(recipes, k, season):
     sliders - which change the target vector, not the season - never
     re-pay this cost on rerun; only the cheap per-target JS-distance step
     (compute_style_pool_by_vector) runs on every slider move.
+
+    Checks for a precomputed data/basis_2025_26/exposure_cache_{season}.npz
+    first (see src/pipeline/precompute_exposure_cache.py) - if present,
+    this returns near-instantly regardless of whether the server process
+    or its disk cache has ever run before, which is what a deployed copy
+    needs. Falls back to the real ~400-query computation otherwise.
     """
+    precomputed_path = BASIS_DIR / f"exposure_cache_{season}.npz"
+    if precomputed_path.exists():
+        data = np.load(precomputed_path)
+        if int(data["k"]) == k:
+            return list(data["pids"]), data["exposures"]
+        # k doesn't match this precomputed file (e.g. re-fit at a different
+        # K) - stale artifact, fall through to a real computation rather
+        # than silently returning the wrong-shaped result.
     return compute_all_player_exposures(recipes, k, season=season)
 
 

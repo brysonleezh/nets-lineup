@@ -227,3 +227,144 @@ def drift_line_svg(seasons, series, width=380, height=160):
         f'<g font-size="7.5" font-family="Lato,sans-serif">{end_label_svg}</g>'
         f'</svg>'
     )
+
+
+# AI-ASSISTED (Claude Code, chat) - Prompt: "in PDF report section, A. style
+# profile, i think we can include their shot distance court image and play
+# type usage pie chart since there are still lots of space below" - rendered
+# the CURRENT report first (not assumed) and found column A ends roughly
+# 40% down the page while column B runs further, confirming real spare
+# room. These two functions port the live interactive page's own
+# build_court_shot_chart/build_playtype_pie geometry (step3_player_
+# breakdown.py) to pure SVG - same court-line math (_court_line_segments),
+# same 5 concentric radial bands over a real half-court, same donut-pie
+# shape - operating on the exact same shotMix/playTypes values already in
+# the data contract (no new computation, same reuse discipline as every
+# other chart in this module).
+_COURT_X_RANGE = (-25, 25)
+_COURT_BASELINE_Y, _COURT_TOP_Y = -5.25, 35  # cropped short of real halfcourt (41.75) - the 5 bands' outermost radius (33ft) never reaches that far, so the crop just trims dead space, not real content
+_COURT_BAND_EDGES = [0, 3, 10, 16, 23.75, 33]
+
+
+def _court_line_paths(scale, ox, oy):
+    """Same regulation-dimension line segments as _court_line_segments()
+    (step3_player_breakdown.py) - baseline/sidelines/backboard/rim/
+    restricted-area/paint/free-throw-circle/3PT line - as SVG path `d`
+    strings instead of a Plotly None-joined scatter trace. `scale`/`ox`/`oy`
+    convert court feet to this SVG's pixel space (see court_shot_chart_svg)."""
+    def px(x, y):
+        return ox + x * scale, oy - y * scale
+
+    def arc_pts(r, deg0, deg1, cx=0.0, cy=0.0, n=40):
+        return [(cx + r * math.cos(math.radians(d)), cy + r * math.sin(math.radians(d)))
+                for d in [deg0 + (deg1 - deg0) * i / (n - 1) for i in range(n)]]
+
+    def path_d(pts):
+        (x0, y0), *rest = [px(x, y) for x, y in pts]
+        return f'M{x0:.1f},{y0:.1f} ' + " ".join(f'L{x:.1f},{y:.1f}' for x, y in rest)
+
+    segments = [
+        [(-25, _COURT_BASELINE_Y), (25, _COURT_BASELINE_Y)],
+        [(-25, _COURT_BASELINE_Y), (-25, _COURT_TOP_Y)],
+        [(25, _COURT_BASELINE_Y), (25, _COURT_TOP_Y)],
+        [(-3, -1.25), (3, -1.25)],
+        arc_pts(0.75, 0, 360),
+        arc_pts(4, 0, 180),
+        [(-8, _COURT_BASELINE_Y), (-8, 13.75)],
+        [(8, _COURT_BASELINE_Y), (8, 13.75)],
+        [(-8, 13.75), (8, 13.75)],
+        arc_pts(6, 0, 360, cy=13.75),
+    ]
+    corner_y = math.sqrt(23.75 ** 2 - 22 ** 2)
+    segments.append([(-22, _COURT_BASELINE_Y), (-22, corner_y)])
+    segments.append([(22, _COURT_BASELINE_Y), (22, corner_y)])
+    corner_deg = math.degrees(math.atan2(corner_y, 22))
+    segments.append(arc_pts(23.75, corner_deg, 180 - corner_deg))
+    return "".join(f'<path d="{path_d(seg)}"></path>' for seg in segments)
+
+
+def court_shot_chart_svg(dist_pairs, colors, width=168, height=136):
+    """dist_pairs: 5 (label, pct) tuples in canonical distance order (0-3,
+    3-10, 10-16, 16-3P, 3PT) - same shotMix already in the data contract.
+    colors: SHOT_MIX_COLORS, same 5-color list the compact bar above this
+    chart already uses, so the two representations of the same numbers read
+    as one system, not two unrelated color schemes."""
+    court_w = _COURT_X_RANGE[1] - _COURT_X_RANGE[0]
+    court_h = _COURT_TOP_Y - _COURT_BASELINE_Y
+    scale = width / court_w
+    ox, oy = width / 2, height - (height - court_h * scale) / 2 - (-_COURT_BASELINE_Y) * scale
+
+    def px(x, y):
+        return ox + x * scale, oy - y * scale
+
+    # AI-ASSISTED (Claude Code, chat) - a first render caught two real bugs
+    # (not assumed - visually inspected at 3x scale): (1) no font-size was
+    # set on these <text> elements at all, so they fell back to the
+    # browser's 16px default on a 136px-tall chart, swamping the innermost
+    # bands; (2) a two-line "51% / 3PT" label per band overlapped its
+    # neighbors regardless of font size, since the 3 innermost bands are
+    # only 3-7ft of radius each. Fixed by (1) an explicit small font-size
+    # matching this module's other charts, and (2) dropping the repeated
+    # zone-name text - the template's existing color-swatch legend directly
+    # below this chart already names each zone, so only the percentage
+    # (one line) needs to fit inside the band itself.
+    polygons, pct_labels = [], []
+    for i, (label, pct) in enumerate(dist_pairs):
+        r_in, r_out = _COURT_BAND_EDGES[i], _COURT_BAND_EDGES[i + 1]
+        theta = [math.pi * t / 89 for t in range(90)]
+        outer = [(r_out * math.cos(t), r_out * math.sin(t)) for t in theta]
+        inner = [(r_in * math.cos(t), r_in * math.sin(t)) for t in reversed(theta)]
+        pts = [(max(-25, min(25, x)), max(_COURT_BASELINE_Y, min(_COURT_TOP_Y, y))) for x, y in outer + inner]
+        pts_str = " ".join(f"{px(x, y)[0]:.1f},{px(x, y)[1]:.1f}" for x, y in pts)
+        polygons.append(f'<polygon points="{pts_str}" fill="{colors[i % len(colors)]}" fill-opacity=".55"></polygon>')
+        mid_r = min((r_in + r_out) / 2, _COURT_TOP_Y - 3)
+        lx, ly = px(0, mid_r)
+        pct_labels.append(f'<text x="{lx:.1f}" y="{ly + 2.5:.1f}" text-anchor="middle">{pct:.0f}%</text>')
+
+    return (
+        f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" style="display:block">'
+        f'{"".join(polygons)}'
+        f'<g stroke="#8D877C" stroke-width="1" fill="none">{_court_line_paths(scale, ox, oy)}</g>'
+        f'<g font-size="8.5" font-weight="700" fill="#1F2328" font-family="Lato,sans-serif">{"".join(pct_labels)}</g>'
+        f'</svg>'
+    )
+
+
+def playtype_pie_svg(pt_pairs, colors, width=136, height=136):
+    """pt_pairs: list[(label, pct)] summing to ~100 (top-3 + "Other" - same
+    playTypes already in the data contract). Donut, not a full pie (hole
+    ratio matches build_playtype_pie's own 0.45), same 4-color PLAY_TYPE_COLORS
+    list the compact bar above this chart already uses."""
+    cx = cy = width / 2
+    r_outer, r_inner = width / 2 - 2, (width / 2 - 2) * 0.45
+    total = sum(p for _, p in pt_pairs) or 1.0
+
+    def pt(angle_deg, r):
+        a = math.radians(angle_deg - 90)
+        return cx + r * math.cos(a), cy + r * math.sin(a)
+
+    slices, labels = [], []
+    angle = 0.0
+    for i, (label, pct) in enumerate(pt_pairs):
+        sweep = pct / total * 360
+        a0, a1 = angle, angle + sweep
+        large_arc = 1 if sweep > 180 else 0
+        x0o, y0o = pt(a0, r_outer)
+        x1o, y1o = pt(a1, r_outer)
+        x0i, y0i = pt(a1, r_inner)
+        x1i, y1i = pt(a0, r_inner)
+        d = (f'M{x0o:.1f},{y0o:.1f} A{r_outer:.1f},{r_outer:.1f} 0 {large_arc} 1 {x1o:.1f},{y1o:.1f} '
+             f'L{x0i:.1f},{y0i:.1f} A{r_inner:.1f},{r_inner:.1f} 0 {large_arc} 0 {x1i:.1f},{y1i:.1f} Z')
+        slices.append(f'<path d="{d}" fill="{colors[i % len(colors)]}"></path>')
+        mid_a, mid_r = (a0 + a1) / 2, (r_outer + r_inner) / 2
+        lx, ly = pt(mid_a, mid_r)
+        if sweep > 18:  # skip a label on a sliver too thin to hold text legibly
+            labels.append(f'<text x="{lx:.1f}" y="{ly + 3:.1f}" text-anchor="middle">{pct:.0f}%</text>')
+        angle = a1
+
+    return (
+        f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" style="display:block">'
+        f'{"".join(slices)}'
+        f'<g fill="#F7F3EC" font-weight="700" font-size="9" font-family="Lato,sans-serif">{"".join(labels)}</g>'
+        f'</svg>'
+    )

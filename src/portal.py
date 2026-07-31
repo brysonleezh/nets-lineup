@@ -129,6 +129,23 @@ st.markdown(
     div[data-baseweb="tab-highlight"] {{ background-color: {BL_GREEN} !important; }}
     .stButton button {{ border-radius: 100px; }}
     section[data-testid="stSidebar"] .stButton button {{ border-radius: 8px; }}
+    /* AI-ASSISTED (Claude Code, chat) - Prompt: "button background不要用黑色
+    这个根本看不清" (don't make the button background black, it's completely
+    illegible) - same root cause as the header/slider-track rules above:
+    the browser's own light/dark toggle (separate from this app's own
+    config.toml theme) can flip a plain st.button/st.download_button's
+    background to Streamlit's dark-theme default (verified directly -
+    rgb(19,23,32)) while this app's existing broad `stMarkdownContainer p`
+    rule below still forces the button's OWN label text to the dark BL_INK
+    ink color - dark text on a near-black background, illegible. Forcing
+    the background (and border) here, the same way the header already is,
+    fixes it: the existing BL_INK text rule then has the contrast it was
+    always meant to have. Covers st.button AND st.download_button - both
+    render as the same `data-testid="stBaseButton-secondary"` (confirmed
+    directly from the real DOM, not assumed). */
+    button[data-testid="stBaseButton-secondary"] {{
+        background-color: {BL_WHITE} !important; border-color: {BL_LINE} !important;
+    }}
     div[role="radiogroup"] label {{ padding: 6px 4px; }}
     hr {{ border-color: {BL_LINE}; }}
     body, .stApp {{ font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
