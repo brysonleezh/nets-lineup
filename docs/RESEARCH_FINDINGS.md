@@ -27,7 +27,7 @@ archetype-RAPM** extension are this project's own additions, explicitly
 
 ## 2. The model
 
-`src/fit_rapm.py`, consuming `src/build_stints.py`'s directed possession
+`src/pipeline/fit_rapm.py`, consuming `src/pipeline/build_stints.py`'s directed possession
 table (2025-26, later extended to 2023-24 and 2024-25):
 
 ```
@@ -43,7 +43,7 @@ Y = y_off = 100 * off_points / off_possessions   (single-stint offensive rating)
 Fit via a differentially-penalized weighted ridge (talent/home unpenalized,
 archetype tilt + synergy ridge-penalized; `lambda` chosen by `GroupKFold`
 grouped by `game_id`). `skill_off`/`skill_def` are exogenous — built by
-`src/build_skill.py` from **prior**-season data only (veteran tier:
+`src/pipeline/build_skill.py` from **prior**-season data only (veteran tier:
 prior-season Basketball-Reference OBPM/DBPM with MIN-weighted shrinkage;
 rookie tier: a draft-slot prior fit on historical draft classes; undrafted:
 empirical replacement level) — with an explicit leakage guard asserting no
@@ -227,7 +227,7 @@ skill-weighting, 1 vs. 3 seasons of data, Net rating vs. process metrics).
   composition gaps, and stylistic incompatibility — carrying no predictive
   claim about lineup outcomes. Already live in the portal's Diagnostic
   Analysis and Roster Construction pages on exactly this basis.
-- **The NCAA→NBA projection machinery** (`step1_archetypes_model.py`'s
+- **The NCAA→NBA projection machinery** (`step1_archetype_model.py`'s
   `project()` function, extended in this investigation to project
   additional NBA seasons onto a fixed basis) — reusable for mapping a
   zero-NBA-data player onto the existing archetype space without refitting.

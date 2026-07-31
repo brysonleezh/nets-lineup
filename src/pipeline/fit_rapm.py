@@ -59,8 +59,13 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupKFold
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+# AI-ASSISTED (Claude Code, chat) - path fix for the src/pipeline/ move:
+# REPO_ROOT now needs one more .parent (this file sits one directory
+# deeper), and sys.path needs src/ added explicitly since the sibling
+# import below no longer auto-resolves from the script's own directory.
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DB_PATH = REPO_ROOT / "data" / "nets_synergy.db"
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 STINTS_PATH = REPO_ROOT / "data" / "stints" / "stints_2025_26.parquet"
 DEFAULT_ALPHA_PATH = REPO_ROOT / "data" / "basis_2025_26" / "recipes.csv"
 MODEL_DIR = REPO_ROOT / "data" / "model"  # NEW dir - never touches data/nets_synergy.db or data/stints/
@@ -153,7 +158,7 @@ def load_skill(skill_season: str, stint_seasons: set, db_path: Path = DB_PATH) -
              f"season={skill_season!r} - a season strictly BEFORE the stint data's own "
              f"{stint_seasons}, confirmed non-overlapping above.")
 
-    from step0_data_collect_process import _normalize_name, _prefer_combined_bref_row
+    from step0_data import _normalize_name, _prefer_combined_bref_row
 
     with sqlite3.connect(db_path) as conn:
         bref = pd.read_sql(

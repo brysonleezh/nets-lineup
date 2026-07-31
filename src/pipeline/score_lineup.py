@@ -32,7 +32,9 @@ import pandas as pd
 
 import fit_rapm as fr
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+# AI-ASSISTED (Claude Code, chat) - path fix for the src/pipeline/ move:
+# REPO_ROOT needs one more .parent now that this file sits one directory deeper.
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def _predict_y_off(x_raw: np.ndarray, model: dict) -> float:

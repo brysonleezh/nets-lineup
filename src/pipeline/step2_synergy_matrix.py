@@ -35,15 +35,21 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 
-from step0_data_collect_process import DB_PATH, build_nba_side_tables
+# AI-ASSISTED (Claude Code, chat) - path fix for the src/pipeline/ move:
+# this file now sits one directory deeper than src/, so DATA_DIR needs an
+# extra .parent and sys.path needs src/ added explicitly for the sibling
+# imports below (both this module-level one and phase_build's local one).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from step0_data import build_nba_side_tables
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 
 
 # --- Part A: load 2-man lineup pairs -----------------------------------
@@ -58,35 +64,13 @@ Not AI: MIN>=100 threshold (CLAUDE.md Step 2), which table/columns to pull.
 """
 
 
-def _parse_pair_ids(group_id: str) -> tuple:
-    """GROUP_ID looks like '-203471-1627752-': two player IDs joined by
-    dashes, empty strings at both ends from the leading/trailing dash."""
-    parts = [p for p in group_id.split("-") if p]
-    if len(parts) != 2:
-        raise ValueError(f"expected 2 player IDs in a 2-man GROUP_ID, got {parts}: {group_id!r}")
-    return int(parts[0]), int(parts[1])
-
-
-def load_pairs(min_threshold=100, db_path=None):
-    """Load 2-man lineup combos with MIN >= min_threshold.
-
-    One row per (player pair, season, team). MIN here is shared minutes -
-    becomes the regression weight. NET_RATING is the regression target.
-    """
-    db_path = db_path or DB_PATH
-    with sqlite3.connect(db_path) as conn:
-        df = pd.read_sql(
-            "SELECT GROUP_ID, TEAM_ID, TEAM_ABBREVIATION, SEASON, MIN, NET_RATING, POSS "
-            "FROM lineups WHERE GROUP_QUANTITY = 2 AND MIN >= ?",
-            conn, params=(min_threshold,),
-        )
-    ids = df["GROUP_ID"].apply(_parse_pair_ids)
-    df["PLAYER_A_ID"] = [t[0] for t in ids]
-    df["PLAYER_B_ID"] = [t[1] for t in ids]
-
-    print(f"pairs: {len(df)} rows | MIN>={min_threshold} | "
-          f"seasons {df['SEASON'].min()}..{df['SEASON'].max()}")
-    return df
+# AI-ASSISTED (Claude Code, chat) - during the src/ restructuring,
+# _parse_pair_ids/load_pairs moved to step1_archetype_model.py (they're
+# imported live by step2_diagnostic_analysis.py, which this file - now
+# relocated to src/pipeline/ as abandoned/offline - shouldn't be a
+# dependency of). Re-exported here so phase_build()'s own call below
+# keeps working unchanged.
+from step1_archetype_model import _parse_pair_ids, load_pairs  # noqa: E402,F401
 
 
 # --- Part B: attach recipes + quality covariate -------------------------
@@ -271,9 +255,7 @@ def phase_build(basis_dir, min_threshold=100, quality_col="BPM", out_dir=None):
 
     basis_dir: step1's output dir (data/basis_full, once it exists).
     """
-    import sys
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from step1_archetypes_model import load_basis
+    from step1_archetype_model import load_basis
 
     basis = load_basis(basis_dir)
     k = basis["k"]

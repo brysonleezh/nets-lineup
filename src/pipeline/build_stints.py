@@ -80,7 +80,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+# AI-ASSISTED (Claude Code, chat) - path fix for the src/pipeline/ move:
+# REPO_ROOT needs one more .parent, and sys.path needs src/ added
+# explicitly since the local import below no longer auto-resolves.
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 STINTS_DIR = REPO_ROOT / "data" / "stints"           # NEW, separate from data/nets_synergy.db
 GAMES_DIR = STINTS_DIR / "games"                      # one parquet per game_id - resumability unit
 CACHE_DIR = STINTS_DIR / "raw_cache"                  # raw boxscore/pbp dataframes per game, cached to disk
@@ -103,7 +107,7 @@ log = logging.getLogger("build_stints")
 
 
 def _call_with_retry(fn, *, retries=6, base_wait=5, max_wait=90, what=""):
-    """Same shape as step0_data_collect_process.py's _call_with_retry -
+    """Same shape as step0_data.py's _call_with_retry -
     stats.nba.com times out and rate-limits under sustained load; this
     project's own established convention is retry-with-linear-backoff, not a
     fixed number of attempts with no backoff."""
@@ -345,7 +349,7 @@ def _resolve_player_by_name(box_df: pd.DataFrame, team_id: int, name: str, game_
     own text uses a different transliteration/accent) for real 2025-26
     games. Reusing the project's existing normalizer (NFKD-strip diacritics,
     lowercase, drop Jr/Sr/II/III/IV) rather than writing a second one."""
-    from step0_data_collect_process import _normalize_name
+    from step0_data import _normalize_name
 
     roster = _team_roster(box_df, team_id)
     name = name.strip()

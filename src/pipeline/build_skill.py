@@ -65,10 +65,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+# AI-ASSISTED (Claude Code, chat) - path fix for the src/pipeline/ move:
+# REPO_ROOT needs one more .parent, and sys.path needs src/ added
+# explicitly since the local imports below no longer auto-resolve.
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DB_PATH = REPO_ROOT / "data" / "nets_synergy.db"
 STINTS_PATH = REPO_ROOT / "data" / "stints" / "stints_2025_26.parquet"
 OUT_PATH = REPO_ROOT / "data" / "model" / "players_skill.parquet"  # NEW file, doesn't touch existing data
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s",
                     handlers=[logging.StreamHandler(sys.stdout)])
@@ -116,7 +120,7 @@ def load_veteran_skill(skill_season: str, stint_seasons: set, db_path: Path = DB
             f"LEAKAGE GUARD: skill_season={skill_season!r} overlaps stint season(s) "
             f"{stint_seasons} - refusing a circular skill source."
         )
-    from step0_data_collect_process import _normalize_name, _prefer_combined_bref_row
+    from step0_data import _normalize_name, _prefer_combined_bref_row
 
     with sqlite3.connect(db_path) as conn:
         bref = pd.read_sql(
@@ -169,7 +173,7 @@ def load_historical_rookie_seasons(exclude_seasons: set, db_path: Path = DB_PATH
     not a formality (2025-26 rookies already have real, in-season
     player_advanced_bref rows by the time this runs).
     """
-    from step0_data_collect_process import _normalize_name, _prefer_combined_bref_row
+    from step0_data import _normalize_name, _prefer_combined_bref_row
 
     with sqlite3.connect(db_path) as conn:
         bio = pd.read_sql(
@@ -249,7 +253,7 @@ def compute_replacement_level(exclude_seasons: set, db_path: Path = DB_PATH) -> 
     constant (e.g. the commonly-cited "-2.0 BPM" replacement-level
     convention). Cross-checked against the draft-curve's own late-pick
     predictions (pick ~55-60) as a sanity check, not used blindly."""
-    from step0_data_collect_process import _normalize_name, _prefer_combined_bref_row
+    from step0_data import _normalize_name, _prefer_combined_bref_row
 
     with sqlite3.connect(db_path) as conn:
         bio = pd.read_sql("SELECT PLAYER_ID, PLAYER_NAME, DRAFT_YEAR FROM player_bio", conn)

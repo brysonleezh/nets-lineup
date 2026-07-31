@@ -36,8 +36,8 @@ import pandas as pd
 
 from scipy.spatial.distance import jensenshannon
 
-from step0_data_collect_process import DB_PATH, _normalize_name
-from step2_synergy_matrix import _parse_pair_ids
+from step0_data import DB_PATH, _normalize_name
+from step1_archetype_model import _parse_pair_ids
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 FIGURES_DIR = Path(__file__).resolve().parent.parent / "figures"

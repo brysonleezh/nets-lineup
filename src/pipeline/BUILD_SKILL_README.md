@@ -1,4 +1,4 @@
-# Exogenous player skill — `src/build_skill.py`
+# Exogenous player skill — `src/pipeline/build_skill.py`
 
 Produces `data/model/players_skill.parquet`: one row per player_id appearing
 in the 2025-26 directed-stint table (`data/stints/stints_2025_26.parquet`),
@@ -150,12 +150,12 @@ identical by construction, but in the right neighborhood.
 - **Leakage guard**: asserted 0/581 rows cite 2025-26 as a performance data
   source.
 - Full distribution-by-source and draft-curve-shape numbers print on every
-  run — rerun `python3 src/build_skill.py` to reproduce them.
+  run — rerun `python3 src/pipeline/build_skill.py` to reproduce them.
 
 ## How to run
 
 ```bash
-python3 src/build_skill.py
+python3 src/pipeline/build_skill.py
 # --stint-season / --skill-season / --stints-path / --out-path all overridable
 ```
 

@@ -21,12 +21,12 @@ file (inspect_data.py); folded in here since it's still part of "look at
 what step 0 produced."
 
 USAGE (Part C / inspection, the default when run with no special flags)
-    python3 src/step0_data_collect_process.py                 # display all tables
-    python3 src/step0_data_collect_process.py player_bio       # display just one table
-    python3 src/step0_data_collect_process.py --no-preview     # skip the row-preview panels
-    python3 src/step0_data_collect_process.py --markdown       # print as GitHub-flavored
+    python3 src/step0_data.py                 # display all tables
+    python3 src/step0_data.py player_bio       # display just one table
+    python3 src/step0_data.py --no-preview     # skip the row-preview panels
+    python3 src/step0_data.py --markdown       # print as GitHub-flavored
                                                                 # Markdown (for README.md)
-    python3 src/step0_data_collect_process.py --pull           # run Part A's data pull instead
+    python3 src/step0_data.py --pull           # run Part A's data pull instead
                                                                 # of inspecting (the heavy,
                                                                 # deliberate action — not the
                                                                 # default, so running this file
@@ -1017,7 +1017,7 @@ def render_all_markdown(conn: sqlite3.Connection) -> str:
     parts = [
         "## Raw Data Tables",
         "",
-        f"_Generated from `data/{DB_PATH.name}` via `python3 src/step0_data_collect_process.py --markdown`. "
+        f"_Generated from `data/{DB_PATH.name}` via `python3 src/step0_data.py --markdown`. "
         "Column meanings are sourced from CLAUDE.md's feature spec, self-describing headers, "
         "and standard NBA/Basketball-Reference stat terminology — see the script's module "
         "docstring for details. Entries marked _(best-effort inference)_ are NBA.com internal "

@@ -2,7 +2,7 @@
 
 Documents the formula and honesty caveats behind every number on the
 Diagnostic Analysis page's per-player report, in Streamlit at
-`src/portal.py` (`render_player_report` and `render_section_a`,
+`src/step3_player_breakdown.py` (`render_player_report` and `render_section_a`,
 `render_section_b`, `render_section_c`, `render_section_d`,
 `render_section_e`), computed in `src/step2b_player_diagnostics.py`.
 Layer 1 (the screening quadrant + table, and the pre-existing
@@ -42,7 +42,7 @@ not use.
 ## Phase 0 — per-season recipes (2023-24, 2024-25)
 
 **What**: project each historical season's population onto the FIXED
-2025-26 basis (`data/basis_2025_26/basis.npz`) using `step1_archetypes_model.project()`
+2025-26 basis (`data/basis_2025_26/basis.npz`) using `step1_archetype_model.project()`
 — never a second ADA fit. A player's role can differ season to season,
 which is exactly what Section C measures; fitting a separate basis per
 season would confound "his role changed" with "the basis itself moved."
@@ -304,7 +304,7 @@ percentage points** (e.g. `USG%` mean ≈19, range 8.5–38.1 in the real
 the fraction bucket and got multiplied by 100 a second time. Fixed by
 adding a third bucket, `ALREADY_PERCENT_FEATURES`, formatted as `.1f}%`
 (no re-multiplication). This project has hit this exact class of bug
-before — `render_player_stats_tab`'s own `adv_defs` in `portal.py` had
+before — `render_player_stats_tab`'s own `adv_defs` in `step3_player_breakdown.py` had
 already classified these same 6 features correctly for a different table
 on the page; this formatter just never matched it. Every one of the 29
 basis features' real population values were checked directly (min/max/
@@ -451,7 +451,7 @@ hatched rather than a false confident reading.
 
 **Superseded, not deleted.** The old team-level `role_sensitivity_profile()`,
 `sensitivity_profile_chart()`, and `_role_sensitivity_verdict()`
-(step2b_player_diagnostics.py / portal.py) are untouched but no longer
+(step2b_player_diagnostics.py / step3_player_breakdown.py) are untouched but no longer
 called from the live page — this project's standard "kept but not wired
 up" convention (see `SHOW_STABILITY_BOOTSTRAP`). The old
 `shot_mix_gate_status()` now checks for the Phase 1 events file directly
@@ -733,7 +733,7 @@ the code alone.
 A per-player PDF "snapshot" of the live report, now generated
 automatically at the bottom of the **Diagnostic Analysis** page for
 whichever player is currently selected there (`render_report_section`,
-`collect_report_data` in `portal.py`; PDF assembly in
+`collect_report_data` in `step4_report.py`; PDF assembly in
 `src/player_report.py`) — Section "3. PDF scouting report," right after
 Section 2's live A-E write-up. This is the SECOND reversal of this
 feature's placement: originally a section at the bottom of Diagnostic
@@ -807,9 +807,9 @@ base64 `@font-face` data URIs — no live network dependency at
 PDF-generation time.
 
 **Architecture — same one-directional dependency as before, same CORE
-RULE.** `portal.py` imports `player_report.py`; `player_report.py` never
-imports `portal.py`, still has no Streamlit dependency. `collect_report_data()`
-(`portal.py`) builds the report's data contract — a plain nested dict
+RULE.** `step4_report.py` imports `player_report.py`; `player_report.py` never
+imports `step4_report.py`, still has no Streamlit dependency. `collect_report_data()`
+(`step4_report.py`) builds the report's data contract — a plain nested dict
 matching the spec's own JSON shape (`player`, `season`, `archetypeMix`,
 `purity`, `entropy`, `shotMix`, `playTypes`, `neighbors`, `drift`,
 `environment`, `miscast`, `boxScore`, `recommendations`, `reads`) — by
@@ -1022,19 +1022,20 @@ PDF report itself, noted here only because this is where it was found.
 
 ## What was reused vs. newly written
 
-Reused verbatim, no second implementation: `step1_archetypes_model.project()`,
+Reused verbatim, no second implementation: `step1_archetype_model.project()`,
 `recipes_frame()`, `load_basis()`, `load_population()`;
 `step2_diagnostic_analysis.macro_archetype_exposure()`,
 `similarity_weighted_benchmark()`, `mismatch_score()`, `teammate_lift()`,
-`screening_table()`, `load_player_pairs()`; portal.py's
+`screening_table()`, `load_player_pairs()`; step3_player_breakdown.py's
 `render_profile_card()`, `archetype_column_chart()`, `diverging_bar()`,
-`render_player_stats_tab()`, `_build_sortable_table_html()`,
-`lift_bar_chart()`, `render_bc_comparison()`/`compute_bc_verdict()`.
+`render_player_stats_tab()`, `lift_bar_chart()`,
+`render_bc_comparison()`/`compute_bc_verdict()` (`_build_sortable_table_html()`
+lives in `portal_shared.py`, shared with the Intro tab).
 
 New in `step2b_player_diagnostics.py`: Phase 0's projection/gates, and all
 section computation (role drift, development comps, role elasticity,
-miscasting, signature, bootstrap). New in `portal.py`: the
-`render_section_*` functions, `render_player_report()`,
+miscasting, signature, bootstrap). New in `step3_player_breakdown.py`/
+`step4_report.py`: the `render_section_*` functions, `render_player_report()`,
 `collect_report_data()`/`render_report_section()` (the PDF export, see
 above), cached loader wrappers, and two new chart types
 (`signature_radar_chart`, `bootstrap_band_chart` — the latter now also
@@ -1051,7 +1052,7 @@ top of this file) after the sections were first built in a different
 order (the
 original build order was, roughly, identity → role drift → environment →
 miscasting → signature → stability, matching a literal A→F letter
-sequence). Python function names in `portal.py` (`render_section_a`
+sequence). Python function names in `step3_player_breakdown.py` (`render_section_a`
 through `render_section_e`) still refer to each function's *original*
 content, not its current display letter — e.g. `render_section_e` renders
 what the page now labels "Section B." Only each function's own
@@ -1063,7 +1064,7 @@ from before the reorder.
 ## Rookie Slot Query — Recommended units around him
 
 **Scope note**: unlike every section above, this documents a different
-page — `render_rookie_slot_query()` in `portal.py` (the 🎯 Rookie Slot
+page — `render_rookie_slot_query()` in `step3_player_breakdown.py` (the 🎯 Rookie Slot
 Query page), not the Diagnostic Analysis per-player report. Grouped here
 anyway because that's where the task asked for it, and this project
 otherwise has no single "portal features" doc.

@@ -1,4 +1,4 @@
-# NBA 2025-26 Directed Stint Data — `src/build_stints.py`
+# NBA 2025-26 Directed Stint Data — `src/pipeline/build_stints.py`
 
 A standalone pipeline that builds a regression-ready "directed stint" table
 from real NBA play-by-play, for a skill-weighted archetype-RAPM model. It is
@@ -39,13 +39,13 @@ complete, fast, real data for the full season.
 pip install -r requirements.txt
 
 # Full season (resumable - safe to interrupt and rerun)
-python3 src/build_stints.py --season 2025-26
+python3 src/pipeline/build_stints.py --season 2025-26
 
 # Test on a handful of games first
-python3 src/build_stints.py --season 2025-26 --limit 10
+python3 src/pipeline/build_stints.py --season 2025-26 --limit 10
 
 # Just recombine + re-validate already-pulled per-game files, no new pulls
-python3 src/build_stints.py --season 2025-26 --combine-only
+python3 src/pipeline/build_stints.py --season 2025-26 --combine-only
 ```
 
 **Resumability**: every game's raw boxscore/play-by-play response is cached

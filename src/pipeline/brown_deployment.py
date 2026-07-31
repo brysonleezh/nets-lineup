@@ -6,8 +6,10 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-sys.path.insert(0, ".")
-from step0_data_collect_process import _normalize_name, _prefer_combined_bref_row
+# AI-ASSISTED (Claude Code, chat) - path fix for the src/pipeline/ move:
+# resolve src/ from this file's own location instead of assuming cwd.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from step0_data import _normalize_name, _prefer_combined_bref_row
 
 k = 8
 brown = json.load(open("data/brown/profile.json"))
@@ -45,7 +47,10 @@ print(f"talent (skill_off/skill_def) join: {roster['skill_off'].notna().sum()}/{
 
 # Brown's own talent number: draft-slot prior at pick #6 (already-validated build_skill.py
 # machinery, reused directly rather than re-derived)
-sys.path.insert(0, "src")
+# AI-ASSISTED (Claude Code, chat) - path fix for the src/pipeline/ move:
+# build_skill.py is now a co-located sibling in src/pipeline/, not src/ -
+# point at this file's own directory rather than the old "src" literal.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build_skill as bsk
 hist = bsk.load_historical_rookie_seasons({"2025-26"})
 curve = bsk.fit_draft_curve(hist)

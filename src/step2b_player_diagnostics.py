@@ -7,7 +7,7 @@ report sections for whichever player is selected in the portal's Diagnostic
 Analysis screening layer. Nothing here re-implements macro_archetype_exposure,
 similarity_weighted_benchmark, mismatch_score, teammate_lift, screening_table,
 load_player_pairs, project(), or recipes_frame() - all reused directly from
-step1_archetypes_model.py / step2_diagnostic_analysis.py.
+step1_archetype_model.py / step2_diagnostic_analysis.py.
 
 Every claim this module produces is DESCRIPTIVE per CLAUDE.md's own
 talent-vs-archetype design principle (see docs/RESEARCH_FINDINGS.md SS6) -
@@ -43,8 +43,8 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.distance import jensenshannon
 
-from step0_data_collect_process import DB_PATH
-from step1_archetypes_model import load_basis, load_population, project, recipes_frame
+from step0_data import DB_PATH
+from step1_archetype_model import load_basis, load_population, project, recipes_frame
 from step2_diagnostic_analysis import load_player_pairs
 
 REPO_ROOT = Path(__file__).resolve().parent.parent

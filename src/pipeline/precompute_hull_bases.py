@@ -1,8 +1,8 @@
 """
 Precompute ADA bases at K=4..10 for the Intro page's convex-hull scatter
-(portal.py). Fitting ADA live inside the app is far too slow for an
+(step2_intro.py). Fitting ADA live inside the app is far too slow for an
 interactive K slider - this script fits each K once, offline, and saves it
-to disk in the exact format step1_archetypes_model's save_basis/load_basis
+to disk in the exact format step1_archetype_model's save_basis/load_basis
 already use, so the portal can load any K's basis instantly at render time.
 
 K=8 is NOT refit here - the app's authoritative K=8 basis already exists at
@@ -16,7 +16,7 @@ Prompt: build a K=4..10 slider for a convex-hull scatter on the Intro page,
 with the explicit instruction "Refitting ADA live is far too slow, so
 precompute bases at each K offline and cache them to disk first — write a
 separate script for that, do not fit inside the app."
-Used: reuses step1_archetypes_model's own load_population / fit_basis_best_of
+Used: reuses step1_archetype_model's own load_population / fit_basis_best_of
 / save_basis / match_archetypes_to_players verbatim - no new fitting logic,
 just looping the existing production fit function over K and writing to a
 new hull_bases/ directory tree via the existing save_basis format.
@@ -24,12 +24,19 @@ Not AI: the K range (4-10), and the decision not to refit K=8 given an
 authoritative fit already exists on disk - both the user's/project's own
 prior choices, not new decisions made here.
 
-Run: python3 src/precompute_hull_bases.py
+Run: python3 src/pipeline/precompute_hull_bases.py
 """
 
 from __future__ import annotations
 
-from step1_archetypes_model import (
+import sys
+from pathlib import Path
+
+# AI-ASSISTED (Claude Code, chat) - path fix for the src/pipeline/ move:
+# sys.path needs src/ added explicitly since this file no longer lives
+# next to step1_archetype_model.py.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from step1_archetype_model import (
     DATA_DIR,
     fit_basis_best_of,
     load_population,

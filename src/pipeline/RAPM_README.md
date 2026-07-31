@@ -1,4 +1,4 @@
-# Skill-weighted archetype-RAPM — `src/fit_rapm.py` / `src/score_lineup.py`
+# Skill-weighted archetype-RAPM — `src/pipeline/fit_rapm.py` / `src/pipeline/score_lineup.py`
 
 Fits a possession-level value model on top of `build_stints.py`'s directed
 stint table: each archetype-pair's estimated offensive/defensive tilt and
@@ -24,14 +24,14 @@ built — the whole reason that file exists.
 **Known, deliberately-not-fixed gap**: of the 148 alpha-missing players,
 147 are genuinely under 300 minutes (the filter working as intended). One,
 **Ronald Holland II (1,550 real 2025-26 minutes)**, is missing purely from a
-name-join miss in Step 1 (`step0_data_collect_process.py` matches him via
+name-join miss in Step 1 (`step0_data.py` matches him via
 Basketball-Reference's short form "Ron Holland" against NBA.com's "Ronald
 Holland II" - already fixed in code via `_NAME_ALIASES`, but `recipes.csv`
 predates that fix). Regenerating the basis to include him was tried and
 reverted: refitting on 434 rows instead of 433 changed 4 of the 8 archetype
 exemplars (Tim Hardaway Jr.→Klay Thompson, Shai Gilgeous-Alexander→Luka
 Dončić, Bez Mbeng→Bryce McGowens, D'Angelo Russell→none), which would make
-`step1_archetypes_model.py`'s hand-written `ARCHETYPE_TO_PAPER` labels stale
+`step1_archetype_model.py`'s hand-written `ARCHETYPE_TO_PAPER` labels stale
 for those 4 rows and ripple into any already-reviewed downstream content
 that names an old exemplar (e.g. `STINTS_README.md`'s "arch_7 = Mbeng-type"
 reference). Given one bench player (~0.7% of total possessions) doesn't
@@ -229,7 +229,7 @@ of which model or features are used to predict it.
 **6. Does more data help (1 season → 3 seasons)?** Pulled two additional
 full seasons (2023-24, 2024-25) via `build_stints.py`, and extended the
 pipeline to support them:
-- **Archetype coverage**: `step1_archetypes_model.py`'s `project()`
+- **Archetype coverage**: `step1_archetype_model.py`'s `project()`
   function (built for exactly this) projects each historical season's
   players onto the **existing, already-labeled 2025-26 basis** — never
   refit, avoiding a repeat of the archetype-exemplar-reshuffle problem from
@@ -330,9 +330,9 @@ and scoring can never silently drift apart.
 ## How to run
 
 ```bash
-python3 src/build_skill.py          # if data/model/players_skill.parquet doesn't exist yet
-python3 src/fit_rapm.py             # full-league + BKN-holdout models, full validation report
-python3 src/score_lineup.py --model data/model/coefficients_holdout_BKN.json \
+python3 src/pipeline/build_skill.py          # if data/model/players_skill.parquet doesn't exist yet
+python3 src/pipeline/fit_rapm.py             # full-league + BKN-holdout models, full validation report
+python3 src/pipeline/score_lineup.py --model data/model/coefficients_holdout_BKN.json \
     --off <5 player_ids> --def league_average
 ```
 

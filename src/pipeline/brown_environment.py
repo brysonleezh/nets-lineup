@@ -4,7 +4,9 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-sys.path.insert(0, ".")
+# AI-ASSISTED (Claude Code, chat) - path fix for the src/pipeline/ move:
+# resolve src/ from this file's own location instead of assuming cwd.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from step2_diagnostic_analysis import (
     compute_style_pool_by_vector, similarity_weighted_benchmark,
     load_player_oncourt_netrating, load_archetype_labels,

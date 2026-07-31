@@ -4,8 +4,10 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-sys.path.insert(0, ".")
-import step1_archetypes_model as s1
+# AI-ASSISTED (Claude Code, chat) - path fix for the src/pipeline/ move:
+# resolve src/ from this file's own location instead of assuming cwd.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import step1_archetype_model as s1
 
 REDUCED_FEATURES = [
     "PTS_PER_100", "PLAYER_HEIGHT_INCHES",

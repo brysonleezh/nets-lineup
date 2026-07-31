@@ -65,7 +65,7 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import GroupKFold
 
-from step0_data_collect_process import DB_PATH, build_nba_side_tables
+from step0_data import DB_PATH, build_nba_side_tables
 from step2_diagnostic_analysis import _parse_group_ids
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -741,7 +741,7 @@ def report_model(model, cv):
 
 def phase_report(basis_dir=None, season="2025-26", min_threshold=100, outcome="OFF_RATING"):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from step1_archetypes_model import load_basis
+    from step1_archetype_model import load_basis
 
     basis_dir = Path(basis_dir) if basis_dir else DATA_DIR / "basis_2025_26"
     basis = load_basis(basis_dir)
