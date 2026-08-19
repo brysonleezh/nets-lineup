@@ -302,6 +302,27 @@ def _hover_card_html(photo_uri, name, subtitle, weight_html, border_color):
     )
 
 
+# AI-ASSISTED (Claude Code, chat) - Prompt: "label two or three of the black
+# Nets dots inline by default... pick recognizable rotation players
+# positioned so labels don't collide with the corner annotations" - a
+# fixed roster subset (not every Nets player, which would clutter the
+# interior) so the figure reads without hovering at all.
+# Used: picked by actually computing this season's real 2D projection and
+# measuring pixel distance from each candidate to every corner label's own
+# anchor point (not eyeballed) - Julius Randle (248px clearance), Michael
+# Porter Jr. (171px), and Day'Ron Sharpe (149px) were the best-separated
+# recognizable rotation players among the roster, spread across the plot
+# (left/up, left/center, right/center) rather than clustered together.
+# If this project's Nets roster or the underlying 2025-26 fit changes and
+# one of these three is no longer in the population, the lookup below
+# just skips it silently - a missing default label is a cosmetic
+# degradation, not a crash.
+# Not AI: the decision to label a small fixed set rather than all Nets
+# dots, and that hover remains the mechanism for everyone else - given
+# directly.
+DEFAULT_INLINE_LABELED_NETS = ["Julius Randle", "Michael Porter Jr.", "Day'Ron Sharpe"]
+
+
 def _top_weights_html(vals, arch_names, colors, top_n=2, min_pct=0.05):
     """'62% Offensive Engine · 24% 3&D Wing' - each archetype name colored
     with its own identity color. Archetypes below min_pct are dropped even
@@ -389,6 +410,24 @@ def build_figure_spec(proj, roster_df, labels, k):
             "x": anchor_data[0], "y": anchor_data[1], "xref": "x", "yref": "y",
             "text": text, "showarrow": False,
             "xanchor": c["align"], "yanchor": "middle", "align": c["align"],
+        })
+
+    # Default-labeled Nets dots (see DEFAULT_INLINE_LABELED_NETS above) - a
+    # small, lighter-weight text label offset from the dot itself via
+    # xshift/yshift (pixel-space, no leader line needed - these were chosen
+    # to already sit clear of the corner labels' own pixel footprint),
+    # visually distinct from the corner callouts (smaller, uncolored,
+    # single line) so the two label types read as different things.
+    for i in np.where(is_nets)[0]:
+        name = pop["PLAYER_NAME"].values[i]
+        if name not in DEFAULT_INLINE_LABELED_NETS:
+            continue
+        x, y = all_2d[i]
+        annotations.append({
+            "x": float(x), "y": float(y), "xref": "x", "yref": "y",
+            "text": f'<span style="font-size:12px;font-weight:600;color:{INK_COLOR};">{name}</span>',
+            "showarrow": False, "xanchor": "left", "yanchor": "bottom",
+            "xshift": 9, "yshift": 9,
         })
 
     # --- traces --------------------------------------------------------------
@@ -515,7 +554,7 @@ callback in Streamlit's Python API, and even if there were, positioning a
 raw HTML div at the mouse position has to happen in the SAME document as
 the chart's own DOM/JS event, which st.plotly_chart doesn't expose. Built
 the entire chart as one self-contained HTML page instead (Plotly.js from
-CDN + a plain <script>), meant to be embedded via st.components.v1.html()
+CDN + a plain <script>), meant to be embedded via st.iframe()
 - that component runs its own real iframe document, so a <script> tag
 actually executes (st.markdown's does not - checked and hit this exact
 wall earlier this session building the roster table's sort feature).
@@ -693,7 +732,7 @@ _PAGE_TEMPLATE = """<!doctype html>
 
 def render_html(spec):
     """spec: the dict returned by build_figure_spec(). Returns a complete,
-    self-contained HTML page string ready for st.components.v1.html() (or a
+    self-contained HTML page string ready for st.iframe() (or a
     standalone file, for the Playwright-driven verification pass)."""
     import json as _json
     nets_trace = spec["data"][spec["nets_trace_index"]]

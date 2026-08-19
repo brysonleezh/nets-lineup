@@ -20,7 +20,6 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-import streamlit.components.v1 as components
 from scipy.spatial.distance import jensenshannon
 
 from step0_data import build_nba_side_tables
@@ -524,7 +523,39 @@ SHOW_FUTURE_WORK_PAGE = False
 # completely untouched, a one-line flip to bring it back.
 # Not AI: the decision to hide it, and the stated reason (time) - the
 # user's own call.
+#
+# Unrelated-systems note: this page and step5_rookie_projections.py's
+# "NCAA Bridge — Rookie Archetype Projections" page both concern the same
+# three rookies (Mikel Brown Jr., Tyler Bilodeau, Joshua Jefferson) but are
+# otherwise unrelated systems that happen to share the word "rookie." This
+# page asks what archetype SLOT a rookie should fill next to the existing
+# roster (a lineup-construction question, using NETS_ROSTER_NCAA_BRIDGE +
+# the original NBA-side archetype model only). step5's page shows the
+# actual trained NCAA->NBA translator's own predictions (a player-
+# projection question, using the full Phase 1-6 pipeline). Do not merge
+# them or assume one supersedes the other.
 SHOW_ROOKIE_SLOT_QUERY_PAGE = False
+
+# AI-ASSISTED (Claude Code, chat) - Prompt: "I want to do one more roster
+# construction tab, what do you think we can do?" - investigation found
+# render_roster_construction() already existed complete and previously
+# validated (see portal.py:187-201's own history - this page was live
+# once, hidden, then its slot repurposed into Future Work & Obstacles
+# instead of being deleted); presented that finding, user chose to
+# revive it as-is over extending it or also reviving Rookie Slot Query.
+# Used: same "kept but not wired up" flip as every other SHOW_* flag on
+# this page - gates the page INTO the sidebar nav list; render_roster_
+# construction() and everything under it were already fully built,
+# requiring zero code changes beyond this flag and portal.py's nav wiring.
+# Not AI: the decision to revive it, and the choice of scope (as-is, no
+# extension) - the user's own call.
+#
+# AI-ASSISTED (Claude Code, chat) - Prompt: "先隐藏掉Roster Construction"
+# (hide Roster Construction for now). Used: same "kept but not wired up"
+# flip back to False - render_roster_construction() and everything under
+# it remain fully built and untouched, a one-line flip to re-enable again.
+# Not AI: the decision to hide it - the user's own call.
+SHOW_ROSTER_CONSTRUCTION_PAGE = False
 
 # AI-ASSISTED (Claude Code, chat) - Prompt: 'hide "see the usage-vs-
 # production gap chart" please'. Used: same "kept but not wired up"
@@ -815,7 +846,7 @@ def render_screening_table(screening_df, labels, selected_pid=None):
         return f"{v:+.1f}{tag}", float(v)
 
     # NOT clickable, despite an attempt (see AI_USAGE.md Entry for the full
-    # story): components.html() renders in an iframe sandboxed with
+    # story): st.iframe() renders in an iframe sandboxed with
     # "allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox
     # allow-same-origin allow-scripts allow-downloads" - critically missing
     # "allow-top-navigation"/"allow-top-navigation-by-user-activation".
@@ -860,7 +891,7 @@ def render_screening_table(screening_df, labels, selected_pid=None):
 
     table_html, iframe_height = _build_sortable_table_html(
         "screening_table", columns, rows_cells, row_styles=row_styles)
-    components.html(table_html, height=iframe_height, scrolling=True)
+    st.iframe(table_html, height=iframe_height)
 
 
 # AI-ASSISTED (Claude Code, chat)
@@ -1092,7 +1123,7 @@ def render_pairwise_conflict(recipes, k, roster_ids, exposure_cache):
             ])
         conflict_html, conflict_height = _build_sortable_table_html(
             "team_conflict_table", conflict_columns, conflict_rows_cells, row_height=40)
-        components.html(conflict_html, height=conflict_height, scrolling=True)
+        st.iframe(conflict_html, height=conflict_height)
 
 
 @st.cache_data
@@ -1776,7 +1807,7 @@ def render_section_b(player_id, recipes_all, bio_all, k, labels, fit, height=340
                         (next_label, next_label.lower()),
                     ])
                 table_html, h = _build_sortable_table_html("dev_comps_table", columns, rows_cells, row_height=44)
-                components.html(table_html, height=h, scrolling=True)
+                st.iframe(table_html, height=h)
 
 
 def render_section_c(player_id, recipes, k, labels, exposure_cache):
@@ -2624,7 +2655,7 @@ def render_section_e(player_id, prow, fit, k, recipes_all):
                 f'<div style="display:flex; align-items:flex-start; height:{wrapper_height}px;">'
                 f'{table_html}</div>'
             )
-            components.html(wrapped_html, height=wrapper_height, scrolling=False)
+            st.iframe(wrapped_html, height=wrapper_height)
 
 
 def bootstrap_band_chart(arch_names, point, lo, hi, height=380):
@@ -2870,7 +2901,7 @@ def render_player_stats_tab(row):
         combined_columns = [(label, None) for label, _, _ in base_defs + adv_defs]
         combined_html, combined_height = _build_sortable_table_html(
             "player_stats_combined", combined_columns, [combined_cells], row_height=44)
-        components.html(combined_html, height=combined_height, scrolling=True)
+        st.iframe(combined_html, height=combined_height)
 
         dist_map = [
             ("0-3 ft", "% of FGA by Distance_0-3"), ("3-10 ft", "% of FGA by Distance_3-10"),
@@ -3058,7 +3089,7 @@ def render_lineup_rankings(recipes, k, labels, roster, team_profile):
             (f"{r['entropy']:.2f}", float(r["entropy"])),
         ])
     html, height = _build_sortable_table_html("lineup_rankings_table", columns, rows_cells, row_height=40)
-    components.html(html, height=height, scrolling=True)
+    st.iframe(html, height=height)
 
     with st.expander(f"Bottom 5 of {len(scored)}"):
         bottom_rows_cells = []
@@ -3072,7 +3103,7 @@ def render_lineup_rankings(recipes, k, labels, roster, team_profile):
             ])
         bottom_html, bottom_height = _build_sortable_table_html(
             "lineup_rankings_bottom_table", columns, bottom_rows_cells, row_height=40)
-        components.html(bottom_html, height=bottom_height, scrolling=True)
+        st.iframe(bottom_html, height=bottom_height)
 
     st.divider()
     st.markdown("**What if we shifted the team's overall composition?**")
@@ -3155,7 +3186,7 @@ def render_rapm_investigation_note():
         columns = [("Hypothesis", "h"), ("What was actually tried", "t"), ("Result", "r")]
         rows_cells = [[(h, h), (t, t), (r, r)] for h, t, r in rows]
         html, height = _build_sortable_table_html("rapm_investigation_table", columns, rows_cells, row_height=64)
-        components.html(html, height=height, scrolling=True)
+        st.iframe(html, height=height)
         st.markdown(
             "**Conclusion**: six independent angles, plus the most favorable "
             "aggregation level tested, all converge on the same answer — "

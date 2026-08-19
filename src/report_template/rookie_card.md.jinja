@@ -1,0 +1,56 @@
+# {{ rookie.name }}
+
+**{{ rookie.college }}** · {{ rookie.position }}, {{ rookie.height }} · 2026 draft pick #{{ rookie.pick }}
+
+*Generated {{ meta.timestamp_utc }} · commit `{{ meta.git_hash }}` · model {{ meta.model_version }}*
+
+---
+
+## 1. Predicted rookie-season archetype mix
+
+Point estimates only — no uncertainty interval shown (see Section 5).
+
+| Archetype | Predicted weight |
+|---|---|
+{% for j, label, pct in pred_bars -%}
+| {{ label }} | {{ "%.0f"|format(pct) }}% |
+{% endfor %}
+
+## 2. Top-3 predicted archetypes
+
+{% for item in top3_prose_md %}
+- {{ item }}
+{% endfor %}
+
+## 3. College profile (the model's input)
+
+His actual 2025-26 college archetype mix — this is what went *into* the model, not a prediction.
+
+| Archetype | Weight |
+|---|---|
+{% for j, label, pct in college_bars -%}
+| {{ label }} | {{ "%.0f"|format(pct) }}% |
+{% endfor %}
+
+## 4. Comps: historically similar college profiles
+
+These are the {{ comps|length }} draft-class anchors whose college statistical profile most closely resembles {{ rookie.first_name }}'s (nearest neighbors in the model's own feature space), shown with what they actually became as NBA rookies. This is the honest answer to "how much could this vary": the spread across these {{ comps|length }} outcomes, not a synthetic confidence interval.
+
+| Player | Class | Pick | College | His college top archetype | What he actually became as a rookie |
+|---|---|---|---|---|---|
+{% for c in comps -%}
+| {{ c.name }} | {{ c.draft_year }} | #{{ c.pick }} | {{ c.college }} | {{ c.college_archetype_label }} | {{ c.actual_outcome }} |
+{% endfor %}
+
+## 5. How much should you trust this?
+
+> {{ confidence_line }}
+{% if saturation_caveat %}
+**Note:** {{ saturation_caveat }}
+{% endif %}
+
+## 6. What this model cannot see
+
+{% for line in limits_footnote %}
+- {{ line }}
+{% endfor %}

@@ -1,12 +1,20 @@
 """
 Carved out of portal.py during the Day-8 portal restructuring. Everything
-that serves ONLY the "The 8 Player Types" (Intro) tab: the K=4..10
+that serves ONLY the "The 8 Player Types" (Intro) tab: the frozen-K=8
 convex-hull scatter (compute_hull_projection/build_intro_hull_html, backed
-by hull_callout_chart.py + the offline bases in src/pipeline/
-precompute_hull_bases.py), the Nets roster gallery table, and the K-slider
+by hull_callout_chart.py), the Nets roster gallery table, and the K-slider
 explained-variance chart (currently dead/commented out on the live page,
 kept per this restructuring's "don't delete dead code" rule). Entry point
 for portal.py's nav dispatch is render_intro_page().
+
+The page used to expose a K=4..10 slider over this chart, backed by bases
+precomputed offline in src/pipeline/precompute_hull_bases.py - removed
+(see AI_USAGE.md) since K=8 is frozen project-wide (Phase 2's RSS/intra-
+variance diagnostics + consensus-basin rule) and every other page reads
+the K=8 basis only; a slider implied a choice the visitor never actually
+had. precompute_hull_bases.py and its data/hull_bases/k4../k10 output are
+left in place as historical pipeline artifacts, not deleted, but nothing
+in the live app reads them anymore.
 """
 
 from __future__ import annotations
@@ -14,7 +22,6 @@ from __future__ import annotations
 import pandas as pd
 import numpy as np
 import streamlit as st
-import streamlit.components.v1 as components
 import plotly.graph_objects as go
 from scipy.spatial import ConvexHull
 from sklearn.decomposition import PCA
@@ -47,13 +54,9 @@ from portal_shared import (
 
 
 
-# Intro page's convex-hull scatter: K=8 reuses the official basis_2025_26
-# fit above (this project's one authoritative K=8, referenced everywhere
-# else in the portal) - only K=4..7,9,10 are precomputed separately (see
-# src/pipeline/precompute_hull_bases.py; ADA is far too slow to refit live on a slider).
-HULL_BASES_DIR = DATA_DIR / "hull_bases"
-HULL_K_RANGE = (4, 5, 6, 7, 8, 9, 10)
-HULL_DEFAULT_K = 8
+# Intro page's convex-hull scatter reads the official basis_2025_26 fit
+# (this project's one authoritative K=8, referenced everywhere else in the
+# portal) - K is frozen, not a live parameter (see the module docstring).
 # data/k_selection.csv reflects a different, now-superseded population
 # (multi-season / higher MIN floor, from before this project's single-
 # season direction change - see step1_archetype_model.py's own Part A
@@ -104,19 +107,16 @@ def load_hull_population(season=SEASON, min_threshold=300):
 
 
 @st.cache_data
-def load_hull_basis(k):
-    """K=8 reuses this project's one authoritative production basis
-    (data/basis_2025_26) rather than a second K=8 fit, so the slider's K=8
-    position always matches every other page in the portal. K=4-7/9-10
-    load src/pipeline/precompute_hull_bases.py's offline output - never refit here."""
-    path = BASIS_DIR if k == 8 else HULL_BASES_DIR / f"k{k}"
-    return load_ada_basis(path)
+def load_hull_basis():
+    """Reuses this project's one authoritative production basis
+    (data/basis_2025_26) rather than a second fit, so this chart always
+    matches every other page in the portal - never refit here."""
+    return load_ada_basis(BASIS_DIR)
 
 
 @st.cache_data
-def load_hull_archetype_defs(k):
-    path = BASIS_DIR if k == 8 else HULL_BASES_DIR / f"k{k}"
-    return pd.read_csv(path / "archetype_definitions.csv")
+def load_hull_archetype_defs():
+    return pd.read_csv(BASIS_DIR / "archetype_definitions.csv")
 
 
 def _resolve_row_by_id(pop, player_id, min_hint=None):
@@ -135,16 +135,17 @@ def _resolve_row_by_id(pop, player_id, min_hint=None):
 
 
 @st.cache_data(show_spinner="Projecting the player cloud onto the archetypoid plane...")
-def compute_hull_projection(k):
-    """Everything the hull scatter needs for one K: the 2D PCA plane
-    (fit on the K archetypoid rows only - see the module note above for
-    why fitting it on all players would be wrong, not just a different
-    choice), every player's position on that plane, their own simplex
-    recipe at this K (project(), not a refit), and the honesty check of
-    how many archetypoids actually land on the 2D hull of the projection.
+def compute_hull_projection():
+    """Everything the hull scatter needs: the 2D PCA plane (fit on the 8
+    archetypoid rows only - see the module note above for why fitting it
+    on all players would be wrong, not just a different choice), every
+    player's position on that plane, their own simplex recipe (project(),
+    not a refit), and the honesty check of how many archetypoids actually
+    land on the 2D hull of the projection. K is always 8 - the frozen,
+    project-wide basis - never a live parameter.
     """
-    fit = load_hull_basis(k)
-    defs = load_hull_archetype_defs(k)
+    fit = load_hull_basis()
+    defs = load_hull_archetype_defs()
     pop = load_hull_population().reset_index(drop=True)
 
     feature_cols = fit["feature_columns"]
@@ -281,6 +282,78 @@ GRAY_RAMP_TOP3 = ["#3f454d", "#7c848c", "#c3c9cf"]  # rank 0 (highest share) -> 
 MIXTURE_BAR_MAX_PX = 70
 MIXTURE_BAR_MIN_PX = 5
 
+# AI-ASSISTED (Claude Code, chat) - Prompt: "in The 8 Player Types, since we
+# already have their receipt in the prediction for NCAA bridge, I think we can
+# show his prediction receipt and point it out in the table please" - the 3
+# true rookies' Mixture cells previously rendered '-'; the NCAA->NBA translator
+# (Phases 1-6) already produces a real predicted NBA recipe for each, so the
+# cell now shows it instead of nothing.
+# Used: the green ramp + hollow/DASHED bars + an explicit "projected" pill, so
+# a modeled recipe can never be mistaken for a fitted one at a glance. Hue
+# alone was deliberately not enough - the dashed/solid difference is the part
+# that survives greyscale printing and colour-blind viewing, which matters
+# because this table is the first thing a coach sees. The projections are read
+# from the frozen Phase-6 output (data/projections/nets_rookies_2026.csv), NOT
+# recomputed here, so this table and the NCAA Bridge page cannot silently
+# disagree - the same rule step4_report.py follows for the PDF.
+# Not AI: the decision to surface the projections in this table at all, and to
+# flag them rather than blend them in - the user's own call.
+REPO_ROOT_CFG = DATA_DIR.parent / "config.yaml"
+PROJECTED_RAMP_TOP3 = ["#004b2b", "#3f7d5c", "#8fb3a1"]  # BL_GREEN family, dark -> light by rank
+PROJECTED_PILL_HTML = (
+    '<div style="display:flex;align-items:center;gap:4px;">'
+    '<span style="font-size:9px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;'
+    'color:#004b2b;background:rgba(0,75,43,0.10);border:1px dashed #004b2b;'
+    'border-radius:3px;padding:0 4px;white-space:nowrap;">projected · NCAA bridge</span>'
+    '</div>'
+)
+
+
+@st.cache_data
+@st.cache_data
+def load_rookie_nba_ids():
+    """{display_name: nba_player_id} for the 3 zero-NBA-data rookies, read from
+    config.yaml — the same frozen input the translator pipeline itself used.
+
+    Read here rather than imported from step5_rookie_projections (which has an
+    identical helper) on purpose: this page should not have to import the NCAA
+    Bridge page to draw its own roster table. The duplication is four lines and
+    one source of truth (config.yaml) is still shared."""
+    import yaml
+    try:
+        cfg = yaml.safe_load((REPO_ROOT_CFG).read_text())
+        return {r["display_name"]: r.get("nba_player_id") for r in cfg.get("rookies", [])}
+    except Exception:
+        return {}
+
+
+def load_rookie_projections():
+    """The frozen Phase-6 NCAA->NBA predictions for the 3 zero-NBA-data
+    rookies, keyed by the SAME display name NETS_ROSTER uses. Returns
+    {name: np.ndarray(k)} - the predicted NBA-side recipe (y_pred_0..7),
+    which lives in the same 8-archetype space as every fitted recipe in
+    this table, so the two are directly comparable (that comparability is
+    the whole point of the bridge).
+
+    Missing file -> {} rather than an exception: the projections are a
+    separate pipeline's output, and this page must still render the other
+    16 players if that pipeline hasn't been run in a given checkout."""
+    path = DATA_DIR / "projections" / "nets_rookies_2026.csv"
+    if not path.exists():
+        return {}
+    df = pd.read_csv(path)
+    y_cols = [c for c in df.columns if c.startswith("y_pred_") and c != "y_pred_argmax"]
+    y_cols.sort(key=lambda c: int(c.rsplit("_", 1)[1]))
+    out = {}
+    for _, row in df.iterrows():
+        vec = row[y_cols].to_numpy(dtype=float)
+        # A projection that doesn't sum to 1 is not a recipe - skip it rather
+        # than render a number the rest of the page would treat as a mixture.
+        if not np.isfinite(vec).all() or abs(vec.sum() - 1.0) > 1e-4:
+            continue
+        out[str(row["display_name"])] = vec
+    return out
+
 
 # AI-ASSISTED (Claude Code, chat)
 # Prompt (this revision): "1,这里只显示了16个球员 3个rookie有bio的数据就填写在这里
@@ -314,28 +387,48 @@ MIXTURE_BAR_MIN_PX = 5
 # just not TEXT-less anymore).
 
 
-def _mixture_cell(vals, arch_names, global_max):
+def _mixture_cell(vals, arch_names, global_max, projected=False):
     """Top-3 archetype mixture as 3 stacked rows: a small bar (length +
     grey shade, dark->light by rank, both ~ the percentage - GRAY_RAMP_TOP3)
     followed by its visible '56% Combo Guard' label. `vals` is None for a
-    player with no fitted recipe at all (the 3 true rookies) - renders '-'.
+    player with neither a fitted recipe nor a projection - renders '-'.
     Bar width scales against `global_max` (the single largest top-1 share
-    anywhere in the table) so bars stay comparable across rows."""
+    anywhere in the table) so bars stay comparable across rows.
+
+    projected=True renders the SAME geometry in a visually distinct
+    treatment (green ramp, hollow/dashed bars, "projected" pill) - see
+    PROJECTED_RAMP_TOP3's own note for why these two kinds of number must
+    never look alike."""
     if vals is None:
         return "—"
+    ramp = PROJECTED_RAMP_TOP3 if projected else GRAY_RAMP_TOP3
     top3 = np.argsort(vals)[::-1][:3]
     rows_html = []
     for rank, i in enumerate(top3):
         pct = float(vals[i])
-        width_px = max(MIXTURE_BAR_MIN_PX, round(pct / global_max * MIXTURE_BAR_MAX_PX))
-        color = GRAY_RAMP_TOP3[min(rank, len(GRAY_RAMP_TOP3) - 1)]
+        # Clamped at both ends: global_max is derived from FITTED recipes only,
+        # so a projected share above it would otherwise render a bar wider than
+        # the column (today 0.55 vs 0.67, but nothing enforces that ordering).
+        width_px = min(MIXTURE_BAR_MAX_PX,
+                       max(MIXTURE_BAR_MIN_PX, round(pct / global_max * MIXTURE_BAR_MAX_PX)))
+        color = ramp[min(rank, len(ramp) - 1)]
+        # Projected bars are hollow + dashed (measured ones are solid): the
+        # distinction survives greyscale printing and colour-blind viewing,
+        # which a hue-only difference would not.
+        bar_style = (
+            f'background:transparent;border:1px dashed {color};'
+            if projected else
+            f'background:{color};border:1px solid {BL_MUTED};'
+        )
         rows_html.append(
             f'<div style="display:flex;align-items:center;gap:6px;">'
-            f'<div style="width:{width_px}px;min-width:{width_px}px;height:12px;background:{color};'
-            f'border:1px solid {BL_MUTED};border-radius:3px;"></div>'
+            f'<div style="width:{width_px}px;min-width:{width_px}px;height:12px;{bar_style}'
+            f'border-radius:3px;"></div>'
             f'<span style="font-size:12px;color:{BL_INK};white-space:nowrap;">{pct:.0%} {arch_names[i]}</span>'
             f'</div>'
         )
+    if projected:
+        rows_html.insert(0, PROJECTED_PILL_HTML)
     return f'<div style="display:flex;flex-direction:column;gap:3px;">{"".join(rows_html)}</div>'
 
 
@@ -362,6 +455,9 @@ def render_nets_roster_table(proj, roster_names, labels, bio, base_stats):
     bio_idx = bio.set_index("PLAYER_ID")
     base_idx = base_stats.set_index("PLAYER_ID")
 
+    rookie_projections = load_rookie_projections()
+    rookie_nba_ids = load_rookie_nba_ids()
+
     resolved = {}  # name -> (player_id or None, row_idx or None)
     for name in roster_names:
         match = bio_by_norm[bio_by_norm["_norm"] == _normalize_name(name)]
@@ -372,14 +468,27 @@ def render_nets_roster_table(proj, roster_names, labels, bio, base_stats):
         resolved[name] = (pid, _resolve_row_by_id(pop, pid))
 
     n_with_recipe = sum(1 for _, row_idx in resolved.values() if row_idx is not None)
+    n_projected = sum(1 for n in roster_names
+                      if resolved[n][1] is None and n in rookie_projections)
     st.markdown(f"#### Nets roster at K={k}")
     st.caption(
-        f"{len(roster_names)} roster players ({n_with_recipe} with a fitted K={k} recipe - "
-        f"the rest are true rookies with no 2025-26 NBA row of any kind, shown with '-' and "
-        f"sorted to the bottom by default). Bio columns from player_bio, box score from "
-        f"player_base. Mixture: top 3 archetypes, highest share first, bar length and grey "
-        f"shade both ~ the percentage. Click a column header to sort."
+        f"{len(roster_names)} roster players ({n_with_recipe} with a fitted K={k} recipe "
+        f"measured from their own 2025-26 NBA minutes). Bio columns from player_bio, box "
+        f"score from player_base. Mixture: top 3 archetypes, highest share first, bar "
+        f"length and shade both ~ the percentage. Click a column header to sort."
     )
+    if n_projected:
+        # Stated as its own line, not buried in the caption above: this is the
+        # one place in the portal where a measured and a modeled recipe sit in
+        # the same column, so the distinction has to be impossible to miss.
+        st.caption(
+            f"The remaining {n_projected} are true rookies with no NBA minutes of any kind. "
+            f"Their mixture is **projected** from college data by the NCAA→NBA translator "
+            f"(dashed green bars, marked *projected · NCAA bridge*) — a model output with real "
+            f"error bars, not a measurement. Everything else in their row is still '—' because "
+            f"no NBA box score exists. See the **NCAA Bridge** page for how each was derived "
+            f"and how accurate the translator was on players whose rookie season we already know."
+        )
 
     global_max = max((float(P[row_idx].max()) for _, row_idx in resolved.values() if row_idx is not None), default=1.0)
 
@@ -424,14 +533,24 @@ def render_nets_roster_table(proj, roster_names, labels, bio, base_stats):
                 f'border:2px solid {BL_WHITE};box-shadow:0 0 0 1px {BL_LINE};display:block;">'
             )
         elif rookie_fallback is not None:
-            # get_headshot_data_uri(None, name) always returns the graceful
-            # initials-SVG data URI (no player_id -> no network attempt at
-            # all, per its own docstring) - a real "profile image" (colored
-            # circle + initials) instead of the blank grey dot every other
-            # unmatched name still gets below.
+            # AI-ASSISTED (Claude Code, chat) - Prompt: "可以把这三名球员profile
+            # image Include进来" - these three rendered as initials discs because
+            # they have no row in player_bio, so `pid` is None. They DO have real
+            # NBA headshots; their nba_player_id just lives in config.yaml rather
+            # than in the DB this table joins against.
+            # Used: get_headshot_data_uri(pid, name) rather than the raw
+            # HEADSHOT_URL the other 16 rows use. That helper downloads once,
+            # caches, and — critically for brand-new draftees — detects the CDN's
+            # generic silhouette placeholder and falls back to the initials disc
+            # instead of rendering a grey non-photo. The other 16 are established
+            # players whose photos certainly exist; these three are exactly the
+            # case where a missing photo is plausible, so they get the guarded
+            # path. Verified all three resolve to real photos today.
+            # Not AI: the request to show their photos - the owner's own.
             photo_html = (
-                f'<img src="{hull_callout_chart.get_headshot_data_uri(None, name)}" '
+                f'<img src="{hull_callout_chart.get_headshot_data_uri(rookie_nba_ids.get(name), name)}" '
                 f'style="width:36px;height:36px;border-radius:50%;object-fit:cover;'
+                f'object-position:top center;'
                 f'border:2px solid {BL_WHITE};box-shadow:0 0 0 1px {BL_LINE};display:block;">'
             )
         else:
@@ -440,7 +559,12 @@ def render_nets_roster_table(proj, roster_names, labels, bio, base_stats):
                 f'border:2px solid {BL_WHITE};box-shadow:0 0 0 1px {BL_LINE};"></div>'
             )
 
-        mix_sort = float(recipe_vals.max()) if recipe_vals is not None else -1.0
+        # A fitted recipe always wins; the projection is only ever a fallback
+        # for a player who has no 2025-26 NBA row at all, so no player can
+        # ever show a modeled number when a measured one exists.
+        projected_vals = rookie_projections.get(name) if recipe_vals is None else None
+        mixture_vals = recipe_vals if recipe_vals is not None else projected_vals
+        mix_sort = float(mixture_vals.max()) if mixture_vals is not None else -1.0
         if b is not None:
             age_cell = (f"{b['AGE']:.0f}", float(b["AGE"]))
             ht_cell = (b["PLAYER_HEIGHT"], float(b["PLAYER_HEIGHT_INCHES"]))
@@ -469,11 +593,12 @@ def render_nets_roster_table(proj, roster_names, labels, bio, base_stats):
             (f"{s['FG_PCT']:.1%}" if s is not None else "—", float(s["FG_PCT"]) if s is not None else -1.0),
             (f"{s['FG3_PCT']:.1%}" if s is not None else "—", float(s["FG3_PCT"]) if s is not None else -1.0),
             (f"{s['FT_PCT']:.1%}" if s is not None else "—", float(s["FT_PCT"]) if s is not None else -1.0),
-            (_mixture_cell(recipe_vals, arch_names, global_max), mix_sort),
+            (_mixture_cell(mixture_vals, arch_names, global_max,
+                           projected=recipe_vals is None and projected_vals is not None), mix_sort),
         ])
 
     table_html, iframe_height = _build_sortable_table_html("roster_table", columns, rows_cells)
-    components.html(table_html, height=iframe_height, scrolling=True)
+    st.iframe(table_html, height=iframe_height)
 
 
 def render_ev_vs_k_chart(summary, chosen_k, height=280):
@@ -504,25 +629,34 @@ def render_ev_vs_k_chart(summary, chosen_k, height=280):
 # complete spec (geometry algorithm, colors, hover-card content/style,
 # Nets-dot interaction) - implemented in the new hull_callout_chart module;
 # this is just the thin Streamlit-side wiring.
-# Used: cached on (hull_k, nets_ids_tuple) rather than passing `proj`/`labels`
+# Used: cached on nets_ids_tuple rather than passing `proj`/`labels`
 # straight through to a cached function - both are large (proj holds several
 # numpy arrays over the whole ~430-player population) and Streamlit's cache
-# would have to hash them on every rerun, whereas hull_k/nets_ids_tuple are
+# would have to hash them on every rerun, whereas nets_ids_tuple is
 # small and stable, and the expensive pieces (compute_hull_projection,
 # load_static) are already independently @st.cache_data'd, so re-deriving
 # them inside on a cache miss costs nothing on a cache hit. This is what
 # lets an unrelated widget interaction elsewhere on the page (which reruns
 # this whole script) skip rebuilding the chart's ~24 embedded base64 photos
-# every time - only a real hull_k or roster change does that.
+# every time - only a real roster change does that.
 # Not AI: the whole component being replaced (build_hull_scatter + the
 # archetypoid list column) - the user's own change of direction.
+#
+# AI-ASSISTED (Claude Code, chat) - Prompt: "先隐藏掉Roster Construction" was
+# followed by a separate request to drop this chart's own K=4-10 slider
+# entirely (K=8 is frozen project-wide; a slider implied a choice the
+# visitor never actually had) - dropped the hull_k parameter, this now
+# always builds the K=8 chart.
+# Used: same cache-on-small-stable-args pattern as above, now with one
+# fewer argument. Not AI: the decision to remove the slider - the user's
+# own call, given with the full rationale (Phase 2 diagnostics froze K=8;
+# every other page in the portal already reads only the K=8 basis).
 @st.cache_data
-def build_intro_hull_html(hull_k, nets_ids_tuple):
-    proj = compute_hull_projection(hull_k)
+def build_intro_hull_html(nets_ids_tuple):
+    proj = compute_hull_projection()
     _, _, static_labels, _ = load_static()
-    use_labels = static_labels if hull_k == 8 else {}
     roster_df = pd.DataFrame({"PLAYER_ID": list(nets_ids_tuple)})
-    spec = hull_callout_chart.build_figure_spec(proj, roster_df, use_labels, hull_k)
+    spec = hull_callout_chart.build_figure_spec(proj, roster_df, static_labels, k=8)
     return hull_callout_chart.render_html(spec)
 
 
@@ -532,21 +666,14 @@ def render_intro_page(roster, labels):
     with st.container(border=True):
         st.markdown("### What is an \"archetype\" here?")
         st.markdown(
-            "ADA finds the **K most extreme real players** in the league and expresses "
+            "ADA finds the **8 most extreme real players** in the league and expresses "
             "everyone else as a blend of them - not abstract types, real players. Below: "
-            "the colored corners are those K archetypes, black dots are Nets players - "
+            "the colored corners are those 8 archetypes, black dots are Nets players - "
             "hover either for details."
         )
+        st.caption("K = 8 - selected by the Phase 2 diagnostics and matching the NBA basis.")
 
-        hull_k = st.slider("Number of archetypes (K)", min_value=min(HULL_K_RANGE),
-                           max_value=max(HULL_K_RANGE), value=HULL_DEFAULT_K, step=1)
-
-        if hull_k != 8 and not (HULL_BASES_DIR / f"k{hull_k}").exists():
-            st.warning(f"K={hull_k}'s precomputed basis isn't on disk yet - run "
-                       f"src/pipeline/precompute_hull_bases.py, then reload.")
-            return
-
-        proj = compute_hull_projection(hull_k)
+        proj = compute_hull_projection()
 
         # AI-ASSISTED (Claude Code, chat)
         # Prompt (this revision): "把这些文字都去掉 字太多了" - drop the <6-on-hull
@@ -556,8 +683,14 @@ def render_intro_page(roster, labels):
         # page having too much caption text.
 
         nets_ids_tuple = tuple(sorted(roster["PLAYER_ID"].astype(int).tolist()))
-        chart_html = build_intro_hull_html(hull_k, nets_ids_tuple)
-        components.html(chart_html, height=int(hull_callout_chart.FIGURE_HEIGHT_PX * 1.05) + 20, scrolling=False)
+        chart_html = build_intro_hull_html(nets_ids_tuple)
+        st.iframe(chart_html, height=int(hull_callout_chart.FIGURE_HEIGHT_PX * 1.05) + 20)
+
+        st.markdown(
+            "Every point above earned its coordinates by playing real NBA minutes - "
+            "the incoming rookies projected on the NCAA Bridge page have none, which is "
+            "exactly the gap that page's translator addresses."
+        )
 
         # Hidden for now per explicit request ("先不要标注这个论文链接" / don't show
         # the paper link for now) - not removed, just commented out (as '#'

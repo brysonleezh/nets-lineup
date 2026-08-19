@@ -535,9 +535,9 @@ FEATURE_CATEGORY = {
 # no-data rookies default-sorted to the bottom (not interspersed alphabetically), and
 # every row forced to the same height regardless of cell content.
 # Used: switched from st.markdown(unsafe_allow_html=True) to
-# st.components.v1.html() - Streamlit's markdown renderer does not execute
+# st.iframe() - Streamlit's markdown renderer does not execute
 # <script> tags (a documented, deliberate restriction), and click-to-sort
-# needs real JS; components.html() runs in its own sandboxed iframe that
+# needs real JS; st.iframe() runs in its own sandboxed iframe that
 # does. Sort is a small vanilla-JS row-reorder: each <td> carries a
 # data-sort attribute (a plain sortable value, separate from its displayed
 # text - e.g. Ht's data-sort is PLAYER_HEIGHT_INCHES while the cell shows
@@ -582,8 +582,7 @@ def _build_sortable_table_html(table_id, columns, rows_cells, row_height=ROW_HEI
     individual cells can still override it locally via their own inline
     `<span style="font-size:...">`, same as before.
     Returns (table_html, iframe_height); caller still calls
-    components.html() itself since the height budget/scrolling behavior can
-    differ by context.
+    st.iframe() itself since the height budget can differ by context.
     """
     if not table_id.isidentifier():
         # table_id gets interpolated directly into JS variable/function names

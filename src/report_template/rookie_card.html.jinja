@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ rookie.name }} — NCAA→NBA Rookie Archetype Card</title>
+<style>
+  :root {
+    --bg: #F5F1E8; --surface: #FFFFFF; --surface-2: #FBF8F1; --ink: #201C16;
+    --ink-soft: #4A443A; --muted: #7A7266; --line: #E3DCCB; --accent: #A85D22;
+    --accent-soft: #F1DFC6; --good: #4B7355; --good-soft: #DCE8DC;
+    --warn: #A9791E; --warn-soft: #F2E6C8; --crit: #A14A3D; --crit-soft: #F1DAD5;
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    --mono: "SF Mono", ui-monospace, "Cascadia Code", "Roboto Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--serif); margin: 0; }
+  .page { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 3.5rem; }
+  .eyebrow { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  h1 { font-size: 2rem; margin: 0.2rem 0 0.1rem; }
+  .subtitle { color: var(--muted); font-size: 0.95rem; }
+  .meta-line { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 0.4rem; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.2rem 0; box-shadow: 0 1px 2px rgba(32,28,22,.05); }
+  .card h2 { font-size: 1.05rem; margin: 0 0 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
+  .card h2 .letter { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); border: 1px solid var(--accent); border-radius: 50%; width: 1.4rem; height: 1.4rem; display: inline-flex; align-items: center; justify-content: center; }
+  .bar-row { display: grid; grid-template-columns: 11rem 1fr 3.2rem; align-items: center; gap: 0.6rem; margin-bottom: 0.45rem; font-size: 0.87rem; }
+  .bar-track { height: 14px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 7px 0 0 7px; }
+  .bar-fill.pred { background: var(--accent); }
+  .bar-fill.college { background: #6E5A96; }
+  .bar-val { font-family: var(--mono); font-size: 0.8rem; text-align: right; color: var(--ink-soft); }
+  .top3-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.6rem; }
+  .top3-item { padding: 0.6rem 0.8rem; background: var(--surface-2); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; font-size: 0.9rem; }
+  .top3-item b { color: var(--accent); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+  th { text-align: left; font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line); }
+  td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--line); }
+  .confidence-line { font-size: 0.95rem; padding: 0.9rem 1.1rem; background: var(--good-soft); border-radius: 8px; color: var(--ink-soft); }
+  .confidence-line b { color: var(--good); }
+  .caveat { font-size: 0.9rem; padding: 0.9rem 1.1rem; background: var(--warn-soft); border-radius: 8px; color: var(--ink-soft); border-left: 3px solid var(--warn); }
+  .footnote { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+  .footnote li { margin-bottom: 0.4rem; }
+  .legend { display: flex; gap: 1.2rem; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.7rem; }
+  .legend span.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.3rem; }
+</style>
+</head>
+<body>
+<div class="page">
+  <span class="eyebrow">NCAA → NBA Rookie Archetype Translator · Phase 6</span>
+  <h1>{{ rookie.name }}</h1>
+  <div class="subtitle">{{ rookie.college }} · {{ rookie.position }}, {{ rookie.height }} · 2026 draft pick #{{ rookie.pick }}</div>
+  <div class="meta-line">generated {{ meta.timestamp_utc }} · commit {{ meta.git_hash }} · model {{ meta.model_version }}</div>
+
+  <div class="card">
+    <h2><span class="letter">1</span> Predicted rookie-season archetype mix</h2>
+    <div class="legend"><span><span class="dot" style="background:var(--accent)"></span>predicted (point estimate — no uncertainty interval shown, see confidence line below)</span></div>
+    {% for j, label, pct in pred_bars %}
+    <div class="bar-row">
+      <span>{{ label }}</span>
+      <div class="bar-track"><div class="bar-fill pred" style="width:{{ pct }}%"></div></div>
+      <span class="bar-val">{{ "%.0f"|format(pct) }}%</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h2><span class="letter">2</span> Top-3 predicted archetypes</h2>
+    <div class="top3-list">
+      {% for item in top3_prose %}
+      <div class="top3-item">{{ item|safe }}</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="letter">3</span> College profile (the model's input)</h2>
+    <div class="legend"><span><span class="dot" style="background:#6E5A96"></span>his actual 2025-26 college archetype mix — this is what went <em>into</em> the model, not a prediction</span></div>
+    {% for j, label, pct in college_bars %}
+    <div class="bar-row">
+      <span>{{ label }}</span>
+      <div class="bar-track"><div class="bar-fill college" style="width:{{ pct }}%"></div></div>
+      <span class="bar-val">{{ "%.0f"|format(pct) }}%</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h2><span class="letter">4</span> Comps: historically similar college profiles</h2>
+    <p style="font-size:0.87rem;color:var(--ink-soft);margin-top:0">These are the {{ comps|length }} draft-class anchors whose college statistical profile most closely resembles {{ rookie.first_name }}'s (nearest neighbors in the model's own feature space) — shown with what they actually became as NBA rookies. This is the honest answer to "how much could this vary": the spread across these {{ comps|length }} outcomes, not a synthetic confidence interval.</p>
+    <table>
+      <thead><tr><th>Player</th><th>Class</th><th>Pick</th><th>College</th><th>His college top archetype</th><th>What he actually became as a rookie</th></tr></thead>
+      <tbody>
+        {% for c in comps %}
+        <tr>
+          <td><b>{{ c.name }}</b></td><td>{{ c.draft_year }}</td><td>#{{ c.pick }}</td><td>{{ c.college }}</td>
+          <td>{{ c.college_archetype_label }}</td>
+          <td>{{ c.actual_outcome }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2><span class="letter">5</span> How much should you trust this?</h2>
+    <div class="confidence-line">{{ confidence_line }}</div>
+    {% if saturation_caveat %}
+    <div class="caveat" style="margin-top:0.8rem"><b>Note:</b> {{ saturation_caveat }}</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2><span class="letter">6</span> What this model cannot see</h2>
+    <ul class="footnote">
+      {% for line in limits_footnote %}
+      <li>{{ line }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+</body>
+</html>

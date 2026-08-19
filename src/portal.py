@@ -1,28 +1,38 @@
 """
 Portal - interactive Streamlit app entry point. Sidebar nav has an Intro
-orientation page plus up to four more pages (two always shown, two gated
+orientation page plus up to six more pages (two always shown, five gated
 behind SHOW_* flags defined in the files that own them):
 
   0. Intro (step2_intro.render_intro_page) - plain-language "what is an
      archetype" explainer with the K=4..10 convex-hull scatter.
   1. Player Breakdown (step3_player_breakdown.render_diagnostic_analysis) -
      screening + the six-section per-player diagnostic card.
-  2. Building Around Rookie (step3_player_breakdown, hidden behind
+  2. Roster Construction (step3_player_breakdown, shown behind
+     SHOW_ROSTER_CONSTRUCTION_PAGE) - team composition, archetype gaps/
+     conflicts, and the validated (WLS, cross-validated R^2=0.312 vs.
+     0.295 talent-only baseline) lineup-ranking model.
+  3. Building Around Rookie (step3_player_breakdown, hidden behind
      SHOW_ROOKIE_SLOT_QUERY_PAGE) - rookie slot query for the 3 zero-NBA-
-     data rookies.
-  3. Report (step4_report, shown behind SHOW_PLAYER_REPORT_PAGE) - per-
+     data rookies. Unrelated to page 4 below despite both concerning the
+     same 3 rookies - see SHOW_ROOKIE_SLOT_QUERY_PAGE's own definition.
+  4. NCAA Bridge (step5_rookie_projections, shown behind
+     SHOW_ROOKIE_PROJECTIONS_PAGE) - the completed NCAA->NBA rookie-
+     translation pipeline's (Phases 1-6) own projections, validation, and
+     pick-slot counterfactual for the same 3 rookies.
+  5. Report (step4_report, shown behind SHOW_PLAYER_REPORT_PAGE) - per-
      player PDF scouting report preview/download.
-  4. Future Work & Obstacles (step3_player_breakdown, hidden behind
+  6. Future Work & Obstacles (step3_player_breakdown, hidden behind
      SHOW_FUTURE_WORK_PAGE) - the RAPM investigation writeup.
 
 This file was trimmed down to a thin entry point during the Day-8 portal
 restructuring (five-file split: portal_shared / step2_intro /
-step3_player_breakdown / step4_report / this file). It only holds
-st.set_page_config + global CSS, the once-per-run roster/data prep, the
-sidebar nav construction (including the SHOW_* flags imported from wherever
-each hidden page actually lives), and the dispatch that calls into the 4
-render entry points above. Every actual computation and all UI/chart
-rendering now lives in the 4 imported files.
+step3_player_breakdown / step4_report / this file), later joined by a
+sixth (step5_rookie_projections). It only holds st.set_page_config +
+global CSS, the once-per-run roster/data prep, the sidebar nav
+construction (including the SHOW_* flags imported from wherever each
+hidden page actually lives), and the dispatch that calls into the render
+entry points above. Every actual computation and all UI/chart rendering
+now lives in the imported files.
 
 Run: streamlit run src/portal.py
 """
@@ -48,13 +58,17 @@ from portal_shared import (
 )
 from step2_intro import render_intro_page
 from step3_player_breakdown import (
+    SHOW_ROSTER_CONSTRUCTION_PAGE,
     SHOW_ROOKIE_SLOT_QUERY_PAGE,
     SHOW_FUTURE_WORK_PAGE,
     render_diagnostic_analysis,
+    render_roster_construction,
     render_rookie_slot_query_page,
     render_future_work,
 )
 from step4_report import SHOW_PLAYER_REPORT_PAGE, render_player_report_page
+from step5_rookie_projections import SHOW_ROOKIE_PROJECTIONS_PAGE, render_rookie_projections_page
+from step6_draft_class import SHOW_DRAFT_CLASS_PAGE, render_draft_class_page
 
 
 st.set_page_config(page_title="Nets Archetype Portal", layout="wide")
@@ -208,9 +222,26 @@ with st.sidebar:
     # Used: new nav entry added alongside the existing 4, not swapped in
     # for one of them.
     # Not AI: the decision to add rather than replace - the user's own call.
-    nav_options = ["📖 The 8 Player Types", "🔍 Player Breakdown"]
+    # AI-ASSISTED (Claude Code, chat) - Prompt: "how do we present to coach/
+    # front office more friendly? I think it looks too complicated right now,
+    # I think we can show three rookie project receipt at the top" - the nav
+    # was ordered by how the model was BUILT (basis -> breakdown -> bridge ->
+    # report), which buries the question a coach actually opens with. Draft
+    # Class 2026 is inserted FIRST so it becomes the default landing page.
+    # Used: one new entry prepended; every existing page kept exactly as-is
+    # and simply shifted down, per the owner's explicit "keep all existing
+    # pages" scope choice.
+    # Not AI: the restructuring decision and its scope - the owner's own call.
+    nav_options = []
+    if SHOW_DRAFT_CLASS_PAGE:
+        nav_options.append("🏆 Draft Class 2026")
+    nav_options += ["📖 The 8 Player Types", "🔍 Player Breakdown"]
+    if SHOW_ROSTER_CONSTRUCTION_PAGE:
+        nav_options.append("🏀 Roster Construction")
     if SHOW_ROOKIE_SLOT_QUERY_PAGE:
         nav_options.append("🎯 Building Around Rookie")
+    if SHOW_ROOKIE_PROJECTIONS_PAGE:
+        nav_options.append("🌉 NCAA Bridge")
     if SHOW_PLAYER_REPORT_PAGE:
         nav_options.append("📄 Report")
     if SHOW_FUTURE_WORK_PAGE:
@@ -267,6 +298,10 @@ with st.sidebar:
         selected_diag_pid = int(roster.loc[roster["PLAYER_NAME"] == selected_diag_name, "PLAYER_ID"].iloc[0])
     elif page in ("🎯 Building Around Rookie",):
         selected_player = st.selectbox("Rookie", NETS_ROSTER_NCAA_BRIDGE)
+    elif page in ("🏆 Draft Class 2026",):
+        pass  # landing page takes no sidebar input - it shows all 3 rookies at once
+    elif page in ("🌉 NCAA Bridge",):
+        pass  # this page owns its own selectbox/slider widgets, rendered inline in its body
     elif page in ("📄 Report",):
         # `roster` here is already merged against `recipes` and dropna'd
         # down to the data-eligible players (see the roster-prep block
@@ -280,12 +315,18 @@ with st.sidebar:
         selected_report_name = st.selectbox("Player", report_names, index=report_names.index(default_name))
         selected_report_pid = int(roster.loc[roster["PLAYER_NAME"] == selected_report_name, "PLAYER_ID"].iloc[0])
 
-if page == "📖 The 8 Player Types":
+if page == "🏆 Draft Class 2026":
+    render_draft_class_page()
+elif page == "📖 The 8 Player Types":
     render_intro_page(roster, labels)
 elif page == "🔍 Player Breakdown":
     render_diagnostic_analysis(recipes, k, labels, oncourt, bio, roster, sidebar_pid=selected_diag_pid)
+elif page == "🏀 Roster Construction":
+    render_roster_construction(roster, recipes, k, labels)
 elif page == "🎯 Building Around Rookie":
     render_rookie_slot_query_page(selected_player, recipes, k, labels, oncourt)
+elif page == "🌉 NCAA Bridge":
+    render_rookie_projections_page()
 elif page == "📄 Report":
     exposure_cache = load_exposure_cache(recipes, k, SEASON)
     render_player_report_page(selected_report_pid, recipes, k, labels, bio, exposure_cache)
