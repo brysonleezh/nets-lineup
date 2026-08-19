@@ -193,3 +193,41 @@ def test_all_step0_audit_checks_reference_a_computed_value():
     for cond in conditions:
         assert not (isinstance(cond, ast.Constant) and isinstance(cond.value, bool)), \
             f"literal boolean condition found at line {cond.lineno}"
+
+
+# --- deployed-app performance artifact ---------------------------------------
+
+def test_league_elasticity_artifact_is_valid_and_gated():
+    """The league elasticity spreads are precomputed (54s -> 2ms) because the
+    deployed page was paying that minute on every recycled container.
+
+    The artifact must be self-describing and the loader must IGNORE it when the
+    season or k disagrees: a stale file answering for the wrong basis would
+    shift every elasticity percentile on the page with nothing on screen to
+    show it happened. (Bit-for-bit agreement with the live computation was
+    verified once by hand — re-deriving it here would put 50s into every test
+    run.)"""
+    import json
+    import numpy as np
+    from pathlib import Path
+    import step2b_player_diagnostics  # noqa: F401  (import path sanity)
+    import portal_shared as ps
+
+    path = ps.DATA_DIR / "league_elasticity_spreads_2025_26.json"
+    if not path.exists():
+        import pytest as _pytest
+        _pytest.skip("artifact not generated in this checkout")
+
+    payload = json.loads(path.read_text())
+    assert payload["season"] == "2025-26"
+    assert payload["k"] == 8
+    spreads = np.array(payload["spreads_pp"], dtype=float)
+    assert len(spreads) == payload["n_players_with_elasticity"] > 0
+    assert (spreads >= 0).all(), "a usage spread in pp cannot be negative"
+    assert len(spreads) <= payload["n_players_considered"]
+
+    # the k gate must actually bite, or a stale artifact would be trusted
+    recipes, k, _labels, _oncourt = ps.load_static()
+    got, n = ps.load_league_elasticity_spreads(recipes, k, "2025-26")
+    assert n == payload["n_players_with_elasticity"]
+    assert np.array_equal(np.sort(got), np.sort(spreads))

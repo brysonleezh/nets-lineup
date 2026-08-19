@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import sqlite3
 
+import json
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -329,8 +330,12 @@ def load_individual_role_sensitivity_cached(player_id, recipes, k, season=SEASON
 # the "why not just reuse what's already computed" framing - given
 # directly; the "give D3 a real percentile too, for consistency" call was
 # a judgment made here.
-@st.cache_data(show_spinner="Computing role-elasticity spreads league-wide (about a minute, cached after)...")
-def load_league_elasticity_spreads(recipes, k, season=SEASON):
+def compute_league_elasticity_spreads(recipes, k, season=SEASON):
+    """The real derivation: every eligible player's usage-elasticity spread.
+    ~54s for 433 players. Kept as its own function so the precompute script
+    (src/pipeline/precompute_elasticity_spreads.py) and the runtime fallback
+    below share one implementation — a second copy would be free to drift and
+    silently change the percentile this feeds."""
     pids = recipes["PLAYER_ID"].astype(int).unique().tolist()
     spreads = []
     for pid in pids:
@@ -341,6 +346,38 @@ def load_league_elasticity_spreads(recipes, k, season=SEASON):
         if elasticity.get("available"):
             spreads.append(elasticity["spread_pp"])
     return np.array(spreads), len(spreads)
+
+
+# AI-ASSISTED (Claude Code, chat) - Prompt: "但是这一部分在我打开正式页面的时候
+# 要加载很长时间" about the "Computing role-elasticity spreads league-wide"
+# spinner on the deployed app.
+# Diagnosis: 54s to produce 380 floats (3KB). Profiled first rather than
+# guessed - the parquet read is 0.07s and OS-cached, so the cost is the
+# per-player derivation (~0.125s x 433), not I/O. Streamlit's cache makes it a
+# once-per-container cost, but Community Cloud recycles containers often
+# enough that real visitors kept paying the full minute.
+# Used: precompute to a 3KB artifact and read it here, since the value is a
+# pure function of frozen inputs (the season's stint/event tables and the
+# fitted recipes) and has no business being derived per request. The runtime
+# computation is KEPT as a fallback so a checkout that never ran the script
+# still works - slowly, exactly as before - rather than failing.
+# The artifact records the season and k it was computed for and is ignored if
+# either disagrees: a stale file that silently answered for the wrong basis
+# would shift every elasticity percentile on the page with nothing to show for
+# it.
+# Not AI: noticing the load time on the deployed page - the owner's.
+@st.cache_data(show_spinner="Computing role-elasticity spreads league-wide (about a minute, cached after)...")
+def load_league_elasticity_spreads(recipes, k, season=SEASON):
+    path = DATA_DIR / f"league_elasticity_spreads_{season.replace('-', '_')}.json"
+    if path.exists():
+        try:
+            payload = json.loads(path.read_text())
+            if payload.get("season") == season and int(payload.get("k", -1)) == int(k):
+                return np.array(payload["spreads_pp"], dtype=float), \
+                    int(payload["n_players_with_elasticity"])
+        except Exception:
+            pass  # unreadable/stale artifact must degrade to the real thing, not fail
+    return compute_league_elasticity_spreads(recipes, k, season)
 
 
 @st.cache_data(show_spinner=False)
