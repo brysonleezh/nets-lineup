@@ -560,6 +560,24 @@ def build_game_stints(box_df: pd.DataFrame, pbp_df: pd.DataFrame, game_id: str,
     stint_num = 0
     current_period = None
     stint_start_score = {"home": 0, "away": 0}
+    # AI-ASSISTED (Claude Code, chat) - Prompt: fit-model diagnostic harness
+    # needs garbage-time exclusion "everywhere" per its own ground rules, and
+    # pbpstats (the harness's cited source for a garbage-time definition)
+    # ships no such definition at all (confirmed by reading its installed
+    # source - no "garbage"/"blowout" filter anywhere in the package). A
+    # standard tiered score-margin/time-remaining definition is used instead
+    # (documented at its point of use, not here) - it needs period + clock +
+    # score margin AT EACH STINT'S START, which this function already builds
+    # for its own internal use (stint_start_score, current_period) but never
+    # emitted. stint_start_clock is the one genuinely new piece of state,
+    # tracked in lockstep with stint_start_score at the exact same two reset
+    # points (period change, substitution) - purely additive, does not touch
+    # the points/possessions/lineup logic this file was already validated on.
+    # Not AI: the decision to extend this file rather than write a separate
+    # reimplementation that re-derives stint boundaries independently and
+    # risks silently disagreeing with the validated original - a single
+    # source of truth for stint boundaries was the deliberate choice here.
+    stint_start_clock = "PT12M00.00S"
     poss_count = {home_team_id: 0, away_team_id: 0}
     last_score = {"home": 0, "away": 0}
     # AI-ASSISTED (Claude Code, chat) - Prompt: "extend to process-level stats
@@ -634,6 +652,12 @@ def build_game_stints(box_df: pd.DataFrame, pbp_df: pd.DataFrame, game_id: str,
                 "home_off": 1 if off_tid == home_team_id else 0,
                 "off_possessions": off_poss, "off_points": pts[off_tid],
                 "y_off": 100.0 * pts[off_tid] / off_poss,
+                "period": current_period, "stint_start_clock": stint_start_clock,
+                "stint_start_margin": (
+                    (stint_start_score["home"] - stint_start_score["away"])
+                    if off_tid == home_team_id else
+                    (stint_start_score["away"] - stint_start_score["home"])
+                ),
                 "off_fga": fga, "off_fgm": fgm, "off_fg3a": fg3a, "off_fg3m": fg3m,
                 "off_efg_pct": (fgm + 0.5 * fg3m) / fga if fga > 0 else float("nan"),
                 "off_tov": tov,
@@ -655,6 +679,7 @@ def build_game_stints(box_df: pd.DataFrame, pbp_df: pd.DataFrame, game_id: str,
         elif period_changed:
             _flush({tid: set(on_court[tid]) for tid in team_ids})
             stint_start_score = dict(last_score)
+            stint_start_clock = event["clock"]
             poss_count = {home_team_id: 0, away_team_id: 0}
             fga_count = {home_team_id: 0, away_team_id: 0}
             fgm_count = {home_team_id: 0, away_team_id: 0}
@@ -668,6 +693,7 @@ def build_game_stints(box_df: pd.DataFrame, pbp_df: pd.DataFrame, game_id: str,
         elif is_substitution:
             _flush({tid: set(on_court[tid]) for tid in team_ids})
             stint_start_score = dict(last_score)
+            stint_start_clock = event["clock"]
             poss_count = {home_team_id: 0, away_team_id: 0}
             fga_count = {home_team_id: 0, away_team_id: 0}
             fgm_count = {home_team_id: 0, away_team_id: 0}

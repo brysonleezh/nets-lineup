@@ -1,4 +1,10 @@
 """
+ORPHANED as of the K-slider removal from step2_intro.py (K=8 is frozen
+project-wide; see that file's own module docstring and AI_USAGE.md) - no
+live page reads this script's output anymore. Left in place, not deleted,
+as a historical pipeline artifact; data/hull_bases/k4../k10 are similarly
+unread now. Original docstring follows unchanged.
+
 Precompute ADA bases at K=4..10 for the Intro page's convex-hull scatter
 (step2_intro.py). Fitting ADA live inside the app is far too slow for an
 interactive K slider - this script fits each K once, offline, and saves it
