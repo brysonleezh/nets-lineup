@@ -1,0 +1,25 @@
+{
+  "chosen_cell": "T1_b",
+  "model": "T1 - Dirichlet regression",
+  "variant": "b",
+  "fit_date": "2026-08-14",
+  "n_train": 273,
+  "seed": 42,
+  "git_hash": "429619e9bab297831a3afa945bb1eb45b6944719",
+  "convergence": {
+    "target_accept": 0.8,
+    "max_rhat": 1.0054813623428345,
+    "min_ess": 1466.1463150307188,
+    "n_divergent": 0,
+    "num_samples_total": 3000
+  },
+  "coefficient_agreement_vs_237fit": {
+    "correlation": 0.9810656996589432,
+    "largest_abs_shift": 0.22674104571342468,
+    "largest_shift_row": "three_pt_jumper_share",
+    "largest_shift_archetype_col": 0,
+    "material_disagreement_flag": false
+  },
+  "posterior_file": "deployment/posterior.npz",
+  "preprocessing_file": "deployment_preprocessing.json"
+}

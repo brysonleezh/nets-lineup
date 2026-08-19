@@ -36,3 +36,34 @@ data/stints/*
 AI_USAGE.md
 CLAUDE.md
 DIAGNOSTICS_README.md
+# --- NCAA bridge data (added with the translator pipeline) -------------------
+# data/raw/ alone is ~176MB of raw CBBD season dumps, and data/college/ another
+# ~25MB of intermediates - all regenerable by re-running the pipeline
+# (src/pipeline/ncaa_bridge/, src/college_model/), and far too heavy for a repo
+# that Streamlit Community Cloud clones on every deploy.
+# The whitelist below is exactly what the LIVE APP reads at runtime (see
+# step5_rookie_projections.REQUIRED_FILES) - about 7.7MB. Dropping any of these
+# does not shrink the repo meaningfully but does break the deployed page, so
+# they are tracked deliberately rather than by accident.
+data/raw/
+data/nba_historical/
+logs/
+
+data/college/*
+!data/college/recipes.csv
+
+data/translator/*
+!data/translator/holdout_predictions.csv
+!data/translator/holdout_metrics.csv
+!data/translator/holdout_baseline_comparison.csv
+!data/translator/deployment_preprocessing.json
+!data/translator/rookie_projections_full.json
+!data/translator/saturation_rule_evidence.csv
+!data/translator/deployment/
+data/translator/deployment/*
+!data/translator/deployment/manifest.json
+!data/translator/deployment/posterior.npz
+
+# Local agent/editor tooling, not part of the deliverable.
+.agents/
+.claude/

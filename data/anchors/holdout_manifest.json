@@ -1,0 +1,7 @@
+{
+  "holdout_file": "holdout_2025.csv",
+  "sha256": "34c5cec5c5de2fdbe68007a021839d942bbed3ce3dd8fbdae8c1ca6e616116ed",
+  "n_rows": 36,
+  "created": "2026-08-13",
+  "note": "No Phase 4 code path may open this file. A pytest asserts this hash is unchanged at phase end."
+}

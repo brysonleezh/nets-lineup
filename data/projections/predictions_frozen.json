@@ -1,0 +1,85 @@
+{
+  "frozen_at_utc": "2026-08-14T07:31:47.582880+00:00",
+  "git_hash": "429619e9bab297831a3afa945bb1eb45b6944719",
+  "nets_rookies_2026_csv_sha256": "a5ebf101057dcf65f26582f38b5d65505c463bb2a5411432dc6b5d2df22af125",
+  "config_yaml_sha256": "bfe6424d420efb7f89010a0341b0a713c04972a53063c64655c897c7fbad086e",
+  "deployment_manifest_sha256": "2dee52b129c373dba056e9df66121071e36746b0dc8026a9c7e13a812f52b158",
+  "phase5_holdout_metrics_at_freeze_time": {
+    "jsd_mean": 0.1687570732128857,
+    "l1_mean": 0.6634640120249604,
+    "top1_hit_mean": 0.5277777777777778,
+    "top1_within_top2_mean": 0.6944444444444444,
+    "n_holdout": 36,
+    "holdout_class": 2025,
+    "beats_t4": true,
+    "beats_t5i": true,
+    "beats_t5ii": true
+  },
+  "rookies": [
+    {
+      "display_name": "Mikel Brown Jr.",
+      "predicted_top3": [
+        [
+          3,
+          0.546
+        ],
+        [
+          7,
+          0.113
+        ],
+        [
+          5,
+          0.104
+        ]
+      ],
+      "predicted_argmax": 3,
+      "saturated": false
+    },
+    {
+      "display_name": "Tyler Bilodeau",
+      "predicted_top3": [
+        [
+          5,
+          0.345
+        ],
+        [
+          0,
+          0.296
+        ],
+        [
+          7,
+          0.082
+        ]
+      ],
+      "predicted_argmax": 5,
+      "saturated": false
+    },
+    {
+      "display_name": "Joshua Jefferson",
+      "predicted_top3": [
+        [
+          0,
+          0.237
+        ],
+        [
+          2,
+          0.226
+        ],
+        [
+          7,
+          0.202
+        ]
+      ],
+      "predicted_argmax": 0,
+      "saturated": false
+    }
+  ],
+  "note": "Frozen before the 2026-27 NBA season began. This file's own sha256 references prove exactly which model version and which config produced these predictions. See src/eval/review_2026_predictions.py for the pre-committed evaluation plan.",
+  "refreeze_log": [
+    {
+      "refrozen_at_utc": "2026-08-14T07:31:47.583128+00:00",
+      "reason": "added games_in_season_2026_27 to config.yaml after the initial freeze (a field used only by the future review script, not by the prediction pipeline itself - predictions/CSV unchanged) - refreezing to keep the recorded config_hash accurate",
+      "previous_csv_sha256": "a5ebf101057dcf65f26582f38b5d65505c463bb2a5411432dc6b5d2df22af125"
+    }
+  ]
+}

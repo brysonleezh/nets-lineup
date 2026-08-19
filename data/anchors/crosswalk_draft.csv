@@ -1,0 +1,594 @@
+draft_year,round,pick,overall,player_name_raw,path,source_team_location,athlete_id,matched_athlete_id,final_college_season,match_method
+2026,1,1,1,AJ Dybantsa,NCAA,BYU,198382.0,198382.0,2026.0,direct_athlete_id
+2026,1,2,2,Darryn Peterson,NCAA,Kansas,199883.0,199883.0,2026.0,direct_athlete_id
+2026,1,3,3,Cameron Boozer,NCAA,Duke,198977.0,198977.0,2026.0,direct_athlete_id
+2026,1,4,4,Caleb Wilson,NCAA,North Carolina,200988.0,200988.0,2026.0,direct_athlete_id
+2026,1,5,5,Keaton Wagler,NCAA,Illinois,199686.0,199686.0,2026.0,direct_athlete_id
+2026,1,6,6,Mikel Brown Jr.,NCAA,Louisville,200182.0,200182.0,2026.0,direct_athlete_id
+2026,1,7,7,Darius Acuff Jr.,NCAA,Arkansas,198012.0,198012.0,2026.0,direct_athlete_id
+2026,1,8,8,Kingston Flemings,NCAA,Houston,199596.0,199596.0,2026.0,direct_athlete_id
+2026,1,9,9,Morez Johnson Jr.,NCAA,Michigan,5647.0,5647.0,2026.0,direct_athlete_id
+2026,1,10,10,Brayden Burries,NCAA,Arizona,197982.0,197982.0,2026.0,direct_athlete_id
+2026,1,11,11,Yaxel Lendeborg,NCAA,Michigan,3951.0,3951.0,2026.0,direct_athlete_id
+2026,1,12,12,Aday Mara,NCAA,Michigan,535.0,535.0,2026.0,direct_athlete_id
+2026,1,13,13,Nate Ament,NCAA,Tennessee,202445.0,202445.0,2026.0,direct_athlete_id
+2026,1,14,14,Hannes Steinbach,NCAA,Washington,203279.0,203279.0,2026.0,direct_athlete_id
+2026,1,15,15,Dailyn Swain,NCAA,Texas,4065.0,4065.0,2026.0,direct_athlete_id
+2026,1,16,16,Bennett Stirtz,NCAA,Iowa,3596.0,3596.0,2026.0,direct_athlete_id
+2026,1,17,17,Ebuka Okorie,NCAA,Stanford,202245.0,202245.0,2026.0,direct_athlete_id
+2026,1,18,18,Christian Anderson Jr.,NCAA,Texas Tech,7593.0,7593.0,2026.0,direct_athlete_id
+2026,1,19,19,Allen Graves,NCAA,Santa Clara,833.0,833.0,2026.0,direct_athlete_id
+2026,1,20,20,Jayden Quaintance,NCAA,Kentucky,7639.0,7639.0,2026.0,direct_athlete_id
+2026,1,21,21,Karim Lopez,International (Mexico),Mexico,,,,
+2026,1,22,22,Labaron Philon Jr.,NCAA,Alabama,85.0,85.0,2026.0,direct_athlete_id
+2026,1,23,23,Zuby Ejiofor,NCAA,St. John's,1424.0,1424.0,2026.0,direct_athlete_id
+2026,1,24,24,Cameron Carr,NCAA,Baylor,309.0,309.0,2026.0,direct_athlete_id
+2026,1,25,25,Sergio De Larrea,International (Spain),Spain,,,,
+2026,1,26,26,Tarris Reed Jr.,NCAA,UConn,7799.0,7799.0,2026.0,direct_athlete_id
+2026,1,27,27,Chris Cenac Jr.,NCAA,Houston,199595.0,199595.0,2026.0,direct_athlete_id
+2026,1,28,28,Joshua Jefferson,NCAA,Iowa State,142.0,142.0,2026.0,direct_athlete_id
+2026,1,29,29,Alex Karaban,NCAA,UConn,7792.0,7792.0,2026.0,direct_athlete_id
+2026,1,30,30,Koa Peat,NCAA,Arizona,197993.0,197993.0,2026.0,direct_athlete_id
+2026,2,1,31,Bruce Thornton,NCAA,Ohio State,420.0,420.0,2026.0,direct_athlete_id
+2026,2,2,32,Richie Saunders,NCAA,BYU,7673.0,7673.0,2026.0,direct_athlete_id
+2026,2,3,33,Isaiah Evans,NCAA,Duke,211.0,211.0,2026.0,direct_athlete_id
+2026,2,4,34,Meleek Thomas,NCAA,Arkansas,198026.0,198026.0,2026.0,direct_athlete_id
+2026,2,5,35,Trevon Brazile,NCAA,Arkansas,7827.0,7827.0,2026.0,direct_athlete_id
+2026,2,6,36,Baba Miller,NCAA,Cincinnati,3921.0,3921.0,2026.0,direct_athlete_id
+2026,2,7,37,Ryan Conwell,NCAA,Louisville,4066.0,4066.0,2026.0,direct_athlete_id
+2026,2,8,38,Braden Smith,NCAA,Purdue,368.0,368.0,2026.0,direct_athlete_id
+2026,2,9,39,Jack Kayil,International (Germany),Germany,,,,
+2026,2,10,40,Dillon Mitchell,NCAA,St. John's,465.0,465.0,2026.0,direct_athlete_id
+2026,2,11,41,Otega Oweh,NCAA,Kentucky,562.0,562.0,2026.0,direct_athlete_id
+2026,2,12,42,Ja'Kobi Gillespie,NCAA,Tennessee,3290.0,3290.0,2026.0,direct_athlete_id
+2026,2,13,43,Tyler Bilodeau,NCAA,UCLA,529.0,529.0,2026.0,direct_athlete_id
+2026,2,14,44,Maliq Brown,NCAA,Duke,209.0,209.0,2026.0,direct_athlete_id
+2026,2,15,45,Emanuel Sharp,NCAA,Houston,115.0,115.0,2026.0,direct_athlete_id
+2026,2,16,46,Felix Okpara,NCAA,Tennessee,302.0,302.0,2026.0,direct_athlete_id
+2026,2,17,47,Tyler Nickel,NCAA,Vanderbilt,4556.0,4556.0,2026.0,direct_athlete_id
+2026,2,18,48,Tobi Lawal,NCAA,Virginia Tech,5702.0,5702.0,2026.0,direct_athlete_id
+2026,2,19,49,Bryce Hopkins,NCAA,St. John's,3147.0,3147.0,2026.0,direct_athlete_id
+2026,2,20,50,Jaden Bradley,NCAA,Arizona,269.0,269.0,2026.0,direct_athlete_id
+2026,2,21,51,Izaiyah Nelson,NCAA,South Florida,4986.0,4986.0,2026.0,direct_athlete_id
+2026,2,22,52,Henri Veesaar,NCAA,North Carolina,270.0,270.0,2026.0,direct_athlete_id
+2026,2,23,53,Ugonna Onyenso,NCAA,Virginia,7614.0,7614.0,2026.0,direct_athlete_id
+2026,2,24,54,Lajae Jones,NCAA,Florida State,2825.0,2825.0,2026.0,direct_athlete_id
+2026,2,25,55,Nick Martinelli,NCAA,Northwestern,5448.0,5448.0,2026.0,direct_athlete_id
+2026,2,26,56,Vsevolod Ishchenko,International (Russia),Russia,,,,
+2026,2,27,57,Narcisse Ngoy,International (France),France,,,,
+2026,2,28,58,Jaron Pierre Jr.,NCAA,SMU,795.0,795.0,2026.0,direct_athlete_id
+2026,2,29,59,Trey Kaufman-Renn,NCAA,Purdue,366.0,366.0,2026.0,direct_athlete_id
+2026,2,30,60,Malique Lewis,International (Trinidad & Tobago),Trinidad & Tobago,,,,
+2025,1,1,1,Cooper Flagg,NCAA,Duke,205.0,205.0,2025.0,direct_athlete_id
+2025,1,2,2,Dylan Harper,NCAA,Rutgers,7871.0,7871.0,2025.0,direct_athlete_id
+2025,1,3,3,VJ Edgecombe,NCAA,Baylor,158.0,158.0,2025.0,direct_athlete_id
+2025,1,4,4,Kon Knueppel,NCAA,Duke,206.0,206.0,2025.0,direct_athlete_id
+2025,1,5,5,Ace Bailey,NCAA,Rutgers,7882.0,7882.0,2025.0,direct_athlete_id
+2025,1,6,6,Tre Johnson,NCAA,Texas,435.0,435.0,2025.0,direct_athlete_id
+2025,1,7,7,Jeremiah Fears,NCAA,Oklahoma,6244.0,6244.0,2025.0,direct_athlete_id
+2025,1,8,8,Egor Demin,NCAA,BYU,,7675.0,2025.0,name_year_team
+2025,1,9,9,Collin Murray-Boyles,NCAA,South Carolina,3204.0,3204.0,2025.0,direct_athlete_id
+2025,1,10,10,Khaman Maluach,NCAA,Duke,204.0,204.0,2025.0,direct_athlete_id
+2025,1,11,11,Cedric Coward,NCAA,Washington State,7326.0,7326.0,2025.0,direct_athlete_id
+2025,1,12,12,Noa Essengue,International (France),France,,,,
+2025,1,13,13,Derik Queen,NCAA,Maryland,3288.0,3288.0,2025.0,direct_athlete_id
+2025,1,14,14,Carter Bryant,NCAA,Arizona,271.0,271.0,2025.0,direct_athlete_id
+2025,1,15,15,Thomas Sorber,NCAA,Georgetown,8173.0,8173.0,2025.0,direct_athlete_id
+2025,1,16,16,Yang Hansen,International (China),China,,,,
+2025,1,17,17,Joan Beringer,International (France),France,,,,
+2025,1,18,18,Walter Clayton Jr.,NCAA,Florida,499.0,499.0,2025.0,direct_athlete_id
+2025,1,19,19,Nolan Traoré,International (France),France,,,,
+2025,1,20,20,Kasparas Jakucionis,NCAA,Illinois,5641.0,5641.0,2025.0,direct_athlete_id
+2025,1,21,21,Will Riley,NCAA,Illinois,5645.0,5645.0,2025.0,direct_athlete_id
+2025,1,22,22,Drake Powell,NCAA,North Carolina,242.0,242.0,2025.0,direct_athlete_id
+2025,1,23,23,Asa Newell,NCAA,Georgia,20.0,20.0,2025.0,direct_athlete_id
+2025,1,24,24,Nique Clifford,NCAA,Colorado State,6788.0,6788.0,2025.0,direct_athlete_id
+2025,1,25,25,Jase Richardson,NCAA,Michigan State,2479.0,2479.0,2025.0,direct_athlete_id
+2025,1,26,26,Ben Saraf,International (Israel),Israel,,,,
+2025,1,27,27,Danny Wolf,NCAA,Michigan,5608.0,5608.0,2025.0,direct_athlete_id
+2025,1,28,28,Hugo González,International (Spain),Spain,,,,
+2025,1,29,29,Liam McNeeley,NCAA,UConn,7791.0,7791.0,2025.0,direct_athlete_id
+2025,1,30,30,Yanic Konan Niederhauser,NCAA,Penn State,4124.0,4124.0,2025.0,direct_athlete_id
+2025,2,1,31,Rasheer Fleming,NCAA,Saint Joseph's,3518.0,3518.0,2025.0,direct_athlete_id
+2025,2,2,32,Noah Penda,International (France),France,,,,
+2025,2,3,33,Sion James,NCAA,Duke,213.0,213.0,2025.0,direct_athlete_id
+2025,2,4,34,Ryan Kalkbrenner,NCAA,Creighton,7806.0,7806.0,2025.0,direct_athlete_id
+2025,2,5,35,Johni Broome,NCAA,Auburn,11.0,11.0,2025.0,direct_athlete_id
+2025,2,6,36,Adou Thiero,NCAA,Arkansas,7821.0,7821.0,2025.0,direct_athlete_id
+2025,2,7,37,Chaz Lanier,NCAA,Tennessee,305.0,305.0,2025.0,direct_athlete_id
+2025,2,8,38,Kam Jones,NCAA,Marquette,401.0,401.0,2025.0,direct_athlete_id
+2025,2,9,39,Alijah Martin,NCAA,Florida,500.0,500.0,2025.0,direct_athlete_id
+2025,2,10,40,Micah Peavy,NCAA,Georgetown,8176.0,8176.0,2025.0,direct_athlete_id
+2025,2,11,41,Koby Brea,NCAA,Kentucky,572.0,572.0,2025.0,direct_athlete_id
+2025,2,12,42,Maxime Raynaud,NCAA,Stanford,907.0,907.0,2025.0,direct_athlete_id
+2025,2,13,43,Jamir Watkins,NCAA,Florida State,3104.0,3104.0,2025.0,direct_athlete_id
+2025,2,14,44,Brooks Barnhizer,NCAA,Northwestern,5461.0,5461.0,2025.0,direct_athlete_id
+2025,2,15,45,Rocco Zikarsky,International (Australia),Australia,,,,
+2025,2,16,46,Amari Williams,NCAA,Kentucky,561.0,561.0,2025.0,direct_athlete_id
+2025,2,17,47,Bogoljub Markovic,International (Serbia),Serbia,,,,
+2025,2,18,48,Javon Small,NCAA,West Virginia,3320.0,3320.0,2025.0,direct_athlete_id
+2025,2,19,49,Tyrese Proctor,NCAA,Duke,207.0,207.0,2025.0,direct_athlete_id
+2025,2,20,50,Kobe Sanders,NCAA,Nevada,7060.0,7060.0,2025.0,direct_athlete_id
+2025,2,21,51,Mohamed Diawara,International (France),France,,,,
+2025,2,22,52,Alex Toohey,International (Australia),Australia,,,,
+2025,2,23,53,John Tonje,NCAA,Wisconsin,5420.0,5420.0,2025.0,direct_athlete_id
+2025,2,24,54,Taelon Peter,NCAA,Liberty,1101.0,1101.0,2025.0,direct_athlete_id
+2025,2,25,55,Lachlan Olbrich,International (Australia),Australia,,,,
+2025,2,26,56,Will Richard,NCAA,Florida,498.0,498.0,2025.0,direct_athlete_id
+2025,2,27,57,Max Shulga,NCAA,VCU,3481.0,3481.0,2025.0,direct_athlete_id
+2025,2,28,58,Saliou Niang,International (Senegal),Senegal,,,,
+2025,2,29,59,Jahmai Mashack,NCAA,Tennessee,306.0,306.0,2025.0,direct_athlete_id
+2024,1,1,1,Zaccharie Risacher,International (France),France,,,,
+2024,1,2,2,Alex Sarr,International (France),France,,,,
+2024,1,3,3,Reed  Sheppard,NCAA,Kentucky,15341.0,15341.0,2024.0,direct_athlete_id
+2024,1,4,4,Stephon Castle,NCAA,UConn,15259.0,15259.0,2024.0,direct_athlete_id
+2024,1,5,5,Ron Holland II,G-League Ignite,G League Ignite,,,,
+2024,1,6,6,Tidjane Salaün,International (France),France,,,,
+2024,1,7,7,Donovan Clingan,NCAA,UConn,15258.0,15258.0,2024.0,direct_athlete_id
+2024,1,8,8,Rob Dillingham,NCAA,Kentucky,15342.0,15342.0,2024.0,direct_athlete_id
+2024,1,9,9,Zach Edey,NCAA,Purdue,15234.0,15234.0,2024.0,direct_athlete_id
+2024,1,10,10,Cody Williams,NCAA,Colorado,16241.0,16241.0,2024.0,direct_athlete_id
+2024,1,11,11,Matas Buzelis,G-League Ignite,G League Ignite,,,,
+2024,1,12,12,Nikola Topi&#263;,International (Serbia),Serbia,,,,
+2024,1,13,13,Devin Carter,NCAA,Providence,16022.0,16022.0,2024.0,direct_athlete_id
+2024,1,14,14,Bub Carrington,NCAA,Pittsburgh,16084.0,16084.0,2024.0,direct_athlete_id
+2024,1,15,15,Kel'el Ware,NCAA,Indiana,17268.0,17268.0,2024.0,direct_athlete_id
+2024,1,16,16,Jared McCain,NCAA,Duke,15225.0,15225.0,2024.0,direct_athlete_id
+2024,1,17,17,Dalton Knecht,NCAA,Tennessee,15275.0,15275.0,2024.0,direct_athlete_id
+2024,1,18,18,Tristan da Silva,NCAA,Colorado,16242.0,16242.0,2024.0,direct_athlete_id
+2024,1,19,19,Ja'Kobe Walter,NCAA,Baylor,17223.0,17223.0,2024.0,direct_athlete_id
+2024,1,20,20,Jaylon Tyson,NCAA,California,16921.0,16921.0,2024.0,direct_athlete_id
+2024,1,21,21,Yves Missi,NCAA,Baylor,17225.0,17225.0,2024.0,direct_athlete_id
+2024,1,22,22,DaRon Holmes II,NCAA,Dayton,16102.0,16102.0,2024.0,direct_athlete_id
+2024,1,23,23,AJ Johnson,International (USA),USA,,,,
+2024,1,24,24,Kyshawn George,NCAA,Miami,15296.0,15296.0,2024.0,direct_athlete_id
+2024,1,25,25,Pacôme Dadiet,International (France),France,,,,
+2024,1,26,26,Dillon Jones,NCAA,Weber State,17403.0,17403.0,2024.0,direct_athlete_id
+2024,1,27,27,Terrence Shannon Jr.,NCAA,Illinois,15420.0,15420.0,2024.0,direct_athlete_id
+2024,1,28,28,Ryan Dunn,NCAA,Virginia,16137.0,16137.0,2024.0,direct_athlete_id
+2024,1,29,29,Isaiah Collier,NCAA,USC,15390.0,15390.0,2024.0,direct_athlete_id
+2024,1,30,30,Baylor Scheierman,NCAA,Creighton,17212.0,17212.0,2024.0,direct_athlete_id
+2024,2,1,31,Jonathan Mogbo,NCAA,San Francisco,17024.0,17024.0,2024.0,direct_athlete_id
+2024,2,2,32,Kyle Filipowski,NCAA,Duke,15223.0,15223.0,2024.0,direct_athlete_id
+2024,2,3,33,Tyler Smith,G-League Ignite,G League Ignite,,,,
+2024,2,4,34,Tyler Kolek,NCAA,Marquette,15251.0,15251.0,2024.0,direct_athlete_id
+2024,2,5,35,Johnny  Furphy,NCAA,Kansas,15216.0,15216.0,2024.0,direct_athlete_id
+2024,2,6,36,Juan Núñez,International (Spain),Spain,,,,
+2024,2,7,37,Bobi Klintman,International (Sweden),Sweden,,,,
+2024,2,8,38,Ajay Mitchell,NCAA,UC Santa Barbara,17774.0,17774.0,2024.0,direct_athlete_id
+2024,2,9,39,Jaylen Wells,NCAA,Washington State,17178.0,17178.0,2024.0,direct_athlete_id
+2024,2,10,40,Osasere Ighodaro,NCAA,Marquette,15250.0,15250.0,2024.0,direct_athlete_id
+2024,2,11,41,Adem Bona,NCAA,UCLA,17199.0,17199.0,2024.0,direct_athlete_id
+2024,2,12,42,KJ Simpson,NCAA,Colorado,16243.0,16243.0,2024.0,direct_athlete_id
+2024,2,13,43,Nikola Djurisi&#263;,International (Serbia),Serbia,,,,
+2024,2,14,44,Pelle Larsson,NCAA,Arizona,15286.0,15286.0,2024.0,direct_athlete_id
+2024,2,15,45,Jamal Shead,NCAA,Houston,15267.0,15267.0,2024.0,direct_athlete_id
+2024,2,16,46,Cameron  Christie,NCAA,Minnesota,16711.0,16711.0,2024.0,direct_athlete_id
+2024,2,17,47,Antonio  Reeves,NCAA,Kentucky,15339.0,15339.0,2024.0,direct_athlete_id
+2024,2,18,48,Harrison Ingram,NCAA,North Carolina,15376.0,15376.0,2024.0,direct_athlete_id
+2024,2,19,49,Tristen Newton,NCAA,UConn,15260.0,15260.0,2024.0,direct_athlete_id
+2024,2,20,50,Enrique Freeman,NCAA,Akron,16965.0,16965.0,2024.0,direct_athlete_id
+2024,2,21,51,Melvin Ajinça,International (France),France,,,,
+2024,2,22,52,Quinten Post,NCAA,Boston College,16665.0,16665.0,2024.0,direct_athlete_id
+2024,2,23,53,Cam  Spencer,NCAA,UConn,15261.0,15261.0,2024.0,direct_athlete_id
+2024,2,24,54,Anton Watson,NCAA,Gonzaga,17777.0,17777.0,2024.0,direct_athlete_id
+2024,2,25,55,Bronny James,NCAA,USC,15393.0,15393.0,2024.0,direct_athlete_id
+2024,2,26,56,Kevin McCullar Jr.,NCAA,Kansas,15214.0,15214.0,2024.0,direct_athlete_id
+2024,2,27,57,Ulrich Chomche,International (Cameroon),Cameroon,,,,
+2024,2,28,58,Ariel Hukporti,International (Germany),Germany,,,,
+2023,1,1,1,Victor Wembanyama,International (France),France,,,,
+2023,1,2,2,Brandon Miller,NCAA,Alabama,20033.0,20033.0,2023.0,direct_athlete_id
+2023,1,3,3,Scoot Henderson,International (USA),USA,,,,
+2023,1,4,4,Amen Thompson,OTE,Overtime Elite,,,,
+2023,1,5,5,Ausar Thompson,OTE,Overtime Elite,,,,
+2023,1,6,6,Anthony Black,NCAA,Arkansas,19922.0,19922.0,2023.0,direct_athlete_id
+2023,1,7,7,Bilal Coulibaly,International (France),France,,,,
+2023,1,8,8,Jarace Walker,NCAA,Houston,19862.0,19862.0,2023.0,direct_athlete_id
+2023,1,9,9,Taylor Hendricks,NCAA,UCF,21469.0,21469.0,2023.0,direct_athlete_id
+2023,1,10,10,Cason Wallace,NCAA,Kentucky,19871.0,19871.0,2023.0,direct_athlete_id
+2023,1,11,11,Jett Howard,NCAA,Michigan,20048.0,20048.0,2023.0,direct_athlete_id
+2023,1,12,12,Dereck Lively II,NCAA,Duke,19901.0,19901.0,2023.0,direct_athlete_id
+2023,1,13,13,Gradey Dick,NCAA,Kansas,19891.0,19891.0,2023.0,direct_athlete_id
+2023,1,14,14,Jordan Hawkins,NCAA,UConn,21138.0,21138.0,2023.0,direct_athlete_id
+2023,1,15,15,Kobe Bufkin,NCAA,Michigan,20049.0,20049.0,2023.0,direct_athlete_id
+2023,1,16,16,Keyonte George,NCAA,Baylor,19880.0,19880.0,2023.0,direct_athlete_id
+2023,1,17,17,Jalen Hood-Schifino,NCAA,Indiana,19960.0,19960.0,2023.0,direct_athlete_id
+2023,1,18,18,Jaime Jaquez Jr,NCAA,UCLA,19911.0,19911.0,2023.0,direct_athlete_id
+2023,1,19,19,Brandin Podziemski,NCAA,Santa Clara,22098.0,22098.0,2023.0,direct_athlete_id
+2023,1,20,20,Cam Whitmore,NCAA,Villanova,19981.0,19981.0,2023.0,direct_athlete_id
+2023,1,21,21,Noah Clowney,NCAA,Alabama,20032.0,20032.0,2023.0,direct_athlete_id
+2023,1,22,22,Dariq Whitehead,NCAA,Duke,19900.0,19900.0,2023.0,direct_athlete_id
+2023,1,23,23,Kris Murray,NCAA,Iowa,20842.0,20842.0,2023.0,direct_athlete_id
+2023,1,24,24,Olivier-Maxence Prosper,NCAA,Marquette,21752.0,21752.0,2023.0,direct_athlete_id
+2023,1,25,25,Marcus Sasser,NCAA,Houston,19863.0,19863.0,2023.0,direct_athlete_id
+2023,1,26,26,Ben Sheppard,NCAA,Belmont,21037.0,21037.0,2023.0,direct_athlete_id
+2023,1,27,27,Nick Smith Jr,NCAA,Arkansas,19925.0,19925.0,2023.0,direct_athlete_id
+2023,1,28,28,Brice Sensabaugh,NCAA,Ohio State,20824.0,20824.0,2023.0,direct_athlete_id
+2023,1,29,29,Julian Strawther,NCAA,Gonzaga,19852.0,19852.0,2023.0,direct_athlete_id
+2023,1,30,30,Kobe Brown,NCAA,Missouri,21564.0,21564.0,2023.0,direct_athlete_id
+2023,2,1,31,James Nnaji,International (Nigeria),Nigeria,,,,
+2023,2,2,32,Jalen Pickett,NCAA,Penn State,20811.0,20811.0,2023.0,direct_athlete_id
+2023,2,3,33,Leonard Miller,International (Canada),Canada,,,,
+2023,2,4,34,Colby Jones,NCAA,Xavier,21155.0,21155.0,2023.0,direct_athlete_id
+2023,2,5,35,Julian Phillips,NCAA,Tennessee,19933.0,19933.0,2023.0,direct_athlete_id
+2023,2,6,36,Andre Jackson Jr,NCAA,UConn,21141.0,21141.0,2023.0,direct_athlete_id
+2023,2,7,37,Hunter Tyson,NCAA,Clemson,20878.0,20878.0,2023.0,direct_athlete_id
+2023,2,8,38,Jordan Walsh,NCAA,Arkansas,19924.0,19924.0,2023.0,direct_athlete_id
+2023,2,9,39,Mouhamed Gueye,NCAA,Washington State,20978.0,20978.0,2023.0,direct_athlete_id
+2023,2,10,40,Maxwell Lewis,NCAA,Pepperdine,22144.0,22144.0,2023.0,direct_athlete_id
+2023,2,11,41,Amari Bailey,NCAA,UCLA,19910.0,19910.0,2023.0,direct_athlete_id
+2023,2,12,42,Tristan Vukcevic,International (Serbia),Serbia,,,,
+2023,2,13,43,Rayan Rupert,International (France),France,,,,
+2023,2,14,44,Sidy Cissoko,International (France),France,,,,
+2023,2,15,45,Gregory Jackson II,NCAA,South Carolina,22294.0,22294.0,2023.0,direct_athlete_id
+2023,2,16,46,Seth Lundy,NCAA,Penn State,20810.0,20810.0,2023.0,direct_athlete_id
+2023,2,17,47,Mojave King,International (New Zealand),New Zealand,,,,
+2023,2,18,48,Jordan Miller,NCAA,Miami,21144.0,21144.0,2023.0,direct_athlete_id
+2023,2,19,49,Emoni Bates,NCAA,Eastern Michigan,20960.0,20960.0,2023.0,direct_athlete_id
+2023,2,20,50,Keyontae Johnson,NCAA,Kansas State,21934.0,21934.0,2023.0,direct_athlete_id
+2023,2,21,51,Jalen Wilson,NCAA,Kansas,19890.0,19890.0,2023.0,direct_athlete_id
+2023,2,22,52,Toumani Camara,NCAA,Dayton,20066.0,20066.0,2023.0,direct_athlete_id
+2023,2,23,53,Jaylen Clark,NCAA,UCLA,19912.0,19912.0,2023.0,direct_athlete_id
+2023,2,24,54,Jalen Slawson,NCAA,Furman,20773.0,20773.0,2023.0,direct_athlete_id
+2023,2,25,55,Isaiah Wong,NCAA,Miami,21143.0,21143.0,2023.0,direct_athlete_id
+2023,2,26,56,Tarik Biberovic,International (Turkey),Turkey,,,,
+2023,2,27,57,Trayce Jackson-Davis,NCAA,Indiana,19957.0,19957.0,2023.0,direct_athlete_id
+2023,2,28,58,Chris Livingston,NCAA,Kentucky,19870.0,19870.0,2023.0,direct_athlete_id
+2022,1,1,1,Paolo Banchero,NCAA,Duke,27623.0,27623.0,2022.0,direct_athlete_id
+2022,1,2,2,Chet Holmgren,NCAA,Gonzaga,25708.0,25708.0,2022.0,direct_athlete_id
+2022,1,3,3,Jabari Smith Jr.,NCAA,Auburn,25841.0,25841.0,2022.0,direct_athlete_id
+2022,1,4,4,Keegan Murray,NCAA,Iowa,27700.0,27700.0,2022.0,direct_athlete_id
+2022,1,5,5,Jaden Ivey,NCAA,Purdue,25745.0,25745.0,2022.0,direct_athlete_id
+2022,1,6,6,Bennedict Mathurin,NCAA,Arizona,27794.0,27794.0,2022.0,direct_athlete_id
+2022,1,7,7,Shaedon Sharpe,NCAA,Kentucky,31152.0,,,unmatched_needs_review
+2022,1,8,8,Dyson Daniels,G-League Ignite,G League Ignite,,,,
+2022,1,9,9,Jeremy Sochan,NCAA,Baylor,28229.0,28229.0,2022.0,direct_athlete_id
+2022,1,10,10,Johnny Davis,NCAA,Wisconsin,26998.0,26998.0,2022.0,direct_athlete_id
+2022,1,11,11,Ousmane Dieng,International (NZ Breakers),NZ Breakers,,,,
+2022,1,12,12,Jalen Williams,NCAA,Santa Clara,27556.0,27556.0,2022.0,direct_athlete_id
+2022,1,13,13,Jalen Duren,NCAA,Memphis,25774.0,25774.0,2022.0,direct_athlete_id
+2022,1,14,14,Ochai Agbaji,NCAA,Kansas,26293.0,26293.0,2022.0,direct_athlete_id
+2022,1,15,15,Mark Williams,NCAA,Duke,27625.0,27625.0,2022.0,direct_athlete_id
+2022,1,16,16,AJ Griffin,NCAA,Duke,19902.0,19902.0,2022.0,direct_athlete_id
+2022,1,17,17,Tari Eason,NCAA,LSU,27062.0,27062.0,2022.0,direct_athlete_id
+2022,1,18,18,Dalen Terry,NCAA,Arizona,27795.0,27795.0,2022.0,direct_athlete_id
+2022,1,19,19,Jake LaRavia,NCAA,Wake Forest,27912.0,27912.0,2022.0,direct_athlete_id
+2022,1,20,20,Malaki Branham,NCAA,Ohio State,25813.0,25813.0,2022.0,direct_athlete_id
+2022,1,21,21,Christian Braun,NCAA,Kansas,26292.0,26292.0,2022.0,direct_athlete_id
+2022,1,22,22,Walker Kessler,NCAA,Auburn,25842.0,25842.0,2022.0,direct_athlete_id
+2022,1,23,23,David Roddy,NCAA,Colorado State,27634.0,27634.0,2022.0,direct_athlete_id
+2022,1,24,24,MarJon Beauchamp,G-League Ignite,G League Ignite,,,,
+2022,1,25,25,Blake Wesley,NCAA,Notre Dame,28596.0,28596.0,2022.0,direct_athlete_id
+2022,1,26,26,Wendell Moore Jr,NCAA,Duke,27624.0,27624.0,2022.0,direct_athlete_id
+2022,1,27,27,Nikola  Jovic,International (Mega Mozzart),Mega Mozzart,,,,
+2022,1,28,28,Patrick Baldwin Jr,NCAA,Milwaukee,27303.0,27303.0,2022.0,direct_athlete_id
+2022,1,29,29,TyTy Washington Jr,NCAA,Kentucky,27620.0,27620.0,2022.0,direct_athlete_id
+2022,1,30,30,Peyton Watson,NCAA,UCLA,25723.0,25723.0,2022.0,direct_athlete_id
+2022,2,1,31,Andrew Nembhard,NCAA,Gonzaga,25709.0,25709.0,2022.0,direct_athlete_id
+2022,2,2,32,Caleb Houstan,NCAA,Michigan,27836.0,27836.0,2022.0,direct_athlete_id
+2022,2,3,33,Christian Koloko,NCAA,Arizona,27793.0,27793.0,2022.0,direct_athlete_id
+2022,2,4,34,Jaylin Williams,NCAA,Arkansas,25805.0,25805.0,2022.0,direct_athlete_id
+2022,2,5,35,Max Christie,NCAA,Michigan State,26300.0,26300.0,2022.0,direct_athlete_id
+2022,2,6,36,Gabriele Procida,International (Fortitudo Bologna),Fortitudo Bologna,,,,
+2022,2,7,37,Jaden Hardy,G-League Ignite,G League Ignite,,,,
+2022,2,8,38,Kennedy Chandler,NCAA,Tennessee,25823.0,25823.0,2022.0,direct_athlete_id
+2022,2,9,39,Khalifa Diop,International (Gran Canaria),Gran Canaria,,,,
+2022,2,10,40,Bryce McGowens,NCAA,Nebraska,27019.0,27019.0,2022.0,direct_athlete_id
+2022,2,11,41,E.J. Liddell,NCAA,Ohio State,25810.0,25810.0,2022.0,direct_athlete_id
+2022,2,12,42,Trevor Keels,NCAA,Duke,27626.0,27626.0,2022.0,direct_athlete_id
+2022,2,13,43,Moussa Diabate,NCAA,Michigan,27839.0,27839.0,2022.0,direct_athlete_id
+2022,2,14,44,Ryan Rollins,NCAA,Toledo,26549.0,26549.0,2022.0,direct_athlete_id
+2022,2,15,45,Josh Minott,NCAA,Memphis,25776.0,25776.0,2022.0,direct_athlete_id
+2022,2,16,46,Ismael  Kamagate,International (Paris),Paris,,,,
+2022,2,17,47,Vince Williams Jr,NCAA,VCU,25973.0,25973.0,2022.0,direct_athlete_id
+2022,2,18,48,Kendall Brown,NCAA,Baylor,28228.0,28228.0,2022.0,direct_athlete_id
+2022,2,19,49,Isaiah Mobley,NCAA,USC,27450.0,27450.0,2022.0,direct_athlete_id
+2022,2,20,50,Matteo  Spagnolo,International (Cremona),Cremona,,,,
+2022,2,21,51,Tyrese Martin,NCAA,UConn,25859.0,25859.0,2022.0,direct_athlete_id
+2022,2,22,52,Karlo Matkovic,International (Mega Mozzart),Mega Mozzart,,,,
+2022,2,23,53,JD Davison,NCAA,Alabama,25792.0,25792.0,2022.0,direct_athlete_id
+2022,2,24,54,Yannick Nzosa,International (Unicaja Malaga),Unicaja Malaga,,,,
+2022,2,25,55,Gui  Santos,International (Minas),Minas,,,,
+2022,2,26,56,Luke Travers,International (Perth),Perth,,,,
+2022,2,27,57,Jabari Walker,NCAA,Colorado,27668.0,27668.0,2022.0,direct_athlete_id
+2022,2,28,58,Hugo Besson,International (NZ Breakers),NZ Breakers,,,,
+2021,1,1,1,Cade Cunningham,NCAA,Oklahoma State,31717.0,31717.0,2021.0,direct_athlete_id
+2021,1,2,2,Jalen Green,International (USA),USA,,,,
+2021,1,3,3,Evan Mobley,NCAA,USC,32167.0,32167.0,2021.0,direct_athlete_id
+2021,1,4,4,Scottie Barnes,NCAA,Florida State,32691.0,32691.0,2021.0,direct_athlete_id
+2021,1,5,5,Jalen Suggs,NCAA,Gonzaga,32257.0,32257.0,2021.0,direct_athlete_id
+2021,1,6,6,Josh Giddey,International (Australia),Australia,,,,
+2021,1,7,7,Jonathan Kuminga,International (Congo),Congo,,,,
+2021,1,8,8,Franz Wagner,NCAA,Michigan,31414.0,31414.0,2021.0,direct_athlete_id
+2021,1,9,9,Davion Mitchell,NCAA,Baylor,32508.0,32508.0,2021.0,direct_athlete_id
+2021,1,10,10,Ziaire Williams,NCAA,Stanford,32615.0,32615.0,2021.0,direct_athlete_id
+2021,1,11,11,James Bouknight,NCAA,UConn,32031.0,32031.0,2021.0,direct_athlete_id
+2021,1,12,12,Joshua Primo,NCAA,Alabama,32100.0,32100.0,2021.0,direct_athlete_id
+2021,1,13,13,Chris Duarte,NCAA,Oregon,32683.0,32683.0,2021.0,direct_athlete_id
+2021,1,14,14,Moses Moody,NCAA,Arkansas,32024.0,32024.0,2021.0,direct_athlete_id
+2021,1,15,15,Corey Kispert,NCAA,Gonzaga,32256.0,32256.0,2021.0,direct_athlete_id
+2021,1,16,16,Alperen Sengun,International (Turkey),Turkey,,,,
+2021,1,17,17,Trey Murphy III,NCAA,Virginia,31570.0,31570.0,2021.0,direct_athlete_id
+2021,1,18,18,Tre Mann,NCAA,Florida,32695.0,32695.0,2021.0,direct_athlete_id
+2021,1,19,19,Kai Jones,NCAA,Texas,31394.0,31394.0,2021.0,direct_athlete_id
+2021,1,20,20,Jalen Johnson,NCAA,Duke,32426.0,32426.0,2021.0,direct_athlete_id
+2021,1,21,21,Keon Johnson,NCAA,Tennessee,33101.0,33101.0,2021.0,direct_athlete_id
+2021,1,22,22,Isaiah Jackson,NCAA,Kentucky,31805.0,31805.0,2021.0,direct_athlete_id
+2021,1,23,23,Usman Garuba,International (Spain),Spain,,,,
+2021,1,24,24,Josh Christopher,NCAA,Arizona State,31892.0,31892.0,2021.0,direct_athlete_id
+2021,1,25,25,Quentin Grimes,NCAA,Houston,31384.0,31384.0,2021.0,direct_athlete_id
+2021,1,26,26,Nah'Shon Hyland,NCAA,VCU,32179.0,32179.0,2021.0,direct_athlete_id
+2021,1,27,27,Cameron Thomas,NCAA,LSU,32286.0,32286.0,2021.0,direct_athlete_id
+2021,1,28,28,Jaden Springer,NCAA,Tennessee,33102.0,33102.0,2021.0,direct_athlete_id
+2021,1,29,29,Day'Ron Sharpe,NCAA,North Carolina,31379.0,31379.0,2021.0,direct_athlete_id
+2021,1,30,30,Santi Aldama,NCAA,Loyola Maryland,34416.0,34416.0,2021.0,direct_athlete_id
+2021,2,1,31,Isaiah Todd,International (USA),USA,,,,
+2021,2,2,32,Jeremiah Robinson-Earl,NCAA,Villanova,32188.0,32188.0,2021.0,direct_athlete_id
+2021,2,3,33,Jason Preston,NCAA,Ohio,31760.0,31760.0,2021.0,direct_athlete_id
+2021,2,4,34,Rokas Jokubaitis,International (Lithuania),Lithuania,,,,
+2021,2,5,35,Herbert Jones,NCAA,Alabama,32097.0,32097.0,2021.0,direct_athlete_id
+2021,2,6,36,Miles McBride,NCAA,West Virginia,31870.0,31870.0,2021.0,direct_athlete_id
+2021,2,7,37,JT Thor,NCAA,Auburn,32264.0,32264.0,2021.0,direct_athlete_id
+2021,2,8,38,Ayo Dosunmu,NCAA,Illinois,31360.0,31360.0,2021.0,direct_athlete_id
+2021,2,9,39,Neemias Queta,NCAA,Utah State,32181.0,32181.0,2021.0,direct_athlete_id
+2021,2,10,40,Jared Butler,NCAA,Baylor,32507.0,32507.0,2021.0,direct_athlete_id
+2021,2,11,41,Joe Wieskamp,NCAA,Iowa,31695.0,31695.0,2021.0,direct_athlete_id
+2021,2,12,42,Isaiah Livers,NCAA,Michigan,31412.0,31412.0,2021.0,direct_athlete_id
+2021,2,13,43,Greg Brown,NCAA,Texas,31393.0,31393.0,2021.0,direct_athlete_id
+2021,2,14,44,Kessler Edwards,NCAA,Pepperdine,31861.0,31861.0,2021.0,direct_athlete_id
+2021,2,15,45,Juhann Begarin,International (Guadeloupe),Guadeloupe,,,,
+2021,2,16,46,Dalano Banton,NCAA,Nebraska,31458.0,31458.0,2021.0,direct_athlete_id
+2021,2,17,47,David Johnson,NCAA,Louisville,31729.0,31729.0,2021.0,direct_athlete_id
+2021,2,18,48,Sharife Cooper,NCAA,Auburn,32265.0,32265.0,2021.0,direct_athlete_id
+2021,2,19,49,Marcus Zegarowski,NCAA,Creighton,32558.0,32558.0,2021.0,direct_athlete_id
+2021,2,20,50,Filip Petrusev,International (Serbia),Serbia,,,,
+2021,2,21,51,Brandon Boston Jr,NCAA,Kentucky,31808.0,31808.0,2021.0,direct_athlete_id
+2021,2,22,52,Luka Garza,NCAA,Iowa,31694.0,31694.0,2021.0,direct_athlete_id
+2021,2,23,53,Charles Bassey,NCAA,Western Kentucky,31746.0,31746.0,2021.0,direct_athlete_id
+2021,2,24,54,Sandro Mamukelashvili,NCAA,Seton Hall,32353.0,32353.0,2021.0,direct_athlete_id
+2021,2,25,55,Aaron Wiggins,NCAA,Maryland,31613.0,31613.0,2021.0,direct_athlete_id
+2021,2,26,56,Scottie Lewis,NCAA,Florida,32696.0,32696.0,2021.0,direct_athlete_id
+2021,2,27,57,Balsa Koprivica,NCAA,Florida State,32690.0,32690.0,2021.0,direct_athlete_id
+2021,2,28,58,Jericho Sims,NCAA,Texas,31395.0,31395.0,2021.0,direct_athlete_id
+2021,2,29,59,RaiQuan Gray,NCAA,Florida State,32689.0,32689.0,2021.0,direct_athlete_id
+2021,2,30,60,Georgios Kalaitzakis,International (Greece),Greece,,,,
+2020,1,1,1,Anthony Edwards,NCAA,Georgia,35495.0,35495.0,2020.0,direct_athlete_id
+2020,1,2,2,James Wiseman,NCAA,Memphis,34891.0,34891.0,2020.0,direct_athlete_id
+2020,1,3,3,LaMelo Ball,International (USA),USA,,,,
+2020,1,4,4,Patrick Williams,NCAA,Florida State,37035.0,37035.0,2020.0,direct_athlete_id
+2020,1,5,5,Isaac Okoro,NCAA,Auburn,34952.0,34952.0,2020.0,direct_athlete_id
+2020,1,6,6,Onyeka Okongwu,NCAA,USC,36662.0,36662.0,2020.0,direct_athlete_id
+2020,1,7,7,Killian Hayes,International (France),France,,,,
+2020,1,8,8,Obi Toppin,NCAA,Dayton,37830.0,37830.0,2020.0,direct_athlete_id
+2020,1,9,9,Deni Avdija,International (Israel),Israel,,,,
+2020,1,10,10,Jalen Smith,NCAA,Maryland,34841.0,34841.0,2020.0,direct_athlete_id
+2020,1,11,11,Devin Vassell,NCAA,Florida State,37033.0,37033.0,2020.0,direct_athlete_id
+2020,1,12,12,Tyrese Haliburton,NCAA,Iowa State,36015.0,36015.0,2020.0,direct_athlete_id
+2020,1,13,13,Kira Lewis Jr,NCAA,Alabama,35985.0,35985.0,2020.0,direct_athlete_id
+2020,1,14,14,Aaron Nesmith,NCAA,Vanderbilt,37008.0,37008.0,2020.0,direct_athlete_id
+2020,1,15,15,Cole Anthony,NCAA,North Carolina,36677.0,36677.0,2020.0,direct_athlete_id
+2020,1,16,16,Isaiah Stewart,NCAA,Washington,37635.0,37635.0,2020.0,direct_athlete_id
+2020,1,17,17,Aleksej Pokusevski,International (Serbia),Serbia,,,,
+2020,1,18,18,Josh Green,NCAA,Arizona,36704.0,36704.0,2020.0,direct_athlete_id
+2020,1,19,19,Saddiq Bey,NCAA,Villanova,34860.0,34860.0,2020.0,direct_athlete_id
+2020,1,20,20,Precious Achiuwa,NCAA,Memphis,34890.0,34890.0,2020.0,direct_athlete_id
+2020,1,21,21,Tyrese Maxey,NCAA,Kentucky,36391.0,36391.0,2020.0,direct_athlete_id
+2020,1,22,22,Zeke Nnaji,NCAA,Arizona,36702.0,36702.0,2020.0,direct_athlete_id
+2020,1,23,23,Leandro Bolmaro,International (Argentina),Argentina,,,,
+2020,1,24,24,RJ Hampton,International (USA),USA,,,,
+2020,1,25,25,Immanuel Quickley,NCAA,Kentucky,36388.0,36388.0,2020.0,direct_athlete_id
+2020,1,26,26,Payton Pritchard,NCAA,Oregon,34903.0,34903.0,2020.0,direct_athlete_id
+2020,1,27,27,Udoka Azubuike,NCAA,Kansas,35509.0,35509.0,2020.0,direct_athlete_id
+2020,1,28,28,Jaden McDaniels,NCAA,Washington,37636.0,37636.0,2020.0,direct_athlete_id
+2020,1,29,29,Malachi Flynn,NCAA,San Diego State,36571.0,36571.0,2020.0,direct_athlete_id
+2020,1,30,30,Desmond Bane,NCAA,TCU,37332.0,37332.0,2020.0,direct_athlete_id
+2020,2,1,31,Tyrell Terry,NCAA,Stanford,37115.0,37115.0,2020.0,direct_athlete_id
+2020,2,2,32,Vernon Carey Jr,NCAA,Duke,35512.0,35512.0,2020.0,direct_athlete_id
+2020,2,3,33,Daniel Oturu,NCAA,Minnesota,36036.0,36036.0,2020.0,direct_athlete_id
+2020,2,4,34,Theo Maledon,International (France),France,,,,
+2020,2,5,35,Xavier Tillman,NCAA,Michigan State,36380.0,36380.0,2020.0,direct_athlete_id
+2020,2,6,36,Tyler Bey,NCAA,Colorado,37677.0,37677.0,2020.0,direct_athlete_id
+2020,2,7,37,Vit Krejci,International (Czech Republic),Czech Republic,,,,
+2020,2,8,38,Saben Lee,NCAA,Vanderbilt,37009.0,37009.0,2020.0,direct_athlete_id
+2020,2,9,39,Elijah Hughes,NCAA,Syracuse,36687.0,36687.0,2020.0,direct_athlete_id
+2020,2,10,40,Robert Woodard II,NCAA,Mississippi State,35962.0,35962.0,2020.0,direct_athlete_id
+2020,2,11,41,Tre Jones,NCAA,Duke,35514.0,35514.0,2020.0,direct_athlete_id
+2020,2,12,42,Nick Richards,NCAA,Kentucky,36390.0,36390.0,2020.0,direct_athlete_id
+2020,2,13,43,Jahmi'us Ramsey,NCAA,Texas Tech,34876.0,34876.0,2020.0,direct_athlete_id
+2020,2,14,44,Marko Simonovic,International (Montenegro),Montenegro,,,,
+2020,2,15,45,Jordan Nwora,NCAA,Louisville,34818.0,34818.0,2020.0,direct_athlete_id
+2020,2,16,46,CJ Elleby,NCAA,Washington State,37340.0,37340.0,2020.0,direct_athlete_id
+2020,2,17,47,Yam Madar,International (Israel),Israel,,,,
+2020,2,18,48,Nico Mannion,NCAA,Arizona,36705.0,36705.0,2020.0,direct_athlete_id
+2020,2,19,49,Isaiah Joe,NCAA,Arkansas,35976.0,35976.0,2020.0,direct_athlete_id
+2020,2,20,50,Skylar Mays,NCAA,LSU,37368.0,37368.0,2020.0,direct_athlete_id
+2020,2,21,51,Justinian Jessup,NCAA,Boise State,36546.0,36546.0,2020.0,direct_athlete_id
+2020,2,22,52,Kenyon Martin Jr.,International (USA),USA,,,,
+2020,2,23,53,Cassius Winston,NCAA,Michigan State,36381.0,36381.0,2020.0,direct_athlete_id
+2020,2,24,54,Cassius Stanley,NCAA,Duke,35513.0,35513.0,2020.0,direct_athlete_id
+2020,2,25,55,Jay Scrubb,International (USA),USA,,,,
+2020,2,26,56,Grant Riller,NCAA,Charleston,35346.0,35346.0,2020.0,direct_athlete_id
+2020,2,27,57,Reggie Perry,NCAA,Mississippi State,35961.0,35961.0,2020.0,direct_athlete_id
+2020,2,28,58,Paul Reed,NCAA,DePaul,36316.0,36316.0,2020.0,direct_athlete_id
+2020,2,29,59,Jalen Harris,NCAA,Nevada,36625.0,36625.0,2020.0,direct_athlete_id
+2020,2,30,60,Sam Merrill,NCAA,Utah State,34918.0,34918.0,2020.0,direct_athlete_id
+2019,1,1,1,Zion Williamson,NCAA,Duke,43429.0,43429.0,2019.0,direct_athlete_id
+2019,1,2,2,Ja Morant,NCAA,Murray State,44342.0,44342.0,2019.0,direct_athlete_id
+2019,1,3,3,RJ Barrett,NCAA,Duke,43431.0,43431.0,2019.0,direct_athlete_id
+2019,1,4,4,De'Andre Hunter,NCAA,Virginia,42531.0,42531.0,2019.0,direct_athlete_id
+2019,1,5,5,Darius Garland,NCAA,Vanderbilt,43330.0,43330.0,2019.0,direct_athlete_id
+2019,1,6,6,Jarrett Culver,NCAA,Texas Tech,42663.0,42663.0,2019.0,direct_athlete_id
+2019,1,7,7,Coby White,NCAA,North Carolina,41849.0,41849.0,2019.0,direct_athlete_id
+2019,1,8,8,Jaxson Hayes,NCAA,Texas,43022.0,43022.0,2019.0,direct_athlete_id
+2019,1,9,9,Rui Hachimura,NCAA,Gonzaga,41807.0,41807.0,2019.0,direct_athlete_id
+2019,1,10,10,Cam Reddish,NCAA,Duke,43430.0,43430.0,2019.0,direct_athlete_id
+2019,1,11,11,Cameron Johnson,NCAA,North Carolina,41851.0,41851.0,2019.0,direct_athlete_id
+2019,1,12,12,PJ Washington,NCAA,Kentucky,43435.0,43435.0,2019.0,direct_athlete_id
+2019,1,13,13,Tyler Herro,NCAA,Kentucky,43437.0,43437.0,2019.0,direct_athlete_id
+2019,1,14,14,Romeo Langford,NCAA,Indiana,42017.0,42017.0,2019.0,direct_athlete_id
+2019,1,15,15,Sekou Doumbouya,International (Guinea),Guinea,,,,
+2019,1,16,16,Chuma Okeke,NCAA,Auburn,41869.0,41869.0,2019.0,direct_athlete_id
+2019,1,17,17,Nickeil Alexander-Walker,NCAA,Virginia Tech,43981.0,43981.0,2019.0,direct_athlete_id
+2019,1,18,18,Goga Bitadze,NCAA,Georgia,,,,unmatched_needs_review
+2019,1,19,19,Luka Samanic,International (Croatia),Croatia,,,,
+2019,1,20,20,Matisse Thybulle,NCAA,Washington,43445.0,43445.0,2019.0,direct_athlete_id
+2019,1,21,21,Brandon Clarke,NCAA,Gonzaga,41808.0,41808.0,2019.0,direct_athlete_id
+2019,1,22,22,Grant Williams,NCAA,Tennessee,41829.0,41829.0,2019.0,direct_athlete_id
+2019,1,23,23,Darius Bazley,International (USA),USA,,,,
+2019,1,24,24,Ty Jerome,NCAA,Virginia,42530.0,42530.0,2019.0,direct_athlete_id
+2019,1,25,25,Nassir Little,NCAA,North Carolina,41852.0,41852.0,2019.0,direct_athlete_id
+2019,1,26,26,Dylan Windler,NCAA,Belmont,44346.0,44346.0,2019.0,direct_athlete_id
+2019,1,27,27,Mfiondu Kabengele,NCAA,Florida State,41899.0,41899.0,2019.0,direct_athlete_id
+2019,1,28,28,Jordan Poole,NCAA,Michigan,43202.0,43202.0,2019.0,direct_athlete_id
+2019,1,29,29,Keldon Johnson,NCAA,Kentucky,43438.0,43438.0,2019.0,direct_athlete_id
+2019,1,30,30,Kevin Porter Jr.,NCAA,USC,43455.0,43455.0,2019.0,direct_athlete_id
+2019,2,1,31,Nic Claxton,NCAA,Georgia,44182.0,44182.0,2019.0,direct_athlete_id
+2019,2,2,32,KZ Okpala,NCAA,Stanford,43404.0,43404.0,2019.0,direct_athlete_id
+2019,2,3,33,Carsen Edwards,NCAA,Purdue,41938.0,41938.0,2019.0,direct_athlete_id
+2019,2,4,34,Bruno Fernando,NCAA,Maryland,42672.0,42672.0,2019.0,direct_athlete_id
+2019,2,5,35,Marcos Louzada Silva,International (Brazil),Brazil,,,,
+2019,2,6,36,Cody Martin,NCAA,Nevada,41843.0,41843.0,2019.0,direct_athlete_id
+2019,2,7,37,Deividas Sirvydis,International (Lithuania),Lithuania,,,,
+2019,2,8,38,Daniel Gafford,NCAA,Arkansas,44057.0,44057.0,2019.0,direct_athlete_id
+2019,2,9,39,Alen Smailagic,International (Serbia),Serbia,,,,
+2019,2,10,40,Justin James,NCAA,Wyoming,43369.0,43369.0,2019.0,direct_athlete_id
+2019,2,11,41,Eric Paschall,NCAA,Villanova,41861.0,41861.0,2019.0,direct_athlete_id
+2019,2,12,42,Admiral Schofield,NCAA,Tennessee,41832.0,41832.0,2019.0,direct_athlete_id
+2019,2,13,43,Jaylen Nowell,NCAA,Washington,43444.0,43444.0,2019.0,direct_athlete_id
+2019,2,14,44,Bol Bol,NCAA,Oregon,41889.0,41889.0,2019.0,direct_athlete_id
+2019,2,15,45,Isaiah Roby,NCAA,Nebraska,43079.0,43079.0,2019.0,direct_athlete_id
+2019,2,16,46,Talen Horton-Tucker,NCAA,Iowa State,43028.0,43028.0,2019.0,direct_athlete_id
+2019,2,17,47,Ignas Brazdeikis,NCAA,Michigan,43201.0,43201.0,2019.0,direct_athlete_id
+2019,2,18,48,Terance Mann,NCAA,Florida State,41898.0,41898.0,2019.0,direct_athlete_id
+2019,2,19,49,Quinndary Weatherspoon,NCAA,Mississippi State,43987.0,43987.0,2019.0,direct_athlete_id
+2019,2,20,50,Jarrell Brantley,NCAA,Charleston,42476.0,42476.0,2019.0,direct_athlete_id
+2019,2,21,51,Tremont Waters,NCAA,LSU,41931.0,41931.0,2019.0,direct_athlete_id
+2019,2,22,52,Jalen McDaniels,NCAA,San Diego State,43358.0,43358.0,2019.0,direct_athlete_id
+2019,2,23,53,Justin Wright-Foreman,NCAA,Hofstra,44089.0,44089.0,2019.0,direct_athlete_id
+2019,2,24,54,Marial Shayok,NCAA,Iowa State,43030.0,43030.0,2019.0,direct_athlete_id
+2019,2,25,55,Kyle Guy,NCAA,Virginia,42532.0,42532.0,2019.0,direct_athlete_id
+2019,2,26,56,Jaylen Hands,NCAA,UCLA,41908.0,41908.0,2019.0,direct_athlete_id
+2019,2,27,57,Jordan Bone,NCAA,Tennessee,41831.0,41831.0,2019.0,direct_athlete_id
+2019,2,28,58,Miye Oni,NCAA,Yale,44254.0,44254.0,2019.0,direct_athlete_id
+2019,2,29,59,Dewan Hernandez,NCAA,Miami,44064.0,,,unmatched_needs_review
+2019,2,30,60,Vanja Marinkovic,International (Serbia),Serbia,,,,
+2018,1,1,1,Deandre Ayton,NCAA,Arizona,46016.0,46016.0,2018.0,direct_athlete_id
+2018,1,2,2,Marvin Bagley III,NCAA,Duke,46001.0,46001.0,2018.0,direct_athlete_id
+2018,1,3,3,Luka Doncic,International (Slovenia),Slovenia,,,,
+2018,1,4,4,Jaren Jackson Jr.,NCAA,Michigan State,46009.0,46009.0,2018.0,direct_athlete_id
+2018,1,5,5,Trae Young,NCAA,Oklahoma,48324.0,48324.0,2018.0,direct_athlete_id
+2018,1,6,6,Mohamed Bamba,NCAA,Texas,47342.0,47342.0,2018.0,direct_athlete_id
+2018,1,7,7,Wendell Carter Jr.,NCAA,Duke,46002.0,46002.0,2018.0,direct_athlete_id
+2018,1,8,8,Collin Sexton,NCAA,Alabama,46356.0,46356.0,2018.0,direct_athlete_id
+2018,1,9,9,Kevin Knox,NCAA,Kentucky,48213.0,48213.0,2018.0,direct_athlete_id
+2018,1,10,10,Mikal Bridges,NCAA,Villanova,46041.0,46041.0,2018.0,direct_athlete_id
+2018,1,11,11,Shai Gilgeous-Alexander,NCAA,Kentucky,48216.0,48216.0,2018.0,direct_athlete_id
+2018,1,12,12,Miles Bridges,NCAA,Michigan State,46010.0,46010.0,2018.0,direct_athlete_id
+2018,1,13,13,Jerome Robinson,NCAA,Boston College,46890.0,46890.0,2018.0,direct_athlete_id
+2018,1,14,14,Michael Porter Jr.,NCAA,Missouri,47525.0,47525.0,2018.0,direct_athlete_id
+2018,1,15,15,Troy Brown,NCAA,Oregon,47762.0,47762.0,2018.0,direct_athlete_id
+2018,1,16,16,Zhaire Smith,NCAA,Texas Tech,47477.0,47477.0,2018.0,direct_athlete_id
+2018,1,17,17,Donte DiVincenzo,NCAA,Villanova,46042.0,46042.0,2018.0,direct_athlete_id
+2018,1,18,18,Lonnie Walker,NCAA,Miami,46078.0,46078.0,2018.0,direct_athlete_id
+2018,1,19,19,Kevin Huerter,NCAA,Maryland,46660.0,46660.0,2018.0,direct_athlete_id
+2018,1,20,20,Josh Okogie,NCAA,Georgia Tech,46132.0,46132.0,2018.0,direct_athlete_id
+2018,1,21,21,Grayson Allen,NCAA,Duke,46005.0,46005.0,2018.0,direct_athlete_id
+2018,1,22,22,Chandler Hutchison,NCAA,Boise State,47643.0,47643.0,2018.0,direct_athlete_id
+2018,1,23,23,Aaron Holiday,NCAA,UCLA,46136.0,46136.0,2018.0,direct_athlete_id
+2018,1,24,24,Anfernee Simons,International (USA),USA,,,,
+2018,1,25,25,Moritz Wagner,NCAA,Michigan,,48111.0,2018.0,name_year_team
+2018,1,26,26,Landry Shamet,NCAA,Wichita State,46052.0,46052.0,2018.0,direct_athlete_id
+2018,1,27,27,Robert Williams,NCAA,Texas A&M,48997.0,48997.0,2018.0,direct_athlete_id
+2018,1,28,28,Jacob Evans,NCAA,Cincinnati,48477.0,48477.0,2018.0,direct_athlete_id
+2018,1,29,29,Dzanan Musa,International (Bosnia & Herzegovina),Bosnia & Herzegovina,,,,
+2018,1,30,30,Omari Spellman,NCAA,Villanova,46039.0,46039.0,2018.0,direct_athlete_id
+2018,2,1,31,Elie Okobo,International (France),France,,,,
+2018,2,2,32,Jevon Carter,NCAA,West Virginia,48747.0,48747.0,2018.0,direct_athlete_id
+2018,2,3,33,Jalen Brunson,NCAA,Villanova,46040.0,46040.0,2018.0,direct_athlete_id
+2018,2,4,34,Devonte' Graham,NCAA,Kansas,46031.0,46031.0,2018.0,direct_athlete_id
+2018,2,5,35,Melvin Frazier,NCAA,Tulane,47229.0,47229.0,2018.0,direct_athlete_id
+2018,2,6,36,Mitchell Robinson,NCAA,Western Kentucky,,,,unmatched_needs_review
+2018,2,7,37,Gary Trent Jr.,NCAA,Duke,46003.0,46003.0,2018.0,direct_athlete_id
+2018,2,8,38,Khyri Thomas,NCAA,Creighton,47518.0,47518.0,2018.0,direct_athlete_id
+2018,2,9,39,Isaac Bonga,International (Germany),Germany,,,,
+2018,2,10,40,Rodions Kurucs,International (Latvia),Latvia,,,,
+2018,2,11,41,Jarred Vanderbilt,NCAA,Kentucky,48217.0,48217.0,2018.0,direct_athlete_id
+2018,2,12,42,Bruce Brown,NCAA,Miami,46075.0,46075.0,2018.0,direct_athlete_id
+2018,2,13,43,Justin Jackson,NCAA,Maryland,46658.0,46658.0,2018.0,direct_athlete_id
+2018,2,14,44,Issuf Sanon,International (Ukraine),Ukraine,,,,
+2018,2,15,45,Hamidou Diallo,NCAA,Kentucky,48214.0,48214.0,2018.0,direct_athlete_id
+2018,2,16,46,De'Anthony Melton,NCAA,USC,46071.0,,,unmatched_needs_review
+2018,2,17,47,Sviatoslav Mykhailiuk,NCAA,Kansas,46030.0,46030.0,2018.0,direct_athlete_id
+2018,2,18,48,Keita Bates-Diop,NCAA,Ohio State,46698.0,46698.0,2018.0,direct_athlete_id
+2018,2,19,49,Chimezie Metu,NCAA,USC,46067.0,46067.0,2018.0,direct_athlete_id
+2018,2,20,50,Alize Johnson,NCAA,Missouri State,47139.0,47139.0,2018.0,direct_athlete_id
+2018,2,21,51,Tony Carr,NCAA,Penn State,46284.0,46284.0,2018.0,direct_athlete_id
+2018,2,22,52,Vince Edwards,NCAA,Purdue,46127.0,46127.0,2018.0,direct_athlete_id
+2018,2,23,53,Devon Hall,NCAA,Virginia,,46656.0,2018.0,name_year_team
+2018,2,24,54,Shake Milton,NCAA,SMU,47238.0,47238.0,2018.0,direct_athlete_id
+2018,2,25,55,Arnoldas Kulboka,International (Lithuania),Lithuania,,,,
+2018,2,26,56,Ray Spalding,NCAA,Louisville,48222.0,48222.0,2018.0,direct_athlete_id
+2018,2,27,57,Kevin Hervey,NCAA,UT Arlington,48124.0,48124.0,2018.0,direct_athlete_id
+2018,2,28,58,Thomas Welsh,NCAA,UCLA,46135.0,46135.0,2018.0,direct_athlete_id
+2018,2,29,59,George King,NCAA,Colorado,,47223.0,2018.0,name_year_team
+2018,2,30,60,Kostas Antetokounmpo,NCAA,Dayton,,46511.0,2018.0,name_year_team
+2017,1,1,1,Markelle Fultz,NCAA,Washington,53509.0,53509.0,2017.0,direct_athlete_id
+2017,1,2,2,Lonzo Ball,NCAA,UCLA,51221.0,51221.0,2017.0,direct_athlete_id
+2017,1,3,3,Jayson Tatum,NCAA,Duke,51900.0,51900.0,2017.0,direct_athlete_id
+2017,1,4,4,Josh Jackson,NCAA,Kansas,52700.0,52700.0,2017.0,direct_athlete_id
+2017,1,5,5,De'Aaron Fox,NCAA,Kentucky,51981.0,51981.0,2017.0,direct_athlete_id
+2017,1,6,6,Jonathan Isaac,NCAA,Florida State,53069.0,53069.0,2017.0,direct_athlete_id
+2017,1,7,7,Lauri Markkanen,NCAA,Arizona,51944.0,51944.0,2017.0,direct_athlete_id
+2017,1,8,8,Frank Ntilikina,International (France),France,,,,
+2017,1,9,9,Dennis Smith,NCAA,NC State,51915.0,51915.0,2017.0,direct_athlete_id
+2017,1,10,10,Zach Collins,NCAA,Gonzaga,51200.0,51200.0,2017.0,direct_athlete_id
+2017,1,11,11,Malik Monk,NCAA,Kentucky,51980.0,51980.0,2017.0,direct_athlete_id
+2017,1,12,12,Luke Kennard,NCAA,Duke,51895.0,51895.0,2017.0,direct_athlete_id
+2017,1,13,13,Donovan Mitchell,NCAA,Louisville,51193.0,51193.0,2017.0,direct_athlete_id
+2017,1,14,14,Edrice Adebayo,NCAA,Kentucky,51978.0,51978.0,2017.0,direct_athlete_id
+2017,1,15,15,Justin Jackson,NCAA,North Carolina,52675.0,52675.0,2017.0,direct_athlete_id
+2017,1,16,16,Justin Patton,NCAA,Creighton,51278.0,51278.0,2017.0,direct_athlete_id
+2017,1,17,17,D.J. Wilson,NCAA,Michigan,52715.0,52715.0,2017.0,direct_athlete_id
+2017,1,18,18,TJ Leaf,NCAA,UCLA,51220.0,51220.0,2017.0,direct_athlete_id
+2017,1,19,19,John Collins,NCAA,Wake Forest,52044.0,52044.0,2017.0,direct_athlete_id
+2017,1,20,20,Harry Giles,NCAA,Duke,51899.0,51899.0,2017.0,direct_athlete_id
+2017,1,21,21,Terrance Ferguson,International (Australia),Australia,,,,
+2017,1,22,22,Jarrett Allen,NCAA,Texas,52496.0,52496.0,2017.0,direct_athlete_id
+2017,1,23,23,OG Anunoby,NCAA,Indiana,52695.0,52695.0,2017.0,direct_athlete_id
+2017,1,24,24,Tyler Lydon,NCAA,Syracuse,51248.0,51248.0,2017.0,direct_athlete_id
+2017,1,25,25,Anzejs Pasecniks ,International (Latvia),Latvia,,,,
+2017,1,26,26,Caleb Swanigan,NCAA,Purdue,51205.0,51205.0,2017.0,direct_athlete_id
+2017,1,27,27,Kyle Kuzma,NCAA,Utah,53273.0,53273.0,2017.0,direct_athlete_id
+2017,1,28,28,Tony Bradley,NCAA,North Carolina,52678.0,52678.0,2017.0,direct_athlete_id
+2017,1,29,29,Derrick White,NCAA,Colorado,,52660.0,2017.0,name_year_team
+2017,1,30,30,Josh Hart,NCAA,Villanova,,51167.0,2017.0,name_year_team
+2017,2,1,31,Frank Jackson,NCAA,Duke,51897.0,51897.0,2017.0,direct_athlete_id
+2017,2,2,32,Davon Reed,NCAA,Miami,,51925.0,2017.0,name_year_team
+2017,2,3,33,Wesley Iwundu,NCAA,Kansas State,,,,unmatched_needs_review
+2017,2,4,34,Frank Mason,NCAA,Kansas,,52701.0,2017.0,name_year_team
+2017,2,5,35,Ivan Rabb,NCAA,California,52942.0,52942.0,2017.0,direct_athlete_id
+2017,2,6,36,Jonah Bolden,International (Australia),Australia,,,,
+2017,2,7,37,Semi Ojeleye,NCAA,SMU,,52385.0,2017.0,name_year_team
+2017,2,8,38,Jordan Bell,NCAA,Oregon,,53000.0,2017.0,name_year_team
+2017,2,9,39,Jawun Evans,NCAA,Oklahoma State,52430.0,52430.0,2017.0,direct_athlete_id
+2017,2,10,40,Dwayne Bacon,NCAA,Florida State,53071.0,53071.0,2017.0,direct_athlete_id
+2017,2,11,41,Tyler Dorsey,NCAA,Oregon,53001.0,53001.0,2017.0,direct_athlete_id
+2017,2,12,42,Thomas Bryant,NCAA,Indiana,52696.0,52696.0,2017.0,direct_athlete_id
+2017,2,13,43,Isaiah Hartenstein,International (Germany),Germany,,,,
+2017,2,14,44,Damyean Dotson,NCAA,Houston,,52378.0,2017.0,name_year_team
+2017,2,15,45,Dillon Brooks,NCAA,Oregon,53003.0,53003.0,2017.0,direct_athlete_id
+2017,2,16,46,Sterling Brown,NCAA,SMU,,52387.0,2017.0,name_year_team
+2017,2,17,47,Ike Anigbogu,NCAA,UCLA,51225.0,51225.0,2017.0,direct_athlete_id
+2017,2,18,48,Sindarius Thornwell,NCAA,South Carolina,,51463.0,2017.0,name_year_team
+2017,2,19,49,Vlatko Cancar,International (Slovenia),Slovenia,,,,
+2017,2,20,50,Mathias  Lessort,International (France),France,,,,
+2017,2,21,51,Monte Morris,NCAA,Iowa State,,51297.0,2017.0,name_year_team
+2017,2,22,52,Edmond Sumner,NCAA,Xavier,51171.0,51171.0,2017.0,direct_athlete_id
+2017,2,23,53,Kadeem Allen,NCAA,Arizona,51945.0,51945.0,2017.0,direct_athlete_id
+2017,2,24,54,Alec Peters,NCAA,Valparaiso,,52417.0,2017.0,name_year_team
+2017,2,25,55,Nigel Williams-Goss,NCAA,Gonzaga,,51198.0,2017.0,name_year_team
+2017,2,26,56,Jabari Bird,NCAA,California,,52937.0,2017.0,name_year_team
+2017,2,27,57,Aleksandar Vezenkov ,International (Cyprus),Cyprus,,,,
+2017,2,28,58,Ognjen Jaramaz,International (Serbia),Serbia,,,,
+2017,2,29,59,Jaron Blossomgame,NCAA,Clemson,,51931.0,2017.0,name_year_team
+2017,2,30,60,Alpha Kaba,International (France),France,,,,

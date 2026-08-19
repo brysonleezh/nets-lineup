@@ -1,0 +1,13 @@
+name,athlete_id,final_college_season,min_start_season,computed,expected,match
+Frank Mason III,52701,2017,2014,4,4,True
+Trae Young,48324,2018,2018,1,1,True
+Jalen Brunson,46040,2018,2016,3,3,True
+Zach Edey,15234,2024,2021,4,4,True
+Ja Morant,44342,2019,2018,2,3,False
+Cooper Flagg,205,2025,2025,1,1,True
+Zion Williamson,43429,2019,2019,1,1,True
+Payton Pritchard,34903,2020,2017,4,4,True
+Anthony Edwards,35495,2020,2020,1,1,True
+RJ Barrett,43431,2019,2019,1,1,True
+Markelle Fultz,53509,2017,2017,1,1,True
+Luka Garza,31694,2021,2018,4,4,True
