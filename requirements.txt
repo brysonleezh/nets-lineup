@@ -10,10 +10,11 @@ jupyter
 requests
 lxml
 rich
-streamlit
+streamlit>=1.61.1  # st.iframe() (used for every sortable table and the hull chart) is a recent addition - 1.61.1 is the version this app was verified against
 plotly
 pyarrow
 kaleido
+pyyaml  # config.yaml is read at RUNTIME by the roster table and the NCAA Bridge page. It was previously present only as a transitive dependency of jupyter, which a deployed Streamlit app has no reason to keep - trimming jupyter would have silently broken the Intro page, since `import yaml` sits outside the try/except there.
 jinja2
 playwright  # browser binary itself comes from packages.txt's `chromium` (see player_report.py's launch fallback), not `playwright install chromium` - Streamlit Community Cloud has no post-pip-install hook to run that command
 pdf2image  # also needs poppler installed system-wide (pdftoppm/pdftocairo on PATH)
