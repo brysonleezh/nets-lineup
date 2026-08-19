@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mikel Brown Jr. — NCAA→NBA Rookie Archetype Card</title>
+<style>
+  :root {
+    --bg: #F5F1E8; --surface: #FFFFFF; --surface-2: #FBF8F1; --ink: #201C16;
+    --ink-soft: #4A443A; --muted: #7A7266; --line: #E3DCCB; --accent: #A85D22;
+    --accent-soft: #F1DFC6; --good: #4B7355; --good-soft: #DCE8DC;
+    --warn: #A9791E; --warn-soft: #F2E6C8; --crit: #A14A3D; --crit-soft: #F1DAD5;
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    --mono: "SF Mono", ui-monospace, "Cascadia Code", "Roboto Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--serif); margin: 0; }
+  .page { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 3.5rem; }
+  .eyebrow { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  h1 { font-size: 2rem; margin: 0.2rem 0 0.1rem; }
+  .subtitle { color: var(--muted); font-size: 0.95rem; }
+  .meta-line { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 0.4rem; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.2rem 0; box-shadow: 0 1px 2px rgba(32,28,22,.05); }
+  .card h2 { font-size: 1.05rem; margin: 0 0 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
+  .card h2 .letter { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); border: 1px solid var(--accent); border-radius: 50%; width: 1.4rem; height: 1.4rem; display: inline-flex; align-items: center; justify-content: center; }
+  .bar-row { display: grid; grid-template-columns: 11rem 1fr 3.2rem; align-items: center; gap: 0.6rem; margin-bottom: 0.45rem; font-size: 0.87rem; }
+  .bar-track { height: 14px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 7px 0 0 7px; }
+  .bar-fill.pred { background: var(--accent); }
+  .bar-fill.college { background: #6E5A96; }
+  .bar-val { font-family: var(--mono); font-size: 0.8rem; text-align: right; color: var(--ink-soft); }
+  .top3-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.6rem; }
+  .top3-item { padding: 0.6rem 0.8rem; background: var(--surface-2); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; font-size: 0.9rem; }
+  .top3-item b { color: var(--accent); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+  th { text-align: left; font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line); }
+  td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--line); }
+  .confidence-line { font-size: 0.95rem; padding: 0.9rem 1.1rem; background: var(--good-soft); border-radius: 8px; color: var(--ink-soft); }
+  .confidence-line b { color: var(--good); }
+  .caveat { font-size: 0.9rem; padding: 0.9rem 1.1rem; background: var(--warn-soft); border-radius: 8px; color: var(--ink-soft); border-left: 3px solid var(--warn); }
+  .footnote { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+  .footnote li { margin-bottom: 0.4rem; }
+  .legend { display: flex; gap: 1.2rem; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.7rem; }
+  .legend span.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.3rem; }
+</style>
+</head>
+<body>
+<div class="page">
+  <span class="eyebrow">NCAA → NBA Rookie Archetype Translator · Phase 6</span>
+  <h1>Mikel Brown Jr.</h1>
+  <div class="subtitle">Louisville · G, 6'5" · 2026 draft pick #6</div>
+  <div class="meta-line">generated 2026-08-14 07:26 UTC · commit 429619e · model T1_b, deployment refit 2026-08-14, n=273</div>
+
+  <div class="card">
+    <h2><span class="letter">1</span> Predicted rookie-season archetype mix</h2>
+    <div class="legend"><span><span class="dot" style="background:var(--accent)"></span>predicted (point estimate — no uncertainty interval shown, see confidence line below)</span></div>
+    
+    <div class="bar-row">
+      <span>Combo Guard</span>
+      <div class="bar-track"><div class="bar-fill pred" style="width:54.639023542404175%"></div></div>
+      <span class="bar-val">55%</span>
+    </div>
+    
+    <div class="bar-row">
+      <span>Traditional Playmaker</span>
+      <div class="bar-track"><div class="bar-fill pred" style="width:11.256971955299377%"></div></div>
+      <span class="bar-val">11%</span>
+    </div>
+    
+    <div class="bar-row">
+      <span>Shooting Specialist</span>
+      <div class="bar-track"><div class="bar-fill pred" style="width:10.364874452352524%"></div></div>
+      <span class="bar-val">10%</span>
+    </div>
+    
+    <div class="bar-row">
+      <span>Rim Protector / Roll Man</span>
+      <div class="bar-track"><div class="bar-fill pred" style="width:6.431230902671814%"></div></div>
+      <span class="bar-val">6%</span>
+    </div>
+    
+    <div class="bar-row">
+      <span>3&D Wing</span>
+      <div class="bar-track"><div class="bar-fill pred" style="width:5.856092274188995%"></div></div>
+      <span class="bar-val">6%</span>
+    </div>
+    
+    <div class="bar-row">
+      <span>Offensive Engine</span>
+      <div class="bar-track"><div class="bar-fill pred" style="width:5.173387750983238%"></div></div>
+      <span class="bar-val">5%</span>
+    </div>
+    
+    <div class="bar-row">
+      <span>Mobile Big</span>
+      <div class="bar-track"><div class="bar-fill pred" style="width:3.4862369298934937%"></div></div>
+      <span class="bar-val">3%</span>
+    </div>
+    
+    <div class="bar-row">
+      <span>Inside Scoring Big</span>
+      <div class="bar-track"><div class="bar-fill pred" style="width:2.792183868587017%"></div></div>
+      <span class="bar-val">3%</span>
+    </div>
+    
+  </div>
+
+  <div class="card">
+    <h2><span class="letter">2</span> Top-3 predicted archetypes</h2>
+    <div class="top3-list">
+      
+      <div class="top3-item"><b>1st: Combo Guard</b> (55%) — closest real comparison: D'Angelo Russell (2025-26)</div>
+      
+      <div class="top3-item"><b>2nd: Traditional Playmaker</b> (11%) — closest real comparison: Bez Mbeng (2025-26)</div>
+      
+      <div class="top3-item"><b>3rd: Shooting Specialist</b> (10%) — closest real comparison: Tim Hardaway Jr. (2025-26)</div>
+      
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="letter">3</span> College profile (the model's input)</h2>
+    <div class="legend"><span><span class="dot" style="background:#6E5A96"></span>his actual 2025-26 college archetype mix — this is what went <em>into</em> the model, not a prediction</span></div>
+    
+    <div class="bar-row">
+      <span>High-Usage Primary Ball-Handler</span>
+      <div class="bar-track"><div class="bar-fill college" style="width:57.18267002843961%"></div></div>
+      <span class="bar-val">57%</span>
+    </div>
+    
+    <div class="bar-row">
+      <span>High-Usage Interior Scorer</span>
+      <div class="bar-track"><div class="bar-fill college" style="width:18.13142581369589%"></div></div>
+      <span class="bar-val">18%</span>
+    </div>
+    
+    <div class="bar-row">
+      <span>Low-Minute Statistical Outlier (a noisier, less distinct archetype in this model)</span>
+      <div class="bar-track"><div class="bar-fill college" style="width:11.317528149175%"></div></div>
+      <span class="bar-val">11%</span>
+    </div>
+    
+    <div class="bar-row">
+      <span>Ball-Hawking Defensive Guard</span>
+      <div class="bar-track"><div class="bar-fill college" style="width:7.37998419290059%"></div></div>
+      <span class="bar-val">7%</span>
+    </div>
+    
+    <div class="bar-row">
+      <span>Efficient Low-Usage Play-Finisher</span>
+      <div class="bar-track"><div class="bar-fill college" style="width:5.98839181578888%"></div></div>
+      <span class="bar-val">6%</span>
+    </div>
+    
+    <div class="bar-row">
+      <span>Inefficient Low-Usage Reserve (a noisier, less distinct archetype in this model)</span>
+      <div class="bar-track"><div class="bar-fill college" style="width:0.0%"></div></div>
+      <span class="bar-val">0%</span>
+    </div>
+    
+    <div class="bar-row">
+      <span>Rim-Protecting Big / Shot-Blocking Center</span>
+      <div class="bar-track"><div class="bar-fill college" style="width:0.0%"></div></div>
+      <span class="bar-val">0%</span>
+    </div>
+    
+    <div class="bar-row">
+      <span>Low-Event Floor Role Player (a noisier, less distinct archetype in this model)</span>
+      <div class="bar-track"><div class="bar-fill college" style="width:0.0%"></div></div>
+      <span class="bar-val">0%</span>
+    </div>
+    
+  </div>
+
+  <div class="card">
+    <h2><span class="letter">4</span> Comps: historically similar college profiles</h2>
+    <p style="font-size:0.87rem;color:var(--ink-soft);margin-top:0">These are the 5 draft-class anchors whose college statistical profile most closely resembles Mikel's (nearest neighbors in the model's own feature space) — shown with what they actually became as NBA rookies. This is the honest answer to "how much could this vary": the spread across these 5 outcomes, not a synthetic confidence interval.</p>
+    <table>
+      <thead><tr><th>Player</th><th>Class</th><th>Pick</th><th>College</th><th>His college top archetype</th><th>What he actually became as a rookie</th></tr></thead>
+      <tbody>
+        
+        <tr>
+          <td><b>Rob Dillingham</b></td><td>2024</td><td>#8</td><td>Kentucky</td>
+          <td>High-Usage Primary Ball-Handler</td>
+          <td>Combo Guard (81%), then Traditional Playmaker (19%)</td>
+        </tr>
+        
+        <tr>
+          <td><b>Dennis Smith</b></td><td>2017</td><td>#9</td><td>NC State</td>
+          <td>High-Usage Primary Ball-Handler</td>
+          <td>Combo Guard (71%), then Offensive Engine (14%)</td>
+        </tr>
+        
+        <tr>
+          <td><b>Dylan Harper</b></td><td>2025</td><td>#2</td><td>Rutgers</td>
+          <td>High-Usage Primary Ball-Handler</td>
+          <td>Combo Guard (41%), then Offensive Engine (18%)</td>
+        </tr>
+        
+        <tr>
+          <td><b>Keyonte George</b></td><td>2023</td><td>#16</td><td>Baylor</td>
+          <td>High-Usage Primary Ball-Handler</td>
+          <td>Combo Guard (78%), then Shooting Specialist (14%)</td>
+        </tr>
+        
+        <tr>
+          <td><b>Jaden Ivey</b></td><td>2022</td><td>#5</td><td>Purdue</td>
+          <td>High-Usage Interior Scorer</td>
+          <td>Combo Guard (72%), then Traditional Playmaker (14%)</td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2><span class="letter">5</span> How much should you trust this?</h2>
+    <div class="confidence-line">On the 2025 draft class (n=36, the only class this model has been tested against that it never trained on), this model's predictions had a 52.8% chance of naming the correct top archetype, a 69.4% chance the correct archetype was in its top two, and an average Jensen-Shannon divergence of 0.169 between predicted and actual archetype mixes.</div>
+    
+  </div>
+
+  <div class="card">
+    <h2><span class="letter">6</span> What this model cannot see</h2>
+    <ul class="footnote">
+      
+      <li>This model is blind to shot-location and play-type data on the college side (16 of the NBA archetype basis's 29 dimensions have no college counterpart) — it cannot reliably separate certain role variants, e.g. a rim-protecting roll man from a perimeter-mobile big, or a spot-up shooter from a movement shooter.</li>
+      
+      <li>It was trained only on players who earned at least 300 NBA minutes as rookies — it answers "what role will he play if he plays," never "will he play."</li>
+      
+      <li>Elite prospects whose final college season was cut short by injury, suspension, or opt-out are absent from the training data — the model has never seen that profile, so a prediction for such a player would be extrapolation, not interpolation.</li>
+      
+      <li>Posterior uncertainty intervals from this model are not calibrated (validated on the 2025 holdout — see the confidence line above) and are deliberately not shown.</li>
+      
+      <li>Coaching decisions, scheme fit, and playing-time opportunity are not observable to any statistical model and are not represented here.</li>
+      
+    </ul>
+  </div>
+</div>
+</body>
+</html>
