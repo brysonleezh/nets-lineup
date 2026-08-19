@@ -1,0 +1,66 @@
+# Phase 6 - deployment, rookie cards & prediction freeze. Single source of
+# truth for the three Nets rookies' identities and Phase 6's tunable knobs.
+# See reports/phase6_worklog.md for how each field below was resolved.
+
+seed: 1
+
+# The three Nets rookies with zero NBA data (2026 draft class). All fields
+# below were verified live, not assumed:
+# - cbbd_athlete_id: from data/raw/cbbd/draft_picks_all.json, cross-checked
+#   against a real college recipe existing in data/college/recipes.csv for
+#   CBBD season=2026 (their 2025-26 college season).
+# - draft_pick_overall / nba_player_id / birthdate: live nba_api lookups
+#   (commonallplayers for player_id, commonplayerinfo for birthdate/draft
+#   number - the latter cached under data/raw/nba/commonplayerinfo/).
+# - Joshua Jefferson was drafted #28 by the Minnesota Timberwolves per CBBD
+#   (not Brooklyn) - confirmed via a live nba_api commonallplayers query
+#   that he is TEAM_ABBREVIATION=BKN for the 2026-27 season, i.e. traded or
+#   signed to Brooklyn after the draft. draft_pick_overall stays 28 (his
+#   real selection slot); current_team records the resolution.
+rookies:
+  - display_name: "Mikel Brown Jr."
+    cbbd_athlete_id: 200182
+    nba_player_id: 1643414
+    draft_pick_overall: 6
+    draft_round: 1
+    birthdate: "2006-04-03"
+    college: "Louisville"
+    current_team: "BKN"
+  - display_name: "Tyler Bilodeau"
+    cbbd_athlete_id: 529
+    nba_player_id: 1643548
+    draft_pick_overall: 43
+    draft_round: 2
+    birthdate: "2004-04-17"
+    college: "UCLA"
+    current_team: "BKN"
+  - display_name: "Joshua Jefferson"
+    cbbd_athlete_id: 142
+    nba_player_id: 1643538
+    draft_pick_overall: 28
+    draft_round: 1
+    birthdate: "2003-11-21"
+    college: "Iowa State"
+    current_team: "BKN"
+    note: "Drafted #28 by Minnesota per CBBD; on BKN's 2026-27 roster per nba_api - post-draft trade/signing, not a data error."
+
+# 2026 NBA draft date, for age_at_draft. Late-June estimate, continuing the
+# established pattern from Phase 3's DRAFT_DATES dict (2025: 2025-06-25) -
+# a +/-few-days error is immaterial (<0.02y against a 365.25-day denominator,
+# same tolerance already accepted for the 2017-2025 draft dates).
+draft_date_2026: "2026-06-24"
+
+# Step 2's saturation flag threshold (the "Kalkbrenner rule") - config-
+# adjustable per spec, not hardcoded in the pipeline script.
+saturation_c_alpha_max_threshold: 0.85
+
+# k-NN comps: number of nearest anchors to show per rookie (Phase 4's own
+# T3 default was k in {5, 8}; Phase 6 spec asks for 5 specifically).
+comps_k: 5
+
+# src/eval/review_2026_predictions.py: games in the 2026-27 regular season,
+# for the eligibility threshold's pro-ration (300 * games/82, same
+# convention as Phase 3's 2020-21 handling). Default 82 = a normal,
+# unshortened season - override only if the real 2026-27 season is
+# actually shortened once it's known.
+games_in_season_2026_27: 82

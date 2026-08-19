@@ -1,0 +1,41 @@
+# Archetype Fit/Synergy Model diagnostic harness - single source of truth
+# for all knobs. See src/pipeline/fit_harness/ for the phase scripts.
+
+seed: 1
+
+seasons:
+  # Spec wants 2022-23..2025-26; 2022-23 stint data does not exist in this
+  # repo yet (confirmed: only 2023-24/2024-25/2025-26 were built). Confirmed
+  # LIVE that nba_api's BoxScoreTraditionalV3/PlayByPlayV3 (the endpoints
+  # build_stints.py uses) DO return real data for 2022-23 - extending back
+  # is feasible, just requires a fresh full-season pull (not yet done -
+  # flagged to the user, not silently skipped).
+  train: ["2023-24", "2024-25"]
+  holdout: "2025-26"
+  # train_full_spec (not yet built): ["2022-23", "2023-24", "2024-25"]
+
+data_sources:
+  stint_backbone: build_stints.py  # NOT pbpstats - confirmed broken for
+  # 2025-26 (deprecated stats.nba.com v2 endpoint), which is exactly why
+  # this project already built its own v3-endpoint stint parser. Reused
+  # directly rather than reimplemented.
+  talent_metric: build_skill.py  # NOT DARKO DPM - already confirmed
+  # unobtainable (no free historical/preseason snapshot) by this exact
+  # project's own prior investigation (see build_skill.py's own docstring).
+  # Falls back to Basketball-Reference OBPM/DBPM, split off/def, exactly
+  # matching the harness spec's own documented fallback clause - already
+  # built, already validated (0.77 corr vs real team-season NET_RATING).
+
+phase0:
+  possession_buckets: [50, 100, 250]
+  garbage_time: standard_tiered  # see src/pipeline/fit_harness/garbage_time.py -
+  # NOT literally "pbpstats definitions" (pbpstats ships no such filter,
+  # confirmed by reading its installed source) - a standard, documented
+  # tiered margin/time-remaining threshold is used instead.
+  gates:
+    min_training_possessions: 500000
+    min_split_half_reliability_at_250: 0.2
+
+paths:
+  reports_dir: reports
+  logs_dir: logs

@@ -1,0 +1,104 @@
+# NCAA -> NBA rookie-season archetype translation pipeline.
+# Single source of truth for every knob this pipeline uses. See
+# src/pipeline/ncaa_bridge/README.md for the full step-by-step design.
+
+seed: 1
+
+# CBBD's own season-labeling convention: season=2017 means the 2016-17
+# season (seasonLabel "20162017"), season=2026 means 2025-26. This range
+# covers every draft class 2017-2025's final college season (class of
+# 2017 -> final season 2016-17) through the three target rookies' own
+# 2025-26 season.
+cbbd:
+  seasons: [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
+  raw_cache_dir: data/raw/cbbd
+  request_timeout_s: 30
+  retry_attempts: 3
+  retry_sleep_s: 2
+  inter_request_sleep_s: 0.2
+
+# Step 1 - college archetype model
+college_model:
+  min_minutes: 300
+  # Drafted-conference pool restriction (Step 1 spec, default ON): restrict
+  # the K-fit training pool to conferences that produced >=1 draft pick
+  # across draft classes 2017-2025. Sensitivity re-run with this OFF is
+  # reported alongside the default-ON result, not silently dropped.
+  restrict_to_drafted_conferences: true
+  draft_sample_window: [2017, 2025]
+  k_range: [4, 12]
+  # Shot-distance-by-feet is NOT available from CBBD (confirmed via live
+  # schema probe - CBBD has shot-TYPE breakdown, dunk/layup/jumper/three,
+  # not distance buckets). Per explicit decision, dropped as a feature
+  # family rather than approximated via a shot-type proxy. Corner-3 rate
+  # (Corner 3s_%3PA) is part of the same location-based family and is
+  # dropped for the same reason.
+  #
+  # BPM has no direct college equivalent tracked by CBBD; PORPAG (a
+  # similar single-number, all-in-one value metric CBBD does report) is
+  # substituted, flagged as an approximation, not an identical stat.
+  features:
+    - PLAYER_HEIGHT_INCHES
+    - PTS_PER_100
+    - TS%
+    - USG%
+    - AST%
+    - TOV%
+    - STL%
+    - BLK%
+    - ORB%
+    - DRB%
+    - TRB%
+    - FTr
+    - PORPAG          # substitutes BPM - see note above
+    - "%FGAst'd_2P"
+    - "%FGAst'd_3P"
+  dropped_nba_features:
+    - Dist.
+    - "% of FGA by Distance_0-3"
+    - "% of FGA by Distance_3-10"
+    - "% of FGA by Distance_10-16"
+    - "% of FGA by Distance_16-3P"
+    - "% of FGA by Distance_3P"
+    - "Corner 3s_%3PA"
+    - PLAYTYPE_CUT
+    - PLAYTYPE_HANDOFF
+    - PLAYTYPE_ISOLATION
+    - PLAYTYPE_OFFREBOUND
+    - PLAYTYPE_OFFSCREEN
+    - PLAYTYPE_PRBALLHANDLER
+    - PLAYTYPE_PRROLLMAN
+    - PLAYTYPE_POSTUP
+    - PLAYTYPE_SPOTUP
+
+# Step 2 - anchor set
+anchors:
+  draft_classes: [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+  min_rookie_minutes: 300
+  min_anchor_count_gate: 120   # stop-and-ask threshold per spec
+
+# Step 5 - target rookies (identities confirmed with user 2026-08-11)
+target_rookies:
+  - name: Mikel Brown Jr.
+    cbbd_athlete_id: 200182
+    school: Louisville
+    draft_year: 2026
+    draft_pick_overall: 6
+    final_college_season: 2026   # 2025-26
+  - name: Tyler Bilodeau
+    school: UCLA
+    draft_year: 2026
+    draft_pick_overall: 43
+    final_college_season: 2026
+  - name: Joshua Jefferson
+    school: Iowa State
+    draft_year: 2026
+    draft_pick_overall: 28
+    final_college_season: 2026
+
+paths:
+  college_recipes: data/college/recipes.csv
+  college_basis: data/college/basis.npz
+  anchors: data/anchors/anchors.csv
+  reports_dir: reports
+  logs_dir: logs
