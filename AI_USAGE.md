@@ -1383,3 +1383,15 @@ Reworded `render_rapm_investigation_note()`'s own sub-heading ("Why isn't this p
 - Mistake made and caught by the tests: my first edit inserted the team-resolution block at module level in the middle of `with st.sidebar:`, which terminated that block and left the nav construction nested inside an `else:` branch — so `page` was undefined on the default path and the nav rendered into the main area. It compiled cleanly; the AppTest caught it (`NameError: name 'page' is not defined`). Fixed by keeping the resolution inside the sidebar block, where the per-page pickers that read it live.
 - Verified: live AppTest across every mode — default "All 30 teams" gives 433 players and the NBA branding; LAL gives 14 and its own logo; "Nets — current roster" gives 16 and the Nets branding; the Intro heading tracks the selection ("All 30 teams at K=8" / "LAL roster at K=8" / "Nets roster at K=8"); no exception on any switch. Full suite 135/135.
 - What was NOT AI-generated: the decision to drop the Nets framing entirely — the owner's own call, made with the cost stated.
+
+## Entry 158 — Stop highlighting everyone in the league-wide hull view (src/step2_intro.py, src/hull_callout_chart.py)
+
+- Date: 2026-08-23
+- Tool: Claude Code
+- Prompt: "在 The 8 Player Types 我可以添加filter选team么？这样很杂乱的放到这里感觉不好看".
+- The filter already existed — the sidebar team picker drives this page. The real defect was one I introduced in the league-wide conversion: with "All 30 teams" selected, the highlight set became every player, so the chart rendered **425 dark dots against 8 grey ones**. Highlighting is a "this team against the league" device; applied to everyone it is not a weaker version of itself, it is the absence of it. Measured before changing anything rather than guessing at the cause.
+- What was used: the league-wide view now highlights nobody, leaving the page's actual subject — the 8 labelled corners over the full player cloud. Selecting any team restores the contrast (LAL: 14 highlighted against 387).
+- Latent bug this surfaced: passing an empty highlight set crashed `build_figure_spec` with a `ValueError` from `np.vstack`, because the empty list comprehension yields shape `(0,)` and cannot stack against the `(n,2)` vertex array. "Nobody highlighted" is a legitimate state, not an error, so the fix reshapes to `(0,2)` rather than special-casing the caller. Without this the clean league view was simply unreachable.
+- Also fixed prose that went stale in the same conversion: the intro sentence still read "black dots are Nets players" while the league view shows no dark dots at all — it described something not on screen. The sentence now follows the selection ("the cloud is every player who logged 300+ minutes this season" league-wide, "the dark dots are LAL players" per team).
+- Verified: built figure specs directly to count highlighted vs background points in each mode; live AppTest confirming the caption text tracks all three selection states; browser screenshot of the cleaned league view. Full suite 135/135.
+- What was NOT AI-generated: noticing that it looked cluttered — the owner's.

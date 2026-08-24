@@ -455,10 +455,15 @@ def build_figure_spec(proj, roster_df, labels, k):
     # data change.
     # Not AI: none - this bug and its fix were not part of the spec, found
     # and resolved during verification.
-    foreground_px = np.vstack([
-        vertices_px,
-        np.array([data_to_px(*all_2d[i]) for i in np.where(is_nets)[0]]),
-    ])
+    # reshape(-1, 2) rather than a bare np.array: with NO highlighted players
+    # (the league-wide view, where singling out one team would be meaningless)
+    # the comprehension yields [] whose shape is (0,), and vstack rejects it
+    # against the (n,2) vertices. Empty is a legitimate state here, not an
+    # error, so it has to produce an empty (0,2) instead of raising.
+    highlight_px = np.array(
+        [data_to_px(*all_2d[i]) for i in np.where(is_nets)[0]], dtype=float
+    ).reshape(-1, 2)
+    foreground_px = np.vstack([vertices_px, highlight_px])
     if len(idx_other):
         other_px = np.array([data_to_px(*all_2d[i]) for i in idx_other])
         HOVER_EXCLUDE_RADIUS_PX = 14.0

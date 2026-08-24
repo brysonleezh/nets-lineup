@@ -669,10 +669,17 @@ def render_intro_page(roster, labels, team_label=None):
 
     with st.container(border=True):
         st.markdown("### What is an \"archetype\" here?")
+        # The "black dots are Nets players" half of this sentence went stale the
+        # moment the page stopped being Brooklyn-only: in the league-wide view
+        # nothing is highlighted, so it described dots that are not on screen.
+        league_view = team_label in (None, "All 30 teams")
+        who = ("every player who logged 300+ minutes this season"
+               if league_view else
+               f"the league; the dark dots are {team_label if team_label != 'Nets — current roster' else 'Nets'} players")
         st.markdown(
             "ADA finds the **8 most extreme real players** in the league and expresses "
             "everyone else as a blend of them - not abstract types, real players. Below: "
-            "the colored corners are those 8 archetypes, black dots are Nets players - "
+            f"the colored corners are those 8 archetypes, the cloud is {who} - "
             "hover either for details."
         )
         st.caption("K = 8 - selected by the Phase 2 diagnostics and matching the NBA basis.")
@@ -686,8 +693,20 @@ def render_intro_page(roster, labels, team_label=None):
         # Not AI: which text to cut - the user's own reaction to the rendered
         # page having too much caption text.
 
-        nets_ids_tuple = tuple(sorted(roster["PLAYER_ID"].astype(int).tolist()))
-        chart_html = build_intro_hull_html(nets_ids_tuple)
+        # AI-ASSISTED (Claude Code, chat) - Prompt: "在 The 8 Player Types 我可以
+        # 添加filter选team么？这样很杂乱的放到这里感觉不好看" - the sidebar team
+        # filter already drives this page, but the league-wide default was
+        # highlighting all 433 players, leaving 425 black dots against 8 grey
+        # ones: no contrast, and the chart stopped reading as anything.
+        # Highlighting is a "this team against the league" device, so in the
+        # league-wide view it highlights NOBODY - the page's job there is the
+        # vocabulary (the 8 labelled corners over the full player cloud), and
+        # singling out every player at once is not a weaker version of that,
+        # it is the absence of it.
+        # Not AI: noticing that it looked cluttered - the owner's.
+        highlight_ids = (() if team_label in (None, "All 30 teams")
+                         else tuple(sorted(roster["PLAYER_ID"].astype(int).tolist())))
+        chart_html = build_intro_hull_html(highlight_ids)
         st.iframe(chart_html, height=int(hull_callout_chart.FIGURE_HEIGHT_PX * 1.05) + 20)
 
         st.markdown(
