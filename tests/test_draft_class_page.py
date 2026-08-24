@@ -46,9 +46,13 @@ def test_every_pre_existing_page_still_present():
     at = AppTest.from_file(str(REPO_ROOT / "src" / "portal.py"))
     at.run(timeout=90)
     opts = at.radio[0].options
-    for expected in ("📖 The 8 Player Types", "🔍 Player Breakdown",
-                     "🌉 NCAA Bridge", "📄 Report"):
+    # The always-on pages. Flag-gated pages (NCAA Bridge, Draft Class, Roster
+    # Construction, Future Work) are asserted against their own flags in their
+    # own tests, so hiding one deliberately does not fail here.
+    for expected in ("📖 The 8 Player Types", "🔍 Player Breakdown", "📄 Report"):
         assert expected in opts, f"{expected} disappeared from the nav"
+    import step5_rookie_projections as s5
+    assert ("🌉 NCAA Bridge" in opts) == bool(s5.SHOW_ROOKIE_PROJECTIONS_PAGE)
 
 
 # --- the numbers must come from the frozen file ------------------------------

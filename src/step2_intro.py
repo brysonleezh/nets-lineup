@@ -486,8 +486,7 @@ def render_nets_roster_table(proj, roster_names, labels, bio, base_stats):
             f"Their mixture is **projected** from college data by the NCAA→NBA translator "
             f"(dashed green bars, marked *projected · NCAA bridge*) — a model output with real "
             f"error bars, not a measurement. Everything else in their row is still '—' because "
-            f"no NBA box score exists. See the **NCAA Bridge** page for how each was derived "
-            f"and how accurate the translator was on players whose rookie season we already know."
+            f"no NBA box score exists."
         )
 
     global_max = max((float(P[row_idx].max()) for _, row_idx in resolved.values() if row_idx is not None), default=1.0)

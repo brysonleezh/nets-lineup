@@ -58,7 +58,11 @@ from portal_shared import BL_PAPER, BL_WHITE, BL_INK, BL_MUTED, BL_LINE, BL_GREE
 # Not AI: the decision to build this page now (deferred earlier in this
 # session until Phase 6 finished), and its placement in the nav order -
 # the owner's own calls.
-SHOW_ROOKIE_PROJECTIONS_PAGE = True
+# AI-ASSISTED (Claude Code, chat) - Prompt: "针对NCAA Bridge可以先hidden" -
+# hidden while the portal is refocused league-wide. Same gate-don't-delete
+# convention: the page, the translator pipeline behind it and their tests are
+# untouched, and one flip brings it back.
+SHOW_ROOKIE_PROJECTIONS_PAGE = False
 
 # AI-ASSISTED (Claude Code, chat) - Prompt: "Try a different draft slot — same
 # player, different opportunity / 把这一章节去掉" (drop this section).

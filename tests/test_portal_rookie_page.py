@@ -29,13 +29,19 @@ def test_portal_default_load_no_exception():
 
 
 def test_portal_ncaa_bridge_page_no_exception():
+    """Tracks SHOW_ROOKIE_PROJECTIONS_PAGE rather than hardcoding either state:
+    the page is currently hidden while the portal is refocused league-wide, but
+    it must still render without exception whenever it is switched back on."""
     from streamlit.testing.v1 import AppTest
+    import step5_rookie_projections as s5
     at = AppTest.from_file(str(REPO_ROOT / "src" / "portal.py"))
     at.run(timeout=60)
     assert not at.exception
-    radios = at.radio
-    assert len(radios) >= 1
-    assert "🌉 NCAA Bridge" in radios[0].options
+    opts = at.radio[0].options
+    if not s5.SHOW_ROOKIE_PROJECTIONS_PAGE:
+        assert "🌉 NCAA Bridge" not in opts
+        return
+    assert "🌉 NCAA Bridge" in opts
     at.radio[0].set_value("🌉 NCAA Bridge").run(timeout=60)
     assert not at.exception
 

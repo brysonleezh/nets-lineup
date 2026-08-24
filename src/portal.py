@@ -173,15 +173,56 @@ TEAM_LOGO_URL = "https://cdn.nba.com/logos/nba/{team_id}/global/L/logo.png"
 
 # --- Sidebar navigation -------------------------------------------------------
 
+# AI-ASSISTED (Claude Code, chat) - Prompt: "我觉得我想做的是可以先把整个
+# player进行扩展 并不是局限于Nets 可以扩展到所有的NBA球员" - the diagnostic
+# pages were restricted to the 16 data-eligible Nets players purely by this
+# one roster call; the model itself was always league-wide (the K=8 basis is
+# fit on all 433 qualifying 2025-26 players, and the on-court and stint tables
+# cover the whole league). Verified before widening that the diagnostics
+# actually hold up off-roster rather than silently degrading: miscast, usage
+# elasticity and role drift all return real values for non-Nets players
+# (checked Doncic, Gilgeous-Alexander, Caruso, Hartenstein).
+# Used: the pool now comes from `recipes` itself - every player with a fitted
+# recipe - with a team filter in the sidebar. Brooklyn stays the DEFAULT
+# selection rather than becoming one option among thirty: the project's
+# research question is a Nets question, and the landing state should still
+# answer it.
+# Not AI: the decision to go league-wide - the owner's own.
 recipes, k, labels, oncourt = load_static()
 bio = load_player_bio(season=SEASON)
-roster = load_nets_roster(season=SEASON)
 
 arch_cols_all = [f"arch_{i}" for i in range(k)]
-roster = roster.merge(recipes[["PLAYER_ID"] + arch_cols_all], on="PLAYER_ID", how="left")
-roster = roster.dropna(subset=[arch_cols_all[0]]).reset_index(drop=True)
-roster["dominant_arch"] = roster[arch_cols_all].values.argmax(axis=1)
-roster["role"] = roster["dominant_arch"].map(labels)
+league = recipes[["PLAYER_ID", "PLAYER_NAME", "TEAM_ABBREVIATION", "MIN"] + arch_cols_all].copy()
+league = league.dropna(subset=[arch_cols_all[0]]).reset_index(drop=True)
+league["dominant_arch"] = league[arch_cols_all].values.argmax(axis=1)
+league["role"] = league["dominant_arch"].map(labels)
+
+# The Nets-only frame is still available to anything that needs it (the Intro
+# page's roster gallery, the team-composition views), so widening the
+# diagnostic pool does not change what those render.
+nets_roster = load_nets_roster(season=SEASON)
+nets_roster = nets_roster.merge(recipes[["PLAYER_ID"] + arch_cols_all], on="PLAYER_ID", how="left")
+nets_roster = nets_roster.dropna(subset=[arch_cols_all[0]]).reset_index(drop=True)
+nets_roster["dominant_arch"] = nets_roster[arch_cols_all].values.argmax(axis=1)
+nets_roster["role"] = nets_roster["dominant_arch"].map(labels)
+
+NETS_ABBR = "BKN"
+ALL_TEAMS = "All 30 teams"
+NETS_CURATED = "Nets — current roster"
+
+# Two different, both-correct answers to "show me Brooklyn", kept as separate
+# options rather than silently picking one. Filtering `recipes` on
+# TEAM_ABBREVIATION gives who ACCUMULATED MINUTES for Brooklyn this season;
+# the curated roster gives who is ON the roster now. They differ by 8 players:
+# five (Claxton, Ziaire Williams, Agbaji, Jalen Wilson, Malachi Smith) played
+# Nets minutes and have since left, and three current Nets (Randle, Keon
+# Ellis, Moritz Wagner) still carry their former team on their season-
+# cumulative row because they were traded in recently - a data-vintage fact
+# this project already documents in CLAUDE.md. Offering only one of these
+# would answer a question the reader did not ask.
+TEAM_PICKER_HELP = ("A team code selects whoever logged minutes there this season. "
+                    "\"Nets — current roster\" selects today's roster instead; the two "
+                    "differ for players traded mid-season.")
 
 with st.sidebar:
     st.markdown(
@@ -274,6 +315,21 @@ with st.sidebar:
     # Not AI: the requirement itself, and "like the Report tab" as the
     # explicit placement/style precedent - given directly.
     if page in ("🔍 Player Breakdown",):
+        # Team filter ahead of the player picker: 433 names in one dropdown is
+        # not a usable control. Brooklyn is the default so the landing state
+        # still answers the project's own Nets question.
+        team_opts = ([NETS_CURATED]
+                     + sorted(league["TEAM_ABBREVIATION"].dropna().unique().tolist())
+                     + [ALL_TEAMS])
+        sel_team = st.selectbox("Team", team_opts, index=0, key="diag_team_select",
+                                help=TEAM_PICKER_HELP)
+        if sel_team == NETS_CURATED:
+            roster = nets_roster
+        elif sel_team == ALL_TEAMS:
+            roster = league
+        else:
+            roster = league[league["TEAM_ABBREVIATION"] == sel_team].reset_index(drop=True)
+
         diag_names = sorted(roster["PLAYER_NAME"].tolist())
         pid_to_diag_name = dict(zip(roster["PLAYER_ID"].astype(int), roster["PLAYER_NAME"]))
         default_diag_match = roster.loc[roster["PLAYER_ID"] == DEFAULT_DIAG_PLAYER_ID, "PLAYER_NAME"]
@@ -291,7 +347,10 @@ with st.sidebar:
 
         if fresh_diag_pid is not None and fresh_diag_pid in pid_to_diag_name:
             st.session_state["diag_player_select"] = pid_to_diag_name[fresh_diag_pid]
-        elif "diag_player_select" not in st.session_state:
+        elif st.session_state.get("diag_player_select") not in diag_names:
+            # Covers first load AND a team switch: a name held over from the
+            # previous team is not in this team's list, and Streamlit raises
+            # on a selectbox whose session value is not among its options.
             st.session_state["diag_player_select"] = default_diag_name
 
         selected_diag_name = st.selectbox("Player", diag_names, key="diag_player_select")
@@ -303,6 +362,17 @@ with st.sidebar:
     elif page in ("🌉 NCAA Bridge",):
         pass  # this page owns its own selectbox/slider widgets, rendered inline in its body
     elif page in ("📄 Report",):
+        rep_team_opts = ([NETS_CURATED]
+                         + sorted(league["TEAM_ABBREVIATION"].dropna().unique().tolist())
+                         + [ALL_TEAMS])
+        rep_team = st.selectbox("Team", rep_team_opts, index=0, key="report_team_select",
+                                help=TEAM_PICKER_HELP)
+        if rep_team == NETS_CURATED:
+            roster = nets_roster
+        elif rep_team == ALL_TEAMS:
+            roster = league
+        else:
+            roster = league[league["TEAM_ABBREVIATION"] == rep_team].reset_index(drop=True)
         # `roster` here is already merged against `recipes` and dropna'd
         # down to the data-eligible players (see the roster-prep block
         # above) - the same 16-player pool Diagnostic Analysis's Layer 1
@@ -318,11 +388,11 @@ with st.sidebar:
 if page == "🏆 Draft Class 2026":
     render_draft_class_page()
 elif page == "📖 The 8 Player Types":
-    render_intro_page(roster, labels)
+    render_intro_page(nets_roster, labels)
 elif page == "🔍 Player Breakdown":
     render_diagnostic_analysis(recipes, k, labels, oncourt, bio, roster, sidebar_pid=selected_diag_pid)
 elif page == "🏀 Roster Construction":
-    render_roster_construction(roster, recipes, k, labels)
+    render_roster_construction(nets_roster, recipes, k, labels)
 elif page == "🎯 Building Around Rookie":
     render_rookie_slot_query_page(selected_player, recipes, k, labels, oncourt)
 elif page == "🌉 NCAA Bridge":
