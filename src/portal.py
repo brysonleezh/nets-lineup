@@ -246,31 +246,41 @@ TEAM_PICKER_HELP = ("A team code selects whoever logged minutes there this seaso
 TEAM_IDS = team_id_map()
 TEAM_CODES = sorted(TEAM_IDS)
 
+
+# AI-ASSISTED (Claude Code, chat) - Prompt: "我觉得不要把Team作为filter放到左上吧
+# ... 我应该在The 8 Player Types写的是关于每个archtype receipt去列举典型的球员",
+# scope confirmed as "从侧栏移走，只放到需要的页" (move the team filter off the
+# sidebar; put it only on the pages that need it).
+# The team filter was global (Entry 157) and drove every page including the
+# vocabulary page, where scoping the 8 league-wide archetypes to one team makes
+# no sense. It now lives ONLY on Player Breakdown and Report - the pages whose
+# question is "which player" - built from this one shared resolver. The 8 Player
+# Types page is always league-wide, and the sidebar identity is fixed to the
+# league (the app is a league-wide tool now, not a team's).
+# Not AI: the observation that the filter was misplaced - the owner's own.
+def resolve_team_frame(sel):
+    if sel == ALL_TEAMS:
+        return league
+    if sel == NETS_CURATED:
+        return nets_roster
+    return league[league["TEAM_ABBREVIATION"] == sel].reset_index(drop=True)
+
+
+# Nets first so the diagnostic pages open on a short, concrete, useful list (the
+# player picker is unusable at 433 names); every other team and the whole league
+# are one click away.
+DIAG_TEAM_OPTS = [NETS_CURATED] + TEAM_CODES + [ALL_TEAMS]
+TEAM_PICK_HELP = ("A team code selects whoever logged minutes there this season. "
+                  "\"Nets — current roster\" selects today's Brooklyn roster instead; "
+                  "the two differ for players traded mid-season.")
+
 with st.sidebar:
-    # The team picker is read BEFORE the header so the header can show the
-    # selected team's own identity. Its value drives every page - roster
-    # table, hull highlighting, diagnostic pool, report pool - so a reader
-    # changes teams once rather than per page.
-    sel_team = st.selectbox(
-        "Team", [ALL_TEAMS, NETS_CURATED] + TEAM_CODES, index=0, key="team_select",
-        help=("A team code selects whoever logged minutes there this season. "
-              "\"Nets — current roster\" selects today's Brooklyn roster instead; "
-              "the two differ for players traded mid-season."))
-
-    if sel_team == ALL_TEAMS:
-        logo_url, title_txt = NBA_LOGO_URL, "NBA Archetype Portal"
-    elif sel_team == NETS_CURATED:
-        logo_url, title_txt = TEAM_LOGO_URL.format(team_id=NETS_TEAM_ID), "Nets Archetype Portal"
-    else:
-        logo_url = TEAM_LOGO_URL.format(team_id=TEAM_IDS[sel_team])
-        title_txt = f"{sel_team} Archetype Portal"
-
     st.markdown(
         f'''
         <div style="display:flex;align-items:center;gap:12px;margin:8px 0 4px;">
-            <img src="{logo_url}" style="height:2.6rem;width:2.6rem;flex-shrink:0;object-fit:contain;">
+            <img src="{NBA_LOGO_URL}" style="height:2.6rem;width:2.6rem;flex-shrink:0;object-fit:contain;">
             <span style="font-size:1.6rem;font-weight:700;color:{BL_INK};letter-spacing:-0.01em;line-height:1.1;">
-                {title_txt}
+                NBA Archetype Portal
             </span>
         </div>
         ''',
@@ -278,15 +288,6 @@ with st.sidebar:
     )
     st.caption("Probabilistic Archetype Scouting Portal")
     st.divider()
-
-    # One resolution of the selection, used by every page below. Kept INSIDE
-    # the sidebar block on purpose: the per-page pickers further down read it.
-    if sel_team == ALL_TEAMS:
-        team_frame = league
-    elif sel_team == NETS_CURATED:
-        team_frame = nets_roster
-    else:
-        team_frame = league[league["TEAM_ABBREVIATION"] == sel_team].reset_index(drop=True)
 
     # AI-ASSISTED (Claude Code, chat)
     # Prompt: "我觉得还不如把这部分先去掉 因为第三个tab我想做的是roster
@@ -364,9 +365,11 @@ with st.sidebar:
     # Not AI: the requirement itself, and "like the Report tab" as the
     # explicit placement/style precedent - given directly.
     if page in ("🔍 Player Breakdown",):
-        # No team picker here any more - the sidebar's global one already
-        # resolved `team_frame`, so the selection is made once for the whole app.
-        roster = team_frame
+        # This page's OWN team picker (the sidebar no longer has a global one):
+        # a 433-name player dropdown is not usable, so a team is chosen first.
+        diag_team = st.selectbox("Team", DIAG_TEAM_OPTS, index=0, key="diag_team_select",
+                                 help=TEAM_PICK_HELP)
+        roster = resolve_team_frame(diag_team)
         diag_names = sorted(roster["PLAYER_NAME"].tolist())
         pid_to_diag_name = dict(zip(roster["PLAYER_ID"].astype(int), roster["PLAYER_NAME"]))
         default_diag_match = roster.loc[roster["PLAYER_ID"] == DEFAULT_DIAG_PLAYER_ID, "PLAYER_NAME"]
@@ -399,27 +402,31 @@ with st.sidebar:
     elif page in ("🌉 NCAA Bridge",):
         pass  # this page owns its own selectbox/slider widgets, rendered inline in its body
     elif page in ("📄 Report",):
-        roster = team_frame
-        # `roster` here is already merged against `recipes` and dropna'd
-        # down to the data-eligible players (see the roster-prep block
-        # above) - the same 16-player pool Diagnostic Analysis's Layer 1
-        # screens, just picked via a plain dropdown instead of a chart
-        # click, since a dedicated report page has no quadrant chart to
-        # click a point on.
+        # This page's own team picker, same as Player Breakdown.
+        rep_team = st.selectbox("Team", DIAG_TEAM_OPTS, index=0, key="report_team_select",
+                                help=TEAM_PICK_HELP)
+        roster = resolve_team_frame(rep_team)
         report_names = sorted(roster["PLAYER_NAME"].tolist())
         default_match = roster.loc[roster["PLAYER_ID"] == DEFAULT_DIAG_PLAYER_ID, "PLAYER_NAME"]
         default_name = default_match.iloc[0] if len(default_match) else report_names[0]
-        selected_report_name = st.selectbox("Player", report_names, index=report_names.index(default_name))
+        # Session value from a previous team may not be in this team's list;
+        # Streamlit raises on a selectbox whose stored value is not an option.
+        if st.session_state.get("report_player_select") not in report_names:
+            st.session_state["report_player_select"] = default_name
+        selected_report_name = st.selectbox("Player", report_names, key="report_player_select")
         selected_report_pid = int(roster.loc[roster["PLAYER_NAME"] == selected_report_name, "PLAYER_ID"].iloc[0])
 
 if page == "🏆 Draft Class 2026":
     render_draft_class_page()
 elif page == "📖 The 8 Player Types":
-    render_intro_page(team_frame, labels, team_label=sel_team)
+    # Always the whole league - this page is the archetype vocabulary, not a
+    # team view, which is the entire reason its team filter was removed.
+    render_intro_page(labels)
 elif page == "🔍 Player Breakdown":
     render_diagnostic_analysis(recipes, k, labels, oncourt, bio, roster, sidebar_pid=selected_diag_pid)
 elif page == "🏀 Roster Construction":
-    render_roster_construction(team_frame, recipes, k, labels)
+    # Team-composition page (currently gated off); keeps its Nets default.
+    render_roster_construction(nets_roster, recipes, k, labels)
 elif page == "🎯 Building Around Rookie":
     render_rookie_slot_query_page(selected_player, recipes, k, labels, oncourt)
 elif page == "🌉 NCAA Bridge":

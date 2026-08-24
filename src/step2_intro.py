@@ -661,86 +661,40 @@ def build_intro_hull_html(nets_ids_tuple):
     return hull_callout_chart.render_html(spec)
 
 
-def render_intro_page(roster, labels, team_label=None):
-    """`roster` is now whatever team the sidebar selected (or the whole league),
-    not a fixed Nets frame - see portal.py's team picker. `team_label` is only
-    used for wording; every number comes from `roster` itself."""
-    st.title("Intro")
+def render_intro_page(labels):
+    """The archetype vocabulary page - always league-wide (the team filter was
+    removed; scoping 8 league-wide archetypes to one team makes no sense).
+
+    AI-ASSISTED (Claude Code, chat) - Prompt: "如果这是一个关于每个球员的archetype
+    receipt 那我应该在The 8 Player Types写的是关于每个archtype receipt去列举典型的
+    球员 ... 把外面的8个type 然后每最具有archetype类型的球员有图像标注 而不是用点
+    然后当点击...可以列举出这个球员最具有高分比的球员".
+    Reframed the page from "here is a team on the archetype map" to "here are
+    the 8 types, embodied by real players - click one to see who else fits it".
+    The 8 corners are the exemplar players' headshots (badges), clicking a corner
+    lists that archetype's top-share players (all in hull_callout_chart), and the
+    Brooklyn roster table below - which only made sense when the page was team-
+    scoped - is gone.
+    Not AI: the reframing itself - the owner's own."""
+    st.title("The 8 Player Types")
 
     with st.container(border=True):
-        st.markdown("### What is an \"archetype\" here?")
-        # The "black dots are Nets players" half of this sentence went stale the
-        # moment the page stopped being Brooklyn-only: in the league-wide view
-        # nothing is highlighted, so it described dots that are not on screen.
-        league_view = team_label in (None, "All 30 teams")
-        who = ("every player who logged 300+ minutes this season"
-               if league_view else
-               f"the league; the dark dots are {team_label if team_label != 'Nets — current roster' else 'Nets'} players")
+        st.markdown("### What is an \"archetype\"?")
         st.markdown(
-            "ADA finds the **8 most extreme real players** in the league and expresses "
-            "everyone else as a blend of them - not abstract types, real players. Below: "
-            f"the colored corners are those 8 archetypes, the cloud is {who} - "
-            "hover either for details."
+            "ADA finds the **8 most extreme real players** in the league and describes "
+            "everyone else as a blend of them - not abstract labels, real players. Each "
+            "corner below is one of those 8, shown by the player who defines it; the grey "
+            "cloud is every player who logged 300+ minutes this season, placed by how their "
+            "game blends the corners."
         )
         st.caption("K = 8 - selected by the Phase 2 diagnostics and matching the NBA basis.")
 
-        proj = compute_hull_projection()
-
-        # AI-ASSISTED (Claude Code, chat)
-        # Prompt (this revision): "把这些文字都去掉 字太多了" - drop the <6-on-hull
-        # warning/caption, the PCA-plane-fit caption, and the "2D projection"
-        # caption under the chart entirely - not reworded/shortened, removed.
-        # Not AI: which text to cut - the user's own reaction to the rendered
-        # page having too much caption text.
-
-        # AI-ASSISTED (Claude Code, chat) - Prompt: "在 The 8 Player Types 我可以
-        # 添加filter选team么？这样很杂乱的放到这里感觉不好看" - the sidebar team
-        # filter already drives this page, but the league-wide default was
-        # highlighting all 433 players, leaving 425 black dots against 8 grey
-        # ones: no contrast, and the chart stopped reading as anything.
-        # Highlighting is a "this team against the league" device, so in the
-        # league-wide view it highlights NOBODY - the page's job there is the
-        # vocabulary (the 8 labelled corners over the full player cloud), and
-        # singling out every player at once is not a weaker version of that,
-        # it is the absence of it.
-        # Not AI: noticing that it looked cluttered - the owner's.
-        highlight_ids = (() if team_label in (None, "All 30 teams")
-                         else tuple(sorted(roster["PLAYER_ID"].astype(int).tolist())))
-        chart_html = build_intro_hull_html(highlight_ids)
+        # Always league-wide: no highlighted subset, so the chart is the 8
+        # exemplar badges over the full player cloud.
+        chart_html = build_intro_hull_html(())
         st.iframe(chart_html, height=int(hull_callout_chart.FIGURE_HEIGHT_PX * 1.05) + 20)
 
-        st.markdown(
-            "Every point above earned its coordinates by playing real NBA minutes - "
-            "the incoming rookies projected on the NCAA Bridge page have none, which is "
-            "exactly the gap that page's translator addresses."
-        )
-
-        # Hidden for now per explicit request ("先不要标注这个论文链接" / don't show
-        # the paper link for now) - not removed, just commented out (as '#'
-        # lines, not a bare triple-quoted string - a bare string here would
-        # trigger Streamlit's own "magic" auto-st.write(), same gotcha as the
-        # explained-variance block below).
-        # st.markdown(f"[Scouting Anyone: Probabilistic Player Archetypes for Any League]({PAPER_URL})")
-
-    with st.container(border=True):
-        bio = load_player_bio(season=SEASON)
-        base_stats = load_player_base_stats(season=SEASON)
-        # AI-ASSISTED (Claude Code, chat) - Prompt: "我是想扩展到所有的NBA球员"
-        # -> "彻底改成全联盟工具". This table was pinned to the hardcoded 19-name
-        # NETS_ROSTER; it now renders whichever team the sidebar selected, or all
-        # 433 players. NETS_ROSTER is still used when Brooklyn's CURATED roster is
-        # picked, because that list carries the three rookies who have no NBA row
-        # at all (and their projections) - a TEAM_ABBREVIATION filter cannot
-        # produce them, since they have no minutes to be filtered on.
-        # Not AI: the decision to go league-wide - the owner's own.
-        if team_label == "Nets — current roster":
-            table_names = NETS_ROSTER
-        else:
-            table_names = sorted(roster["PLAYER_NAME"].astype(str).tolist())
-        heading = ("Nets roster" if team_label == "Nets — current roster"
-                   else "All 30 teams" if team_label in (None, "All 30 teams")
-                   else f"{team_label} roster")
-        render_nets_roster_table(proj, table_names, labels, bio, base_stats, heading=heading)
+        st.markdown("**Click a player's face** to see who else in the league looks most like that type.")
 
     # Hidden for now per explicit request ("这部分内容先不显示 先comment掉" / "we
     # don't need to show this image for now") - not removed, just commented

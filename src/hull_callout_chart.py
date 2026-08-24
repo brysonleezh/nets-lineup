@@ -412,24 +412,6 @@ def build_figure_spec(proj, roster_df, labels, k):
             "xanchor": c["align"], "yanchor": "middle", "align": c["align"],
         })
 
-    # Default-labeled Nets dots (see DEFAULT_INLINE_LABELED_NETS above) - a
-    # small, lighter-weight text label offset from the dot itself via
-    # xshift/yshift (pixel-space, no leader line needed - these were chosen
-    # to already sit clear of the corner labels' own pixel footprint),
-    # visually distinct from the corner callouts (smaller, uncolored,
-    # single line) so the two label types read as different things.
-    for i in np.where(is_nets)[0]:
-        name = pop["PLAYER_NAME"].values[i]
-        if name not in DEFAULT_INLINE_LABELED_NETS:
-            continue
-        x, y = all_2d[i]
-        annotations.append({
-            "x": float(x), "y": float(y), "xref": "x", "yref": "y",
-            "text": f'<span style="font-size:12px;font-weight:600;color:{INK_COLOR};">{name}</span>',
-            "showarrow": False, "xanchor": "left", "yanchor": "bottom",
-            "xshift": 9, "yshift": 9,
-        })
-
     # --- traces --------------------------------------------------------------
     idx_other = np.where(is_other)[0]
 
@@ -477,63 +459,53 @@ def build_figure_spec(proj, roster_df, labels, k):
         "hoverinfo": "none", "showlegend": False,
     }
 
-    idx_nets = np.where(is_nets)[0]
-    nets_pids = pop["PLAYER_ID"].astype(int).values[idx_nets]
-    nets_names = pop["PLAYER_NAME"].values[idx_nets]
-    nets_cards = []
-    for pid, name in zip(nets_pids, nets_names):
-        pos_num = NETS_POSITION_NUMBER.get(name, ("", "—"))
-        subtitle = f"{pos_num[0]} · #{pos_num[1]}" if pos_num[0] else f"#{pos_num[1]}"
-        row_i = int(pop.index[pop["PLAYER_ID"].astype(int) == int(pid)][0])
-        weight_html = _top_weights_html(P[row_i], arch_names, colors)
-        photo = get_headshot_data_uri(pid, name)
-        nets_cards.append(_hover_card_html(photo, name, subtitle, weight_html, NETS_DOT_COLOR))
-
-    nets_trace = {
-        "type": "scatter", "mode": "markers",
-        "x": all_2d[idx_nets, 0].tolist(), "y": all_2d[idx_nets, 1].tolist(),
-        "marker": {"size": 10, "color": NETS_DOT_COLOR, "opacity": 1.0,
-                   "line": {"width": 1.5, "color": CHART_BG}},
-        "customdata": nets_cards, "hoverinfo": "none", "showlegend": False,
-    }
-
-    arch_cards = []
-    for a in range(k):
-        name = defs[defs["archetype"] == a].iloc[0]["PLAYER_NAME"]
-        role = arch_names[a]
-        photo = get_headshot_data_uri(int(pop["PLAYER_ID"].values[arch_row[a]]), name, fallback_color=colors[a])
-        arch_cards.append(_hover_card_html(photo, name, role, "", colors[a]))
-
-    arch_trace = {
-        "type": "scatter", "mode": "markers",
-        "x": vertices_data[:, 0].tolist(), "y": vertices_data[:, 1].tolist(),
-        "marker": {"size": 12, "color": colors, "line": {"width": 2, "color": CHART_BG}},
-        "customdata": arch_cards, "hoverinfo": "none", "showlegend": False,
-    }
-
     # Dashed outline connecting the 8 corner (archetypoid) vertices, closing
-    # back to the first - dropped when this component was rebuilt from
-    # build_hull_scatter, added back on request. Walks the SAME clockwise
-    # order used for color assignment (clockwise_order, Part B) rather than
-    # a second independent ordering, so the line traces the vertices in the
-    # order a viewer's eye would naturally follow color-to-color around the
-    # loop, not a differently-ordered path that could visually cross itself.
+    # back to the first. Walks the SAME clockwise order used for color
+    # assignment so the line follows the vertices color-to-color around the
+    # loop rather than a differently-ordered path that could self-cross.
     hull_order = clockwise_order(vertices_data)
     hull_loop = list(hull_order) + [hull_order[0]]
     hull_trace = {
         "type": "scatter", "mode": "lines",
         "x": vertices_data[hull_loop, 0].tolist(), "y": vertices_data[hull_loop, 1].tolist(),
         "line": {"color": HULL_LINE_COLOR, "width": 1.5, "dash": "dash"},
-        # "skip", not "none": this line's own vertices are exactly the
-        # archetypoid dots' positions, so a "none" (participates in hover,
-        # suppress tooltip) let Plotly's hover detection pick the coincident
-        # LINE point over the marker at the same spot - found live, hovering
-        # an archetypoid dot fired curveNumber for the line trace instead
-        # and no card ever showed. "skip" excludes it from hover entirely.
         "hoverinfo": "skip", "showlegend": False,
     }
 
-    data = [other_trace, nets_trace, hull_trace, arch_trace]
+    # AI-ASSISTED (Claude Code, chat) - Prompt: "把外面的8个type 然后每最具有
+    # archetype类型的球员有图像标注 而不是用点 然后当点击...可以列举出这个球员最
+    # 具有高分比的球员" - the 8 corners were colored scatter dots; each corner IS a
+    # real player (its archetypoid), so it now renders as that player's HEADSHOT
+    # instead of a dot, and clicking it lists the players who load most heavily
+    # on that archetype. The dots and the interior team-highlight dots are gone;
+    # the grey cloud (everyone as a blend) and the dashed hull loop stay.
+    # The badges are absolutely-positioned HTML <img>s overlaid on the plot (see
+    # render_html) rather than Plotly image markers, so they can be true circles
+    # with a colored ring and be directly clickable - Plotly layout.images are
+    # neither circle-maskable nor clickable. `corner_px` is in the same fixed
+    # design-pixel space the leader-line geometry already uses, so the CSS
+    # scale-wrapper scales badges and lines together.
+    # Not AI: the redesign itself (headshots not dots; click -> top-share list)
+    # - the owner's own.
+    TOP_N = 8
+    corner_badges, archetype_top_lists = [], []
+    for a in range(k):
+        name = defs[defs["archetype"] == a].iloc[0]["PLAYER_NAME"]
+        pid = int(pop["PLAYER_ID"].values[arch_row[a]])
+        corner_badges.append({
+            "px": float(vertices_px[a][0]), "py": float(vertices_px[a][1]),
+            "photo": get_headshot_data_uri(pid, name, fallback_color=colors[a]),
+            "color": colors[a], "arch": a, "name": name, "label": arch_names[a],
+        })
+        order = np.argsort(-P[:, a])[:TOP_N]
+        archetype_top_lists.append([
+            {"name": str(pop["PLAYER_NAME"].values[i]),
+             "pct": int(round(float(P[i, a]) * 100)),
+             "is_exemplar": int(i) == int(arch_row[a])}
+            for i in order
+        ])
+
+    data = [other_trace, hull_trace]
     layout = {
         "width": FIGURE_WIDTH_PX, "height": FIGURE_HEIGHT_PX,
         "margin": {"l": 0, "r": 0, "t": 0, "b": 0},
@@ -541,9 +513,11 @@ def build_figure_spec(proj, roster_df, labels, k):
         "xaxis": {"visible": False, "range": [full_x0, full_x1], "fixedrange": True},
         "yaxis": {"visible": False, "range": [data_y0, data_y1], "fixedrange": True},
         "shapes": shapes, "annotations": annotations,
-        "hovermode": "closest",
+        "hovermode": False,
     }
-    return {"data": data, "layout": layout, "nets_trace_index": 1, "arch_trace_index": 3}
+    return {"data": data, "layout": layout,
+            "corner_badges": corner_badges, "archetype_top_lists": archetype_top_lists,
+            "colors": colors}
 
 
 # --- Part E: standalone HTML/JS shell ----------------------------------------
@@ -577,159 +551,141 @@ Not AI: the interaction spec itself (card follows mouse, Nets dot enlarge +
 halo + dim-others on hover, both stale-card safety nets) - given directly.
 """
 
+# Placeholders (__TOKEN__) rather than str.format so the JS/CSS braces below
+# don't each need escaping. render_html() substitutes them.
 _PAGE_TEMPLATE = """<!doctype html>
 <html><head><meta charset="utf-8">
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <style>
-  html, body {{ margin: 0; padding: 0; background: {bg}; overflow: hidden; }}
-  #scale-wrapper {{ width: {width}px; height: {height}px; transform-origin: top left; }}
-  #chart {{ width: {width}px; height: {height}px; }}
-  #hover-card {{
-    position: fixed; display: none; z-index: 1000; pointer-events: none;
-    background: {card_bg}; border: 1px solid {card_border}; border-radius: 4px;
-    padding: 10px 12px; box-shadow: 0 4px 14px {card_shadow};
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  }}
+  html, body { margin: 0; padding: 0; background: __BG__; overflow: hidden;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  #scale-wrapper { width: __WIDTH__px; height: __HEIGHT__px; transform-origin: top left; position: relative; }
+  #chart { width: __WIDTH__px; height: __HEIGHT__px; }
+  #badge-layer { position: absolute; inset: 0; pointer-events: none; }
+  .badge { position: absolute; width: 52px; height: 52px; border-radius: 50%;
+    transform: translate(-50%, -50%); cursor: pointer; pointer-events: auto;
+    background: __BG__; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    transition: transform .12s ease, box-shadow .12s ease; }
+  .badge img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+    object-position: top center; display: block; box-sizing: border-box; }
+  .badge:hover { transform: translate(-50%, -50%) scale(1.10); box-shadow: 0 4px 16px rgba(0,0,0,0.28); }
+  .badge.active { transform: translate(-50%, -50%) scale(1.12); }
+  #panel { position: fixed; display: none; z-index: 1000; width: 288px;
+    background: __CARD_BG__; border: 1px solid __CARD_BORDER__; border-radius: 10px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.20); overflow: hidden; }
+  #panel .phead { display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 14px; border-bottom: 1px solid __CARD_BORDER__; }
+  #panel .ptitle { font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; color: __INK__; }
+  #panel .pclose { cursor: pointer; color: __MUTED__; font-size: 17px; line-height: 1;
+    padding: 2px 4px; border-radius: 4px; }
+  #panel .pclose:hover { background: rgba(0,0,0,0.06); color: __INK__; }
+  #panel .psub { font-size: 11px; color: __MUTED__; padding: 7px 14px 3px; }
+  #panel .prow { display: flex; align-items: center; gap: 9px; padding: 4px 14px; }
+  #panel .prank { width: 15px; text-align: right; font-size: 11px; color: __MUTED__;
+    font-variant-numeric: tabular-nums; flex: none; }
+  #panel .pname { flex: 1; font-size: 13px; color: __INK__; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; }
+  #panel .pname .star { color: __MUTED__; font-size: 10px; margin-left: 4px; }
+  #panel .pbarwrap { width: 66px; height: 7px; border-radius: 4px; background: rgba(0,0,0,0.06);
+    overflow: hidden; flex: none; }
+  #panel .pbar { height: 100%; border-radius: 4px; }
+  #panel .ppct { width: 34px; text-align: right; font-size: 12px; font-weight: 600; color: __INK__;
+    font-variant-numeric: tabular-nums; flex: none; }
+  #panel .pfoot { padding: 8px 14px 11px; font-size: 10.5px; color: __MUTED__; line-height: 1.4; }
 </style>
 </head>
 <body>
-<div id="scale-wrapper"><div id="chart"></div></div>
-<div id="hover-card"></div>
+<div id="scale-wrapper">
+  <div id="chart"></div>
+  <div id="badge-layer"></div>
+</div>
+<div id="panel"></div>
 <script>
-  // AI-ASSISTED (Claude Code, chat)
-  // Prompt: none of this was requested - found live while checking the app
-  // (the closing instruction to export a default-state screenshot from the
-  // actual portal, not just the standalone test file). The figure's pixel
-  // width (1400px) is fixed on purpose - the whole leader-line algorithm is
-  // calibrated in real pixels - but Streamlit's own content column is
-  // narrower than that at ordinary browser widths (measured live via
-  // Playwright: 1008px in a 1500px-wide window, 1428px at 1920px), so the
-  // chart was clipping Jonas Valanciunas/Ryan Kalkbrenner's labels off the
-  // right edge in the real app despite rendering perfectly in the
-  // standalone test file at a fixed 1450px viewport.
-  // Used: a CSS transform: scale() on a wrapper div around #chart, sized to
-  // the ACTUAL available width (document.documentElement.clientWidth,
-  // measured inside this component's own iframe) divided by the design
-  // width - this shrinks (or modestly grows, capped) the whole rendered
-  // chart to fit whatever column width Streamlit actually gives it, while
-  // Plotly itself still lays out and computes hover/hit-testing against the
-  // full 1400x700 box internally (a CSS transform changes paint, not
-  // layout, so none of the pixel-space geometry this file precomputed in
-  // Python needs to change). The hover-card div is a sibling of
-  // scale-wrapper, not inside it, and already positions itself from the
-  // raw, untransformed event.event.clientX/clientY - so it needed no
-  // adjustment at all for the scale to not throw its positioning off.
-  // Not AI: none - not part of the spec, found and fixed during
-  // verification against the real app.
-  const DESIGN_WIDTH = {width};
+  const DESIGN_WIDTH = __WIDTH__;
   const scale = Math.min(document.documentElement.clientWidth / DESIGN_WIDTH, 1.05);
   document.getElementById("scale-wrapper").style.transform = "scale(" + scale + ")";
 
-  const figData = {fig_data_json};
-  const figLayout = {fig_layout_json};
-  const netsTraceIdx = {nets_idx};
-  const archTraceIdx = {arch_idx};
-  const netsBaseSize = {nets_base_size};
-  const netsHoverSize = {nets_hover_size};
-  const netsColor = "{nets_color}";
+  const figData = __FIG_DATA__;
+  const figLayout = __FIG_LAYOUT__;
+  const badges = __BADGES__;
+  const topLists = __TOPLISTS__;
 
   const chartDiv = document.getElementById("chart");
-  const card = document.getElementById("hover-card");
+  const layer = document.getElementById("badge-layer");
+  const panel = document.getElementById("panel");
+  let openArch = null;
 
-  // AI-ASSISTED (Claude Code, chat) - Prompt: "点击某个球员的点球员会定在hover的
-  // 效果" (clicking a player's point should lock/pin it in the hover state,
-  // staying visible after the mouse moves away). Used: a single `pinned`
-  // state variable (curveNumber+pointIndex, or null) - `plotly_click`
-  // toggles it (click the pinned point again to unpin, click a different
-  // point to move the pin there); `plotly_hover`/`plotly_unhover`/
-  // `mouseleave` all check it first and skip their own show/hide/reset
-  // logic entirely while something is pinned, so a pin can't be knocked
-  // loose by an incidental mouse movement. This is a pure client-side JS
-  // interaction, entirely inside this chart's own iframe - no
-  // communication with the outer Streamlit page is needed or attempted.
-  // Not AI: the interaction spec itself - given directly.
-  let pinned = null;
+  function hexToRgba(hex, a) {
+    const m = hex.replace("#", "");
+    const r = parseInt(m.substring(0, 2), 16), g = parseInt(m.substring(2, 4), 16), b = parseInt(m.substring(4, 6), 16);
+    return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+  }
 
-  Plotly.newPlot(chartDiv, figData, figLayout, {{displayModeBar: false, staticPlot: false}}).then(function() {{
+  function closePanel() {
+    panel.style.display = "none";
+    if (openArch !== null && badgeEls[openArch]) badgeEls[openArch].classList.remove("active");
+    openArch = null;
+  }
 
-    function showCard(html, clientX, clientY) {{
-      card.innerHTML = html;
-      card.style.display = "block";
-      const cw = card.offsetWidth, ch = card.offsetHeight;
-      let left = clientX + 16, top = clientY + 16;
-      if (left + cw > window.innerWidth) left = clientX - cw - 16;
-      if (top + ch > window.innerHeight) top = clientY - ch - 16;
-      card.style.left = Math.max(0, left) + "px";
-      card.style.top = Math.max(0, top) + "px";
-    }}
+  function openPanel(arch) {
+    const b = badges[arch];
+    const rows = topLists[arch].map(function(p, i) {
+      const star = p.is_exemplar ? '<span class="star">the archetype</span>' : '';
+      return '<div class="prow">' +
+        '<div class="prank">' + (i + 1) + '</div>' +
+        '<div class="pname">' + p.name + star + '</div>' +
+        '<div class="pbarwrap"><div class="pbar" style="width:' + p.pct + '%;background:' + b.color + ';"></div></div>' +
+        '<div class="ppct">' + p.pct + '%</div>' +
+      '</div>';
+    }).join("");
+    panel.innerHTML =
+      '<div class="phead" style="border-bottom-color:' + hexToRgba(b.color, 0.35) + ';">' +
+        '<span class="ptitle">' + b.label + '</span>' +
+        '<span class="pclose" id="pclose">&times;</span>' +
+      '</div>' +
+      '<div class="psub">Players who load most heavily on this archetype</div>' +
+      rows +
+      '<div class="pfoot">Anchored by <b>' + b.name + '</b> - the real player at this corner.</div>';
 
-    function hideCard() {{ card.style.display = "none"; }}
+    // Position next to the badge, in real (post-scale) iframe pixels, clamped.
+    panel.style.display = "block";
+    const pw = panel.offsetWidth, ph = panel.offsetHeight;
+    const bx = b.px * scale, by = b.py * scale;
+    let left = bx < window.innerWidth / 2 ? bx + 40 : bx - pw - 40;
+    let top = by - ph / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+    top = Math.max(8, Math.min(top, window.innerHeight - ph - 8));
+    panel.style.left = left + "px";
+    panel.style.top = top + "px";
 
-    function resetNetsStyle() {{
-      const n = figData[netsTraceIdx].x.length;
-      Plotly.restyle(chartDiv, {{
-        "marker.size": [Array(n).fill(netsBaseSize)],
-        "marker.opacity": [Array(n).fill(1.0)],
-        "marker.line.width": [Array(n).fill(1.5)],
-      }}, [netsTraceIdx]);
-    }}
+    document.getElementById("pclose").addEventListener("click", function(e) { e.stopPropagation(); closePanel(); });
+    if (openArch !== null && badgeEls[openArch]) badgeEls[openArch].classList.remove("active");
+    openArch = arch;
+    badgeEls[arch].classList.add("active");
+  }
 
-    function applyNetsHighlight(pointIndex) {{
-      const n = figData[netsTraceIdx].x.length;
-      const sizes = Array(n).fill(netsBaseSize);
-      const opacities = Array(n).fill(0.35);
-      const lineWidths = Array(n).fill(1.5);
-      sizes[pointIndex] = netsHoverSize;
-      opacities[pointIndex] = 1.0;
-      lineWidths[pointIndex] = 8;
-      Plotly.animate(chartDiv, {{
-        data: [{{"marker.size": sizes, "marker.opacity": opacities,
-                "marker.line.width": lineWidths,
-                "marker.line.color": Array(n).fill("rgba(28,26,23,0.28)")}}],
-        traces: [netsTraceIdx],
-      }}, {{transition: {{duration: 150}}, frame: {{duration: 150, redraw: false}}}});
-    }}
+  const badgeEls = [];
+  Plotly.newPlot(chartDiv, figData, figLayout, {displayModeBar: false, staticPlot: true}).then(function() {
+    badges.forEach(function(b) {
+      const el = document.createElement("div");
+      el.className = "badge";
+      el.style.left = b.px + "px";
+      el.style.top = b.py + "px";
+      el.style.border = "3px solid " + b.color;
+      el.title = b.name + " - " + b.label;
+      el.innerHTML = '<img src="' + b.photo + '" alt="">';
+      el.addEventListener("click", function(e) {
+        e.stopPropagation();
+        if (openArch === b.arch) { closePanel(); } else { openPanel(b.arch); }
+      });
+      layer.appendChild(el);
+      badgeEls[b.arch] = el;
+    });
+  });
 
-    function showForPoint(pt, clientX, clientY) {{
-      if (pt.curveNumber === netsTraceIdx) applyNetsHighlight(pt.pointIndex);
-      showCard(pt.customdata, clientX, clientY);
-    }}
-
-    chartDiv.on("plotly_hover", function(evt) {{
-      if (pinned) return;
-      const pt = evt.points[0];
-      if (pt.curveNumber === netsTraceIdx || pt.curveNumber === archTraceIdx) {{
-        showForPoint(pt, evt.event.clientX, evt.event.clientY);
-      }}
-    }});
-
-    chartDiv.on("plotly_unhover", function(evt) {{
-      if (pinned) return;
-      hideCard();
-      resetNetsStyle();
-    }});
-
-    chartDiv.addEventListener("mouseleave", function() {{
-      if (pinned) return;
-      hideCard();
-      resetNetsStyle();
-    }});
-
-    chartDiv.on("plotly_click", function(evt) {{
-      const pt = evt.points[0];
-      if (pt.curveNumber !== netsTraceIdx && pt.curveNumber !== archTraceIdx) return;
-      const isSamePoint = pinned && pinned.curveNumber === pt.curveNumber && pinned.pointIndex === pt.pointIndex;
-      if (isSamePoint) {{
-        pinned = null;
-        hideCard();
-        resetNetsStyle();
-      }} else {{
-        if (pinned && pinned.curveNumber === netsTraceIdx) resetNetsStyle();
-        pinned = {{curveNumber: pt.curveNumber, pointIndex: pt.pointIndex}};
-        showForPoint(pt, evt.event.clientX, evt.event.clientY);
-      }}
-    }});
-  }});
+  // Click anywhere off a badge/panel closes the panel.
+  document.addEventListener("click", function() { if (openArch !== null) closePanel(); });
+  panel.addEventListener("click", function(e) { e.stopPropagation(); });
 </script>
 </body></html>
 """
@@ -737,15 +693,22 @@ _PAGE_TEMPLATE = """<!doctype html>
 
 def render_html(spec):
     """spec: the dict returned by build_figure_spec(). Returns a complete,
-    self-contained HTML page string ready for st.iframe() (or a
-    standalone file, for the Playwright-driven verification pass)."""
+    self-contained HTML page string ready for st.iframe() (or a standalone
+    file, for the Playwright-driven verification pass).
+
+    The 8 archetype corners are HTML headshot badges overlaid on the plot,
+    each clickable to reveal that archetype's top-share player list - see
+    build_figure_spec's own note for why badges are HTML, not Plotly markers."""
     import json as _json
-    nets_trace = spec["data"][spec["nets_trace_index"]]
-    return _PAGE_TEMPLATE.format(
-        bg=CHART_BG, width=FIGURE_WIDTH_PX, height=FIGURE_HEIGHT_PX,
-        card_bg=CARD_BG, card_border=CARD_BORDER, card_shadow=CARD_SHADOW,
-        fig_data_json=_json.dumps(spec["data"]), fig_layout_json=_json.dumps(spec["layout"]),
-        nets_idx=spec["nets_trace_index"], arch_idx=spec["arch_trace_index"],
-        nets_base_size=nets_trace["marker"]["size"], nets_hover_size=16,
-        nets_color=NETS_DOT_COLOR,
-    )
+    return (_PAGE_TEMPLATE
+            .replace("__BG__", CHART_BG)
+            .replace("__WIDTH__", str(FIGURE_WIDTH_PX))
+            .replace("__HEIGHT__", str(FIGURE_HEIGHT_PX))
+            .replace("__CARD_BG__", CARD_BG)
+            .replace("__CARD_BORDER__", CARD_BORDER)
+            .replace("__INK__", INK_COLOR)
+            .replace("__MUTED__", "#687078")
+            .replace("__FIG_DATA__", _json.dumps(spec["data"]))
+            .replace("__FIG_LAYOUT__", _json.dumps(spec["layout"]))
+            .replace("__BADGES__", _json.dumps(spec["corner_badges"]))
+            .replace("__TOPLISTS__", _json.dumps(spec["archetype_top_lists"])))
