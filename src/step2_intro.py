@@ -445,7 +445,9 @@ ROOKIE_BIO_FALLBACK = {
 }
 
 
-def render_nets_roster_table(proj, roster_names, labels, bio, base_stats):
+def render_nets_roster_table(proj, roster_names, labels, bio, base_stats, heading=None):
+    """`heading` lets the caller name whose roster this is; it defaults to the
+    generic wording now that the table is no longer Brooklyn-only."""
     pop, P = proj["pop"], proj["P"]
     k = proj["k"]
     arch_names = [labels.get(i, f"Archetype {i}") if k == 8 else f"Archetype {i}" for i in range(k)]
@@ -470,9 +472,9 @@ def render_nets_roster_table(proj, roster_names, labels, bio, base_stats):
     n_with_recipe = sum(1 for _, row_idx in resolved.values() if row_idx is not None)
     n_projected = sum(1 for n in roster_names
                       if resolved[n][1] is None and n in rookie_projections)
-    st.markdown(f"#### Nets roster at K={k}")
+    st.markdown(f"#### {heading or 'Players'} at K={k}")
     st.caption(
-        f"{len(roster_names)} roster players ({n_with_recipe} with a fitted K={k} recipe "
+        f"{len(roster_names)} players ({n_with_recipe} with a fitted K={k} recipe "
         f"measured from their own 2025-26 NBA minutes). Bio columns from player_bio, box "
         f"score from player_base. Mixture: top 3 archetypes, highest share first, bar "
         f"length and shade both ~ the percentage. Click a column header to sort."
@@ -659,7 +661,10 @@ def build_intro_hull_html(nets_ids_tuple):
     return hull_callout_chart.render_html(spec)
 
 
-def render_intro_page(roster, labels):
+def render_intro_page(roster, labels, team_label=None):
+    """`roster` is now whatever team the sidebar selected (or the whole league),
+    not a fixed Nets frame - see portal.py's team picker. `team_label` is only
+    used for wording; every number comes from `roster` itself."""
     st.title("Intro")
 
     with st.container(border=True):
@@ -701,7 +706,22 @@ def render_intro_page(roster, labels):
     with st.container(border=True):
         bio = load_player_bio(season=SEASON)
         base_stats = load_player_base_stats(season=SEASON)
-        render_nets_roster_table(proj, NETS_ROSTER, labels, bio, base_stats)
+        # AI-ASSISTED (Claude Code, chat) - Prompt: "我是想扩展到所有的NBA球员"
+        # -> "彻底改成全联盟工具". This table was pinned to the hardcoded 19-name
+        # NETS_ROSTER; it now renders whichever team the sidebar selected, or all
+        # 433 players. NETS_ROSTER is still used when Brooklyn's CURATED roster is
+        # picked, because that list carries the three rookies who have no NBA row
+        # at all (and their projections) - a TEAM_ABBREVIATION filter cannot
+        # produce them, since they have no minutes to be filtered on.
+        # Not AI: the decision to go league-wide - the owner's own.
+        if team_label == "Nets — current roster":
+            table_names = NETS_ROSTER
+        else:
+            table_names = sorted(roster["PLAYER_NAME"].astype(str).tolist())
+        heading = ("Nets roster" if team_label == "Nets — current roster"
+                   else "All 30 teams" if team_label in (None, "All 30 teams")
+                   else f"{team_label} roster")
+        render_nets_roster_table(proj, table_names, labels, bio, base_stats, heading=heading)
 
     # Hidden for now per explicit request ("这部分内容先不显示 先comment掉" / "we
     # don't need to show this image for now") - not removed, just commented

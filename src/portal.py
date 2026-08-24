@@ -71,7 +71,7 @@ from step5_rookie_projections import SHOW_ROOKIE_PROJECTIONS_PAGE, render_rookie
 from step6_draft_class import SHOW_DRAFT_CLASS_PAGE, render_draft_class_page
 
 
-st.set_page_config(page_title="Nets Archetype Portal", layout="wide")
+st.set_page_config(page_title="NBA Archetype Portal", layout="wide")
 
 
 st.markdown(
@@ -169,6 +169,25 @@ st.markdown(
 )
 NETS_TEAM_ID = 1610612751
 TEAM_LOGO_URL = "https://cdn.nba.com/logos/nba/{team_id}/global/L/logo.png"
+NBA_LOGO_URL = "https://cdn.nba.com/logos/leagues/logo-nba.svg"
+
+# AI-ASSISTED (Claude Code, chat) - Prompt: "我是想扩展到所有的NBA球员", scope
+# then confirmed by the owner as "彻底改成全联盟工具" (make it a genuinely
+# league-wide tool, not a Nets tool with a league option).
+# Used: ONE team selection now drives the whole app - the sidebar identity, the
+# Intro roster table, the hull chart's highlighted dots, the diagnostic pool and
+# the report pool - instead of Brooklyn being wired in at four separate places.
+# The hull chart needed no rework: build_figure_spec() already derived its
+# highlighted set from whatever roster frame it was handed, so it was
+# parameterised all along and only its caller was hardcoded.
+# Not AI: the decision to drop the Nets framing - the owner's own call, made
+# after being shown that it costs the "answers the Nets research question"
+# narrative.
+@st.cache_data
+def team_id_map(season=SEASON):
+    b = load_player_bio(season=season).dropna(subset=["TEAM_ABBREVIATION", "TEAM_ID"])
+    b = b.drop_duplicates("TEAM_ABBREVIATION")
+    return dict(zip(b["TEAM_ABBREVIATION"], b["TEAM_ID"].astype(int)))
 
 
 # --- Sidebar navigation -------------------------------------------------------
@@ -224,13 +243,34 @@ TEAM_PICKER_HELP = ("A team code selects whoever logged minutes there this seaso
                     "\"Nets — current roster\" selects today's roster instead; the two "
                     "differ for players traded mid-season.")
 
+TEAM_IDS = team_id_map()
+TEAM_CODES = sorted(TEAM_IDS)
+
 with st.sidebar:
+    # The team picker is read BEFORE the header so the header can show the
+    # selected team's own identity. Its value drives every page - roster
+    # table, hull highlighting, diagnostic pool, report pool - so a reader
+    # changes teams once rather than per page.
+    sel_team = st.selectbox(
+        "Team", [ALL_TEAMS, NETS_CURATED] + TEAM_CODES, index=0, key="team_select",
+        help=("A team code selects whoever logged minutes there this season. "
+              "\"Nets — current roster\" selects today's Brooklyn roster instead; "
+              "the two differ for players traded mid-season."))
+
+    if sel_team == ALL_TEAMS:
+        logo_url, title_txt = NBA_LOGO_URL, "NBA Archetype Portal"
+    elif sel_team == NETS_CURATED:
+        logo_url, title_txt = TEAM_LOGO_URL.format(team_id=NETS_TEAM_ID), "Nets Archetype Portal"
+    else:
+        logo_url = TEAM_LOGO_URL.format(team_id=TEAM_IDS[sel_team])
+        title_txt = f"{sel_team} Archetype Portal"
+
     st.markdown(
         f'''
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
-            <img src="{TEAM_LOGO_URL.format(team_id=NETS_TEAM_ID)}" style="height:2.6rem;width:2.6rem;flex-shrink:0;">
-            <span style="font-size:1.7rem;font-weight:700;color:{BL_INK};letter-spacing:-0.01em;line-height:1.1;">
-                Nets Archetype Portal
+        <div style="display:flex;align-items:center;gap:12px;margin:8px 0 4px;">
+            <img src="{logo_url}" style="height:2.6rem;width:2.6rem;flex-shrink:0;object-fit:contain;">
+            <span style="font-size:1.6rem;font-weight:700;color:{BL_INK};letter-spacing:-0.01em;line-height:1.1;">
+                {title_txt}
             </span>
         </div>
         ''',
@@ -238,6 +278,15 @@ with st.sidebar:
     )
     st.caption("Probabilistic Archetype Scouting Portal")
     st.divider()
+
+    # One resolution of the selection, used by every page below. Kept INSIDE
+    # the sidebar block on purpose: the per-page pickers further down read it.
+    if sel_team == ALL_TEAMS:
+        team_frame = league
+    elif sel_team == NETS_CURATED:
+        team_frame = nets_roster
+    else:
+        team_frame = league[league["TEAM_ABBREVIATION"] == sel_team].reset_index(drop=True)
 
     # AI-ASSISTED (Claude Code, chat)
     # Prompt: "我觉得还不如把这部分先去掉 因为第三个tab我想做的是roster
@@ -315,21 +364,9 @@ with st.sidebar:
     # Not AI: the requirement itself, and "like the Report tab" as the
     # explicit placement/style precedent - given directly.
     if page in ("🔍 Player Breakdown",):
-        # Team filter ahead of the player picker: 433 names in one dropdown is
-        # not a usable control. Brooklyn is the default so the landing state
-        # still answers the project's own Nets question.
-        team_opts = ([NETS_CURATED]
-                     + sorted(league["TEAM_ABBREVIATION"].dropna().unique().tolist())
-                     + [ALL_TEAMS])
-        sel_team = st.selectbox("Team", team_opts, index=0, key="diag_team_select",
-                                help=TEAM_PICKER_HELP)
-        if sel_team == NETS_CURATED:
-            roster = nets_roster
-        elif sel_team == ALL_TEAMS:
-            roster = league
-        else:
-            roster = league[league["TEAM_ABBREVIATION"] == sel_team].reset_index(drop=True)
-
+        # No team picker here any more - the sidebar's global one already
+        # resolved `team_frame`, so the selection is made once for the whole app.
+        roster = team_frame
         diag_names = sorted(roster["PLAYER_NAME"].tolist())
         pid_to_diag_name = dict(zip(roster["PLAYER_ID"].astype(int), roster["PLAYER_NAME"]))
         default_diag_match = roster.loc[roster["PLAYER_ID"] == DEFAULT_DIAG_PLAYER_ID, "PLAYER_NAME"]
@@ -362,17 +399,7 @@ with st.sidebar:
     elif page in ("🌉 NCAA Bridge",):
         pass  # this page owns its own selectbox/slider widgets, rendered inline in its body
     elif page in ("📄 Report",):
-        rep_team_opts = ([NETS_CURATED]
-                         + sorted(league["TEAM_ABBREVIATION"].dropna().unique().tolist())
-                         + [ALL_TEAMS])
-        rep_team = st.selectbox("Team", rep_team_opts, index=0, key="report_team_select",
-                                help=TEAM_PICKER_HELP)
-        if rep_team == NETS_CURATED:
-            roster = nets_roster
-        elif rep_team == ALL_TEAMS:
-            roster = league
-        else:
-            roster = league[league["TEAM_ABBREVIATION"] == rep_team].reset_index(drop=True)
+        roster = team_frame
         # `roster` here is already merged against `recipes` and dropna'd
         # down to the data-eligible players (see the roster-prep block
         # above) - the same 16-player pool Diagnostic Analysis's Layer 1
@@ -388,11 +415,11 @@ with st.sidebar:
 if page == "🏆 Draft Class 2026":
     render_draft_class_page()
 elif page == "📖 The 8 Player Types":
-    render_intro_page(nets_roster, labels)
+    render_intro_page(team_frame, labels, team_label=sel_team)
 elif page == "🔍 Player Breakdown":
     render_diagnostic_analysis(recipes, k, labels, oncourt, bio, roster, sidebar_pid=selected_diag_pid)
 elif page == "🏀 Roster Construction":
-    render_roster_construction(nets_roster, recipes, k, labels)
+    render_roster_construction(team_frame, recipes, k, labels)
 elif page == "🎯 Building Around Rookie":
     render_rookie_slot_query_page(selected_player, recipes, k, labels, oncourt)
 elif page == "🌉 NCAA Bridge":
