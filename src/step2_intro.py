@@ -728,24 +728,40 @@ def _render_hull_3d(labels):
         x=all_3d[cloud, 0], y=all_3d[cloud, 1], z=all_3d[cloud, 2], mode="markers",
         marker=dict(size=2.6, color="#b1a993", opacity=0.55),
         hovertext=cloud_text, hoverinfo="text", showlegend=False))
-    # The 8 archetypes: colored, labelled corners.
+    # The 8 archetypes: each corner IS a real player (that's what ADA means),
+    # so the visible label is the PLAYER'S NAME - headshots can't sit on a
+    # rotating 3D marker, so the face lives in the hover and in the strip below.
+    corner_players = [str(defs[defs["archetype"] == a].iloc[0]["PLAYER_NAME"]) for a in range(k)]
     fig.add_trace(go.Scatter3d(
         x=basis_3d[:, 0], y=basis_3d[:, 1], z=basis_3d[:, 2], mode="markers+text",
-        marker=dict(size=8, color=ARCH_COLORS_3D[:k], line=dict(width=1, color="white")),
-        text=[labels[a] for a in range(k)], textposition="top center",
-        textfont=dict(size=11, color=BL_INK),
-        hovertext=[f"{defs[defs['archetype'] == a].iloc[0]['PLAYER_NAME']} — {labels[a]}"
-                   for a in range(k)],
+        marker=dict(size=11, color=ARCH_COLORS_3D[:k], line=dict(width=1.5, color="white")),
+        text=corner_players, textposition="top center",
+        textfont=dict(size=12, color=BL_INK),
+        hovertext=[f"{corner_players[a]} — {labels[a]}" for a in range(k)],
         hoverinfo="text", showlegend=False))
+
+    # Simple, labelled axes (the three archetypoid principal components). Tick
+    # numbers are hidden - PCA component values carry no basketball units - but
+    # the axes and a faint grid give the rotation a spatial reference, which the
+    # fully-hidden version lacked.
+    def _axis(title):
+        return dict(title=title, showticklabels=False, showspikes=False,
+                    gridcolor=BL_LINE, zerolinecolor=BL_LINE, color=BL_MUTED,
+                    showbackground=True, backgroundcolor=BL_PAPER)
     fig.update_layout(
         height=620, margin=dict(l=0, r=0, t=0, b=0),
         paper_bgcolor=BL_PAPER, showlegend=False,
         scene=dict(
-            xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False),
+            xaxis=_axis("PC 1"), yaxis=_axis("PC 2"), zaxis=_axis("PC 3"),
             bgcolor=BL_PAPER, aspectmode="cube",
             camera=dict(eye=dict(x=1.6, y=1.6, z=1.05))),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    # displayModeBar=True keeps Plotly's toolbar visible - the reset-camera /
+    # zoom / autoscale controls are the "resize" buttons; Streamlit also adds a
+    # fullscreen expander on the chart.
+    st.plotly_chart(fig, use_container_width=True,
+                    config={"displayModeBar": True, "displaylogo": False,
+                            "modeBarButtonsToRemove": ["toImage"]})
 
 
 def render_intro_page(labels):

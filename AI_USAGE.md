@@ -1444,3 +1444,13 @@ Reworded `render_rapm_investigation_note()`'s own sub-heading ("Why isn't this p
 - Trade-off recorded honestly: 3D cannot carry HTML headshot badges or leader-line callouts, and corner labels overlap at some rotations (inherent to 3D; rotating resolves it). The faces did not leave the page - they remain in the "Who else fits each type?" strip below (Entry 161). The old 2D chart machinery (build_intro_hull_html, hull_callout_chart badges) is left in place, unused, per the keep-don't-delete convention.
 - Verified: 3D projection builds (434×3 cloud, 8×3 corners, convex hull 8 verts/12 faces); full suite 135/135; live-browser confirmed the polyhedron + labelled corners + cloud render, and that click-dragging rotates the view (Plotly 3D modebar appears, corners reposition).
 - What was NOT AI-generated: the 3D idea and the decision to replace the 2D view - the owner's own, made after the trade-offs were stated.
+
+## Entry 163 — 3D view: simple axes, visible toolbar, player names at corners (src/step2_intro.py)
+
+- Date: 2026-08-24
+- Tool: Claude Code
+- Prompt: "可以使用一个简单的坐标轴 并且有resize button 然后每个角落还是使用球员 因为我们做的是ADA 就是现在的使用效果并不好" — the first 3D pass read poorly: no spatial reference (axes fully hidden), no visible controls, and the corners were anonymous colored dots that lost ADA's whole point (each archetype is a real player).
+- What was used: (1) visible, labelled axes (PC 1 / PC 2 / PC 3) with a faint grid; tick numbers stay hidden because PCA component values carry no basketball units, but the axes give the rotation a reference the hidden version lacked. (2) `displayModeBar=True` so Plotly's reset-camera / zoom / autoscale toolbar is always shown (the "resize"/reset controls), logo removed. (3) each corner's visible label is now the PLAYER'S NAME (SGA, Capela, Kalkbrenner, ...), and corners are larger (size 11) - the ADA point made legible.
+- Stated the limitation honestly to the owner rather than papering over it: a headshot cannot ride a rotating 3D marker (Plotly image markers don't exist in scatter3d, and HTML overlays can't track 3D rotation), so faces stay in the hover and in the "Who else fits each type?" strip below; if faces ON the corners are required, only the 2D view can do it.
+- Verified: compiles; portal + draft-class test files pass (29); live-browser shows the labelled PC axes, the toolbar top-right, and player-name corners over the translucent polyhedron and cloud.
+- What was NOT AI-generated: the three fixes and the "current effect isn't good" judgement - the owner's own.
