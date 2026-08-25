@@ -3438,7 +3438,7 @@ ROOKIE_COLLEGE_IDENTITY = {
 # rule (flag-free first, then fit, epsilon-tiebreak by talent), and the card
 # UI spec (cards, contrast card, honesty line, caching per hypothesis) -
 # given directly, in full, by the user.
-UNIT_RIM_SHARE_THRESHOLD = 0.06        # combined Rim Protector/Roll Man + Mobile Big share; below -> "no rim protection" (~p25 of all 1820 four-man Nets complements: p25=0.061)
+UNIT_RIM_SHARE_THRESHOLD = 0.06        # combined Rim Protector/Roll Man + Play-Finishing Big share; below -> "no rim protection" (~p25 of all 1820 four-man Nets complements: p25=0.061)
 UNIT_SPACING_SHARE_THRESHOLD = 0.25    # combined Shooting Specialist + 3&D Wing share; below -> "spacing risk" (~p25: p25=0.267)
 UNIT_BALL_DOMINANCE_THRESHOLD = 0.36   # combined Offensive Engine + Combo Guard share; above -> "second on-ball engine" (~p75: p75=0.357)
 UNIT_ENV_MATCH_EPSILON = 0.005         # env-match units within this of the current tie-group's leader are treated as a near-tie and re-sorted by talent (sum BPM) - consecutive-ranked gaps near the top of the real distribution are frequently smaller than this (observed range across all 1820 combos ~0.44 wide, min 0.48 to max 0.93 under one tested hypothesis)
@@ -3655,7 +3655,7 @@ def render_rookie_slot_query(rookie_name, recipes, k, labels, oncourt):
         f"above and ranked by fit, subject to three structural checks - see exactly how below."
     )
 
-    rim_idx = [arch_idx["Rim Protector / Roll Man"], arch_idx["Mobile Big"]]
+    rim_idx = [arch_idx["Rim Protector / Roll Man"], arch_idx["Play-Finishing Big"]]
     spacing_idx = [arch_idx["Shooting Specialist"], arch_idx["3&D Wing"]]
     ball_idx = [arch_idx["Offensive Engine"], arch_idx["Combo Guard"]]
     roster_id_list = roster_ids["PLAYER_ID"].tolist()

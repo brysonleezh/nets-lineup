@@ -64,10 +64,10 @@ ARCHETYPE_ABBREV = {
     "Inside Scoring Big": "Inside Scor. Big",
     "Rim Protector / Roll Man": "Rim Prot. / Roll",
     "Combo Guard": "Combo Gd.",
-    "Mobile Big": "Mobile Big",
+    "Play-Finishing Big": "Play-Fin. Big",
     "Shooting Specialist": "Shooting Spec.",
     "Offensive Engine": "Off. Engine",
-    "Traditional Playmaker": "Trad. PM",
+    "Perimeter Defender": "Perim. Def.",
 }
 
 

@@ -750,14 +750,14 @@ ARCHETYPE_TO_PAPER = {
         "Capela: OREB%/BLK%/roll-man led, no outside shot - matches the paper's Mitchell Robinson exemplar closely"),
     3: ("Combo Guard", "strong",
         "D. Russell: ball-handler + high USG%/AST% but low TS% - scoring guard w/ creation, not pure pass-first"),
-    4: ("Mobile Big", "partial",
-        "Kalkbrenner: cut/rim-finisher big, high TS%, but low 3PA%/Dist. here vs. the paper's 'high corner-3FGA%' - likely the non-stretch end of this archetype"),
+    4: ("Play-Finishing Big", "data-fit",
+        "Kalkbrenner: cut +3.7, TS% +3.4, rim-FGA +3.2, OREB/BLK led, NO outside shot (3PA%/Dist. bottomed out) - an efficient vertical finisher, not a stretch/mobile big. Relabelled from the paper's 'Mobile Big' to fit this fit's own z-profile (owner's call: labels describe this data, not the paper)."),
     5: ("Shooting Specialist", "strong",
         "Hardaway Jr.: off-screen/handoff led, low self-creation, high 3PA share - near-exact match to the paper's description"),
     6: ("Offensive Engine", "strong",
         "SGA: isolation + USG% + BPM led, low %assisted - same tier of player the paper itself names (Harden/Doncic)"),
-    7: ("Traditional Playmaker", "partial",
-        "Mbeng: low USG%/BPM, high STL%, but AST%/PnR-handler% aren't standout here - reads more as a low-usage defensive guard than a pass-first facilitator; weakest of the 8 matches"),
+    7: ("Perimeter Defender", "data-fit",
+        "Mbeng: STL% +2.4 the one standout, USG%/PTS/BPM all low, AST% not distinguishing (rank 27/29) - a low-usage point-of-attack defender, not a facilitator. Relabelled from the paper's 'Traditional Playmaker' to fit this fit's own z-profile (its top loaders - Mashack, Andre Jackson Jr., Dru Smith - are all POA defenders, zero facilitators)."),
 }
 
 

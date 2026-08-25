@@ -409,7 +409,7 @@ def league_benchmark_exposure(successful, recipes, k, season="2025-26", db_path=
 
     Returns None if `successful` is empty - a real, honest possibility for
     a thin archetype (e.g. only 5 league-wide players clear the 55%
-    threshold for "Traditional Playmaker" this season, and every one of
+    threshold for "Perimeter Defender" this season, and every one of
     them has a negative on-court net rating - there is no successful
     comparable to benchmark against, not a bug in the filter). Callers
     must handle None rather than assume a baseline always exists.
