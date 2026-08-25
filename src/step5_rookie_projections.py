@@ -62,7 +62,7 @@ from portal_shared import BL_PAPER, BL_WHITE, BL_INK, BL_MUTED, BL_LINE, BL_GREE
 # hidden while the portal is refocused league-wide. Same gate-don't-delete
 # convention: the page, the translator pipeline behind it and their tests are
 # untouched, and one flip brings it back.
-SHOW_ROOKIE_PROJECTIONS_PAGE = False
+SHOW_ROOKIE_PROJECTIONS_PAGE = True  # re-enabled at owner request
 
 # AI-ASSISTED (Claude Code, chat) - Prompt: "Try a different draft slot — same
 # player, different opportunity / 把这一章节去掉" (drop this section).

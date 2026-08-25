@@ -694,7 +694,73 @@ def render_intro_page(labels):
         chart_html = build_intro_hull_html(())
         st.iframe(chart_html, height=int(hull_callout_chart.FIGURE_HEIGHT_PX * 1.05) + 20)
 
-        st.markdown("**Click a player's face** to see who else in the league looks most like that type.")
+    _render_similar_players_section(labels)
+
+
+# AI-ASSISTED (Claude Code, chat) - Prompt: "当点击球员的头像时候在下面显示一个
+# table 可以把类似的球员展示在下面" - clicking an archetype face shows a table of
+# similar players below the chart.
+# Implemented Streamlit-side rather than inside the chart because the chart is an
+# st.iframe, whose sandbox blocks a click from calling back into the Streamlit
+# script - so the 8 exemplar faces are re-rendered here as st.button chips that
+# CAN drive a rerun, and the picked face renders the similar-player table below.
+# "Similar" = highest weight on that archetype: the players nearest that corner
+# in recipe space are exactly the ones the model reads as most that-type. The
+# in-chart badges keep their own quick-look panel; this is the fuller, sortable
+# view with headshots and teams.
+# Not AI: the interaction (click a face -> table of similar players below) - the
+# owner's own.
+def _render_similar_players_section(labels, top_n=12):
+    import hull_callout_chart as hc
+    proj = compute_hull_projection()
+    pop, P, defs = proj["pop"], proj["P"], proj["defs"]
+    arch_row = proj["archetype_row_idx"]
+    recipes, _k, _lab, _onc = load_static()
+    team_of = dict(zip(recipes["PLAYER_ID"].astype(int), recipes["TEAM_ABBREVIATION"]))
+
+    st.divider()
+    st.markdown("#### Who else fits each type?")
+    st.caption("Click a player to see the others whose game blends most toward that type.")
+
+    cols = st.columns(8)
+    for a, col in enumerate(cols):
+        pid = int(pop["PLAYER_ID"].values[arch_row[a]])
+        name = str(defs[defs["archetype"] == a].iloc[0]["PLAYER_NAME"])
+        photo = hc.get_headshot_data_uri(pid, name)
+        with col:
+            st.markdown(
+                f'<div style="text-align:center;margin-bottom:4px;">'
+                f'<img src="{photo}" style="width:48px;height:48px;border-radius:50%;'
+                f'object-fit:cover;object-position:top center;border:2px solid {BL_LINE};"></div>',
+                unsafe_allow_html=True,
+            )
+            if st.button(labels[a], key=f"intro_arch_btn_{a}", use_container_width=True):
+                st.session_state["intro_selected_arch"] = a
+
+    sel = st.session_state.get("intro_selected_arch")
+    if sel is None:
+        return
+
+    exemplar = str(defs[defs["archetype"] == sel].iloc[0]["PLAYER_NAME"])
+    order = np.argsort(-P[:, sel])[:top_n]
+    columns = [("", None), ("Player", "name"), ("Team", "team"), (f"% {labels[sel]}", "pct")]
+    rows_cells = []
+    for i in order:
+        i = int(i)
+        pid = int(pop["PLAYER_ID"].values[i]); nm = str(pop["PLAYER_NAME"].values[i])
+        pct = float(P[i, sel]) * 100
+        team = team_of.get(pid, "—")
+        img = (f'<img src="{hc.get_headshot_data_uri(pid, nm)}" style="width:34px;height:34px;'
+               f'border-radius:50%;object-fit:cover;object-position:top center;">')
+        rows_cells.append([
+            (img, None),
+            (f"<b>{nm}</b>", nm.lower()),
+            (str(team) if team else "—", str(team).lower() if team else ""),
+            (f"{pct:.0f}%", pct),
+        ])
+    st.markdown(f"**Players most like {labels[sel]}** — anchored by {exemplar}")
+    table_html, height = _build_sortable_table_html(f"similar_{sel}", columns, rows_cells, row_height=42)
+    st.iframe(table_html, height=height)
 
     # Hidden for now per explicit request ("这部分内容先不显示 先comment掉" / "we
     # don't need to show this image for now") - not removed, just commented

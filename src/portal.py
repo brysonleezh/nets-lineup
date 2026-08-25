@@ -269,10 +269,10 @@ def resolve_team_frame(sel):
 # Nets first so the diagnostic pages open on a short, concrete, useful list (the
 # player picker is unusable at 433 names); every other team and the whole league
 # are one click away.
-DIAG_TEAM_OPTS = [NETS_CURATED] + TEAM_CODES + [ALL_TEAMS]
-TEAM_PICK_HELP = ("A team code selects whoever logged minutes there this season. "
-                  "\"Nets — current roster\" selects today's Brooklyn roster instead; "
-                  "the two differ for players traded mid-season.")
+# "Nets — current roster" dropped from the picker at owner request - the app is
+# league-wide now, and Brooklyn is still reachable via its "BKN" team code.
+DIAG_TEAM_OPTS = [ALL_TEAMS] + TEAM_CODES
+TEAM_PICK_HELP = "A team selects whoever logged minutes there this season; \"All 30 teams\" is the whole league."
 
 with st.sidebar:
     st.markdown(
