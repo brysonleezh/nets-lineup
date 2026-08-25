@@ -661,6 +661,93 @@ def build_intro_hull_html(nets_ids_tuple):
     return hull_callout_chart.render_html(spec)
 
 
+# AI-ASSISTED (Claude Code, chat) - Prompt: "我想在首页这里做一个比较酷炫的展示
+# 效果 就是可以做一个3D的图像 在这个空间的点中用户可以拖拽并且点击这些球员",
+# scope confirmed as "直接用 3D 替换 2D".
+# Replaces the 2D hull iframe with a native Plotly scatter3d: PCA to THREE
+# components (still fit on the 8 archetypoids only, same principle as the 2D
+# plane - see compute_hull_projection), rendered through st.plotly_chart so
+# drag-rotate / zoom / hover are Plotly's own, no iframe. The 8 corners are
+# colored, labelled points inside a translucent convex polyhedron (the "shape
+# of the league"), the grey cloud is every 300+-minute player, and hover names
+# the player and his top archetype. Trade-off accepted by the owner: 3D cannot
+# carry the 2D version's HTML headshot badges or leader-line callouts - the
+# faces live in the "Who else fits each type?" strip below instead.
+# Not AI: the 3D idea and the decision to replace the 2D view - the owner's own.
+ARCH_COLORS_3D = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100",
+                  "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
+
+
+@st.cache_data(show_spinner="Projecting the league into 3D...")
+def compute_hull_projection_3d():
+    fit = load_hull_basis()
+    defs = load_hull_archetype_defs()
+    pop = load_hull_population().reset_index(drop=True)
+    fc = fit["feature_columns"]
+    X_z = (pop[fc].astype(float).values - fit["mu"]) / fit["sd"]
+    basis = np.asarray(fit["basis"], dtype=float)
+    pca = PCA(n_components=3)
+    pca.fit(basis)                    # fit on the 8 archetypoids only
+    basis_3d = pca.transform(basis)
+    all_3d = pca.transform(X_z)
+    P = ada_project(pop, fit["basis"], fit["mu"], fit["sd"], fc)
+    arch_row = [None] * len(defs)
+    for _, d in defs.iterrows():
+        arch_row[int(d["archetype"])] = _resolve_row_by_id(pop, int(d["PLAYER_ID"]), float(d["MIN"]))
+    return {"pop": pop, "P": P, "defs": defs, "all_3d": all_3d, "basis_3d": basis_3d,
+            "archetype_row_idx": arch_row,
+            "explained": float(pca.explained_variance_ratio_[:3].sum())}
+
+
+def _render_hull_3d(labels):
+    proj = compute_hull_projection_3d()
+    pop, P = proj["pop"], proj["P"]
+    all_3d, basis_3d = proj["all_3d"], proj["basis_3d"]
+    arch_row, defs = proj["archetype_row_idx"], proj["defs"]
+    k = basis_3d.shape[0]
+
+    is_arch = np.zeros(len(pop), dtype=bool)
+    for r in arch_row:
+        if r is not None:
+            is_arch[r] = True
+    cloud = np.where(~is_arch)[0]
+    top = P.argmax(axis=1)
+    cloud_text = [f"{pop['PLAYER_NAME'].values[i]} — {labels[int(top[i])]} {P[i, int(top[i])]*100:.0f}%"
+                  for i in cloud]
+
+    fig = go.Figure()
+    # Translucent convex polyhedron of the 8 archetypoids - "the shape of the
+    # league", the 3D analogue of the 2D hull outline.
+    hull = ConvexHull(basis_3d)
+    fig.add_trace(go.Mesh3d(
+        x=basis_3d[:, 0], y=basis_3d[:, 1], z=basis_3d[:, 2],
+        i=hull.simplices[:, 0], j=hull.simplices[:, 1], k=hull.simplices[:, 2],
+        color="#8fa89a", opacity=0.10, flatshading=True, hoverinfo="skip", showscale=False))
+    # Every 300+-minute player, placed by how his game blends the corners.
+    fig.add_trace(go.Scatter3d(
+        x=all_3d[cloud, 0], y=all_3d[cloud, 1], z=all_3d[cloud, 2], mode="markers",
+        marker=dict(size=2.6, color="#b1a993", opacity=0.55),
+        hovertext=cloud_text, hoverinfo="text", showlegend=False))
+    # The 8 archetypes: colored, labelled corners.
+    fig.add_trace(go.Scatter3d(
+        x=basis_3d[:, 0], y=basis_3d[:, 1], z=basis_3d[:, 2], mode="markers+text",
+        marker=dict(size=8, color=ARCH_COLORS_3D[:k], line=dict(width=1, color="white")),
+        text=[labels[a] for a in range(k)], textposition="top center",
+        textfont=dict(size=11, color=BL_INK),
+        hovertext=[f"{defs[defs['archetype'] == a].iloc[0]['PLAYER_NAME']} — {labels[a]}"
+                   for a in range(k)],
+        hoverinfo="text", showlegend=False))
+    fig.update_layout(
+        height=620, margin=dict(l=0, r=0, t=0, b=0),
+        paper_bgcolor=BL_PAPER, showlegend=False,
+        scene=dict(
+            xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False),
+            bgcolor=BL_PAPER, aspectmode="cube",
+            camera=dict(eye=dict(x=1.6, y=1.6, z=1.05))),
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+
 def render_intro_page(labels):
     """The archetype vocabulary page - always league-wide (the team filter was
     removed; scoping 8 league-wide archetypes to one team makes no sense).
@@ -682,17 +769,16 @@ def render_intro_page(labels):
         st.markdown("### What is an \"archetype\"?")
         st.markdown(
             "ADA finds the **8 most extreme real players** in the league and describes "
-            "everyone else as a blend of them - not abstract labels, real players. Each "
-            "corner below is one of those 8, shown by the player who defines it; the grey "
-            "cloud is every player who logged 300+ minutes this season, placed by how their "
-            "game blends the corners."
+            "everyone else as a blend of them - not abstract labels, real players. The 8 "
+            "colored corners are those archetypes; the grey cloud is every player who logged "
+            "300+ minutes this season, floating by how his game blends the corners. "
+            "**Drag to rotate the space, scroll to zoom, hover any point for the player.**"
         )
         st.caption("K = 8 - selected by the Phase 2 diagnostics and matching the NBA basis.")
 
-        # Always league-wide: no highlighted subset, so the chart is the 8
-        # exemplar badges over the full player cloud.
-        chart_html = build_intro_hull_html(())
-        st.iframe(chart_html, height=int(hull_callout_chart.FIGURE_HEIGHT_PX * 1.05) + 20)
+        # Always league-wide: the 8 labelled corners inside the league's convex
+        # shape, every 300+-minute player as a point in between.
+        _render_hull_3d(labels)
 
     _render_similar_players_section(labels)
 
