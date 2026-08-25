@@ -19,6 +19,7 @@ in the live app reads them anymore.
 
 from __future__ import annotations
 
+import json
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -699,69 +700,79 @@ def compute_hull_projection_3d():
             "explained": float(pca.explained_variance_ratio_[:3].sum())}
 
 
-def _render_hull_3d(labels):
+@st.cache_data
+def _load_player_thumbs():
+    """{player_id(str): circular-headshot data URI}, from the precomputed
+    artifact (src/pipeline/precompute_player_thumbnails.py). {} if absent, in
+    which case faces fall back to plain dots."""
+    p = DATA_DIR / "player_thumbs_2025_26.json"
+    if not p.exists():
+        return {}
+    return json.loads(p.read_text())
+
+
+@st.cache_data
+def _build_hull_3d_payload():
+    """Everything the three.js scene needs, normalized to a ~[-1,1] cube.
+    Cached: a chip/nav rerun should not recompute the projection or re-read the
+    1.2MB thumbnail file."""
     proj = compute_hull_projection_3d()
     pop, P = proj["pop"], proj["P"]
     all_3d, basis_3d = proj["all_3d"], proj["basis_3d"]
     arch_row, defs = proj["archetype_row_idx"], proj["defs"]
-    k = basis_3d.shape[0]
+    _r, _k, labels, _o = load_static()
+    thumbs = _load_player_thumbs()
+
+    center = all_3d.mean(axis=0)
+    scale = float(np.abs(all_3d - center).max()) or 1.0
+    def norm(v):
+        return [float((v[0] - center[0]) / scale),
+                float((v[1] - center[1]) / scale),
+                float((v[2] - center[2]) / scale)]
 
     is_arch = np.zeros(len(pop), dtype=bool)
     for r in arch_row:
         if r is not None:
             is_arch[r] = True
-    cloud = np.where(~is_arch)[0]
+
     top = P.argmax(axis=1)
-    cloud_text = [f"{pop['PLAYER_NAME'].values[i]} — {labels[int(top[i])]} {P[i, int(top[i])]*100:.0f}%"
-                  for i in cloud]
+    players = []
+    for i in np.where(~is_arch)[0]:
+        i = int(i)
+        pid = str(int(pop["PLAYER_ID"].values[i]))
+        thumb = thumbs.get(pid)
+        if not thumb:
+            continue  # no face -> leave it out of the cloud rather than draw a broken sprite
+        xyz = norm(all_3d[i])
+        a = int(top[i])
+        players.append({"x": xyz[0], "y": xyz[1], "z": xyz[2],
+                        "name": str(pop["PLAYER_NAME"].values[i]),
+                        "arch": a, "arch_label": labels[a],
+                        "pct": int(round(float(P[i, a]) * 100)), "thumb": thumb})
 
-    fig = go.Figure()
-    # Translucent convex polyhedron of the 8 archetypoids - "the shape of the
-    # league", the 3D analogue of the 2D hull outline.
+    k = basis_3d.shape[0]
+    corners = []
+    for a in range(k):
+        pid = str(int(pop["PLAYER_ID"].values[arch_row[a]]))
+        xyz = norm(basis_3d[a])
+        corners.append({"x": xyz[0], "y": xyz[1], "z": xyz[2],
+                        "name": str(defs[defs["archetype"] == a].iloc[0]["PLAYER_NAME"]),
+                        "label": labels[a], "color": ARCH_COLORS_3D[a % len(ARCH_COLORS_3D)],
+                        "thumb": thumbs.get(pid, "")})
+
     hull = ConvexHull(basis_3d)
-    fig.add_trace(go.Mesh3d(
-        x=basis_3d[:, 0], y=basis_3d[:, 1], z=basis_3d[:, 2],
-        i=hull.simplices[:, 0], j=hull.simplices[:, 1], k=hull.simplices[:, 2],
-        color="#8fa89a", opacity=0.10, flatshading=True, hoverinfo="skip", showscale=False))
-    # Every 300+-minute player, placed by how his game blends the corners.
-    fig.add_trace(go.Scatter3d(
-        x=all_3d[cloud, 0], y=all_3d[cloud, 1], z=all_3d[cloud, 2], mode="markers",
-        marker=dict(size=2.6, color="#b1a993", opacity=0.55),
-        hovertext=cloud_text, hoverinfo="text", showlegend=False))
-    # The 8 archetypes: each corner IS a real player (that's what ADA means),
-    # so the visible label is the PLAYER'S NAME - headshots can't sit on a
-    # rotating 3D marker, so the face lives in the hover and in the strip below.
-    corner_players = [str(defs[defs["archetype"] == a].iloc[0]["PLAYER_NAME"]) for a in range(k)]
-    fig.add_trace(go.Scatter3d(
-        x=basis_3d[:, 0], y=basis_3d[:, 1], z=basis_3d[:, 2], mode="markers+text",
-        marker=dict(size=11, color=ARCH_COLORS_3D[:k], line=dict(width=1.5, color="white")),
-        text=corner_players, textposition="top center",
-        textfont=dict(size=12, color=BL_INK),
-        hovertext=[f"{corner_players[a]} — {labels[a]}" for a in range(k)],
-        hoverinfo="text", showlegend=False))
+    edges = sorted({tuple(sorted((int(s[a]), int(s[b]))))
+                    for s in hull.simplices for a, b in [(0, 1), (1, 2), (2, 0)]})
+    return players, corners, [ARCH_COLORS_3D[a] for a in range(k)], [list(e) for e in edges]
 
-    # Simple, labelled axes (the three archetypoid principal components). Tick
-    # numbers are hidden - PCA component values carry no basketball units - but
-    # the axes and a faint grid give the rotation a spatial reference, which the
-    # fully-hidden version lacked.
-    def _axis(title):
-        return dict(title=title, showticklabels=False, showspikes=False,
-                    gridcolor=BL_LINE, zerolinecolor=BL_LINE, color=BL_MUTED,
-                    showbackground=True, backgroundcolor=BL_PAPER)
-    fig.update_layout(
-        height=620, margin=dict(l=0, r=0, t=0, b=0),
-        paper_bgcolor=BL_PAPER, showlegend=False,
-        scene=dict(
-            xaxis=_axis("PC 1"), yaxis=_axis("PC 2"), zaxis=_axis("PC 3"),
-            bgcolor=BL_PAPER, aspectmode="cube",
-            camera=dict(eye=dict(x=1.6, y=1.6, z=1.05))),
-    )
-    # displayModeBar=True keeps Plotly's toolbar visible - the reset-camera /
-    # zoom / autoscale controls are the "resize" buttons; Streamlit also adds a
-    # fullscreen expander on the chart.
-    st.plotly_chart(fig, use_container_width=True,
-                    config={"displayModeBar": True, "displaylogo": False,
-                            "modeBarButtonsToRemove": ["toImage"]})
+
+def _render_hull_3d(labels):
+    import hull_3d_chart
+    players, corners, colors, edges = _build_hull_3d_payload()
+    html = hull_3d_chart.build_hull_3d_html(
+        players, corners, colors, edges, height=640,
+        bg=BL_PAPER, ink=BL_INK, muted=BL_MUTED, line=BL_LINE, card_bg=BL_WHITE)
+    st.iframe(html, height=660)
 
 
 def render_intro_page(labels):
@@ -792,11 +803,12 @@ def render_intro_page(labels):
         )
         st.caption("K = 8 - selected by the Phase 2 diagnostics and matching the NBA basis.")
 
-        # Always league-wide: the 8 labelled corners inside the league's convex
-        # shape, every 300+-minute player as a point in between.
+        # Always league-wide: the 8 archetype faces at the corners of the
+        # league's convex shape, every other player a point (a face when you
+        # zoom in) in between. The old "Who else fits each type?" strip was
+        # removed at the owner's request - hovering / zooming the 3D scene now
+        # IS how you see who fits where.
         _render_hull_3d(labels)
-
-    _render_similar_players_section(labels)
 
 
 # AI-ASSISTED (Claude Code, chat) - Prompt: "当点击球员的头像时候在下面显示一个
