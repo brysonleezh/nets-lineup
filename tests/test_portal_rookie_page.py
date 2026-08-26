@@ -105,6 +105,27 @@ def test_check_required_files_empty_when_all_present():
     assert page.check_required_files() == []
 
 
+def test_what_the_model_says_uses_2026_draft_class_not_2025_holdout():
+    """The team browser's population is the 60-player 2026 draft ledger.
+
+    The 36-player 2025 holdout remains validation evidence for Act 2; it must
+    never be recycled as the current draft-class projection surface.
+    """
+    import step5_rookie_projections as page
+    rows = page.load_2026_draft_projections()
+    assert len(rows) == 60
+    assert [r["draft_pick_overall"] for r in rows] == list(range(1, 61))
+    assert sum(r["y_pred"] is not None for r in rows) == 53
+    assert {r["display_name"] for r in rows if r["draft_team_abbr"] == "BKN"} == {
+        "Mikel Brown Jr.", "Isaiah Evans", "Tyler Bilodeau",
+    }
+    brown = next(r for r in rows if r["display_name"] == "Mikel Brown Jr.")
+    assert brown["draft_team"] == "Brooklyn Nets"
+    assert brown["espn_source_id"] == "5101761"
+    assert brown["profile_image_url"].endswith("/5101761.png")
+    assert "Cooper Flagg" not in {r["display_name"] for r in rows}
+
+
 # --- no write path from page code -------------------------------------------
 
 def test_no_write_path_to_projections_or_anchors_from_page_code():

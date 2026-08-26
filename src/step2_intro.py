@@ -20,6 +20,7 @@ in the live app reads them anymore.
 from __future__ import annotations
 
 import json
+from itertools import permutations
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -662,42 +663,94 @@ def build_intro_hull_html(nets_ids_tuple):
     return hull_callout_chart.render_html(spec)
 
 
-# AI-ASSISTED (Claude Code, chat) - Prompt: "我想在首页这里做一个比较酷炫的展示
-# 效果 就是可以做一个3D的图像 在这个空间的点中用户可以拖拽并且点击这些球员",
-# scope confirmed as "直接用 3D 替换 2D".
-# Replaces the 2D hull iframe with a native Plotly scatter3d: PCA to THREE
-# components (still fit on the 8 archetypoids only, same principle as the 2D
-# plane - see compute_hull_projection), rendered through st.plotly_chart so
-# drag-rotate / zoom / hover are Plotly's own, no iframe. The 8 corners are
-# colored, labelled points inside a translucent convex polyhedron (the "shape
-# of the league"), the grey cloud is every 300+-minute player, and hover names
-# the player and his top archetype. Trade-off accepted by the owner: 3D cannot
-# carry the 2D version's HTML headshot badges or leader-line callouts - the
-# faces live in the "Who else fits each type?" strip below instead.
-# Not AI: the 3D idea and the decision to replace the 2D view - the owner's own.
-ARCH_COLORS_3D = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100",
-                  "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
+ARCH_COLORS_3D = [
+    "oklch(.52 .09 165)",  # 3&D Wing — Wings
+    "oklch(.58 .11 62)",   # Inside Scoring Big — Bigs
+    "oklch(.44 .11 62)",   # Rim Protector / Roll Man — Bigs
+    "oklch(.60 .11 258)",  # Combo Guard — Guards
+    "oklch(.72 .09 62)",   # Play-Finishing Big — Bigs
+    "oklch(.38 .08 165)",  # Shooting Specialist — Wings
+    "oklch(.40 .12 258)",  # Offensive Engine — Guards
+    "oklch(.66 .08 165)",  # Perimeter Defender — Wings
+]
 
 
-@st.cache_data(show_spinner="Projecting the league into 3D...")
+@st.cache_data(show_spinner="Constructing the archetype space...")
+def _assign_archetypes_to_antiprism(recipe_weights):
+    """Place frequently co-occurring archetypes near one another.
+
+    Eight vertices are small enough to exhaust all 8! assignments.  A regular
+    antiprism has 16 equivalent rotations/reflections, so the data-derived
+    tie-break anchors the archetype with the strongest pure-recipe mass in the
+    first slot and puts its more frequent neighbour next.  This produces a
+    stable camera orientation without hard-coding an archetype permutation.
+    """
+    weights = np.asarray(recipe_weights, dtype=float)
+    if weights.ndim != 2 or weights.shape[1] != 8:
+        raise ValueError(f"Expected an n×8 recipe matrix, got {weights.shape}")
+
+    radius, half_height = 1.0, 0.52
+    slots = np.array(
+        [[radius * np.cos(i * np.pi / 2), half_height,
+          radius * np.sin(i * np.pi / 2)] for i in range(4)]
+        + [[radius * np.cos(i * np.pi / 2 + np.pi / 4), -half_height,
+            radius * np.sin(i * np.pi / 2 + np.pi / 4)] for i in range(4)],
+        dtype=float,
+    )
+    distances = np.linalg.norm(slots[:, None, :] - slots[None, :, :], axis=2)
+    gram = weights.T @ weights
+    similarity = gram.copy()
+    np.fill_diagonal(similarity, 0.0)
+    similarity /= float(similarity.sum()) or 1.0
+
+    best_cost = np.inf
+    best_permutations = []
+    for slot_to_arch in permutations(range(8)):
+        order = np.asarray(slot_to_arch, dtype=int)
+        cost = float(np.triu(
+            similarity[order[:, None], order[None, :]] * distances, k=1
+        ).sum())
+        if cost < best_cost - 1e-12:
+            best_cost = cost
+            best_permutations = [slot_to_arch]
+        elif abs(cost - best_cost) <= 1e-12:
+            best_permutations.append(slot_to_arch)
+
+    slot_to_arch = max(
+        best_permutations,
+        key=lambda p: (
+            gram[p[0], p[0]],
+            similarity[p[0], p[1]] - similarity[p[0], p[3]],
+            p,
+        ),
+    )
+    corner_xyz = np.empty((8, 3), dtype=float)
+    for slot, arch in enumerate(slot_to_arch):
+        corner_xyz[arch] = slots[slot]
+    return corner_xyz, list(slot_to_arch)
+
+
+@st.cache_data(show_spinner="Building the league's player recipes...")
 def compute_hull_projection_3d():
-    fit = load_hull_basis()
-    defs = load_hull_archetype_defs()
-    pop = load_hull_population().reset_index(drop=True)
-    fc = fit["feature_columns"]
-    X_z = (pop[fc].astype(float).values - fit["mu"]) / fit["sd"]
-    basis = np.asarray(fit["basis"], dtype=float)
-    pca = PCA(n_components=3)
-    pca.fit(basis)                    # fit on the 8 archetypoids only
-    basis_3d = pca.transform(basis)
-    all_3d = pca.transform(X_z)
-    P = ada_project(pop, fit["basis"], fit["mu"], fit["sd"], fc)
-    arch_row = [None] * len(defs)
-    for _, d in defs.iterrows():
-        arch_row[int(d["archetype"])] = _resolve_row_by_id(pop, int(d["PLAYER_ID"]), float(d["MIN"]))
-    return {"pop": pop, "P": P, "defs": defs, "all_3d": all_3d, "basis_3d": basis_3d,
-            "archetype_row_idx": arch_row,
-            "explained": float(pca.explained_variance_ratio_[:3].sum())}
+    """Return constructed corners and the frozen 433-player recipe matrix."""
+    recipes = pd.read_csv(BASIS_DIR / "recipes.csv")
+    weight_columns = [f"arch_{a}" for a in range(8)]
+    recipe_weights = recipes[weight_columns].astype(float).to_numpy()
+    recipe_weights = np.clip(recipe_weights, 0.0, None)
+    recipe_weights /= np.where(
+        recipe_weights.sum(axis=1, keepdims=True) > 0,
+        recipe_weights.sum(axis=1, keepdims=True),
+        1.0,
+    )
+    corner_xyz, slot_to_arch = _assign_archetypes_to_antiprism(recipe_weights)
+    return {
+        "recipes": recipes,
+        "P": recipe_weights,
+        "defs": load_hull_archetype_defs(),
+        "label_defs": pd.read_csv(BASIS_DIR / "archetype_labels.csv"),
+        "corner_xyz": corner_xyz,
+        "slot_to_arch": slot_to_arch,
+    }
 
 
 @st.cache_data
@@ -711,68 +764,111 @@ def _load_player_thumbs():
     return json.loads(p.read_text())
 
 
+def _compress_archetype_note(note):
+    """Turn the fit-audit note into one readable sentence for the table."""
+    text = str(note or "").split(":", 1)[-1].strip().split(" - ", 1)[0].strip()
+    replacements = {
+        "OREB%": "offensive boards",
+        "BLK%": "blocks",
+        "TRB%": "rebounding",
+        "USG%": "usage",
+        "FTr": "free-throw rate",
+        "TS%": "finishing efficiency",
+        "3PA%": "three-point volume",
+        "rim-FGA": "shots at the rim",
+        "roll-man led": "roll finishing",
+        "no outside shot": "no outside shot at all",
+        "NO outside shot": "no outside shot at all",
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    text = text[:1].upper() + text[1:]
+    return text.rstrip(". ") + "."
+
+
 @st.cache_data
 def _build_hull_3d_payload():
-    """Everything the three.js scene needs, normalized to a ~[-1,1] cube.
-    Cached: a chip/nav rerun should not recompute the projection or re-read the
-    1.2MB thumbnail file."""
+    """First-paint recipes plus the compact bio/box-score fields used by drill-down."""
     proj = compute_hull_projection_3d()
-    pop, P = proj["pop"], proj["P"]
-    all_3d, basis_3d = proj["all_3d"], proj["basis_3d"]
-    arch_row, defs = proj["archetype_row_idx"], proj["defs"]
-    _r, _k, labels, _o = load_static()
+    recipes, P = proj["recipes"], proj["P"]
+    defs, label_defs = proj["defs"], proj["label_defs"]
+    corner_xyz = proj["corner_xyz"]
     thumbs = _load_player_thumbs()
+    bio_rows = {
+        str(int(row["PLAYER_ID"])): row
+        for _, row in load_player_bio(season=SEASON).drop_duplicates("PLAYER_ID").iterrows()
+    }
+    base_rows = {
+        str(int(row["PLAYER_ID"])): row
+        for _, row in load_player_base_stats(season=SEASON).drop_duplicates("PLAYER_ID").iterrows()
+    }
 
-    center = all_3d.mean(axis=0)
-    scale = float(np.abs(all_3d - center).max()) or 1.0
-    def norm(v):
-        return [float((v[0] - center[0]) / scale),
-                float((v[1] - center[1]) / scale),
-                float((v[2] - center[2]) / scale)]
-
-    is_arch = np.zeros(len(pop), dtype=bool)
-    for r in arch_row:
-        if r is not None:
-            is_arch[r] = True
+    def optional_number(row, field, digits=1):
+        if row is None:
+            return None
+        value = row.get(field)
+        if value is None or pd.isna(value):
+            return None
+        return round(float(value), digits)
 
     top = P.argmax(axis=1)
     players = []
-    for i in np.where(~is_arch)[0]:
-        i = int(i)
-        pid = str(int(pop["PLAYER_ID"].values[i]))
-        thumb = thumbs.get(pid)
-        if not thumb:
-            continue  # no face -> leave it out of the cloud rather than draw a broken sprite
-        xyz = norm(all_3d[i])
+    for i, row in recipes.reset_index(drop=True).iterrows():
+        pid = str(int(row["PLAYER_ID"]))
         a = int(top[i])
-        players.append({"x": xyz[0], "y": xyz[1], "z": xyz[2],
-                        "name": str(pop["PLAYER_NAME"].values[i]),
-                        "arch": a, "arch_label": labels[a],
-                        "pct": int(round(float(P[i, a]) * 100)), "thumb": thumb})
+        team = row.get("TEAM_ABBREVIATION", "—")
+        bio_row = bio_rows.get(pid)
+        base_row = base_rows.get(pid)
+        players.append({
+            "id": pid,
+            "name": str(row["PLAYER_NAME"]),
+            "team": "—" if pd.isna(team) else str(team),
+            "min": int(round(float(row["MIN"]))),
+            "age": optional_number(bio_row, "AGE", 0),
+            "height": (
+                "—" if bio_row is None or pd.isna(bio_row.get("PLAYER_HEIGHT"))
+                else str(bio_row.get("PLAYER_HEIGHT"))
+            ),
+            "weight": optional_number(bio_row, "PLAYER_WEIGHT", 0),
+            "gp": optional_number(base_row, "GP", 0),
+            "pts": optional_number(base_row, "PTS"),
+            "reb": optional_number(base_row, "REB"),
+            "ast": optional_number(base_row, "AST"),
+            "stl": optional_number(base_row, "STL"),
+            "blk": optional_number(base_row, "BLK"),
+            "fg_pct": optional_number(base_row, "FG_PCT", 3),
+            "fg3_pct": optional_number(base_row, "FG3_PCT", 3),
+            "w": [float(v) for v in P[i]],
+            "top": a,
+            "top_pct": int(round(float(P[i, a]) * 100)),
+        })
 
-    k = basis_3d.shape[0]
     corners = []
-    for a in range(k):
-        pid = str(int(pop["PLAYER_ID"].values[arch_row[a]]))
-        xyz = norm(basis_3d[a])
-        corners.append({"x": xyz[0], "y": xyz[1], "z": xyz[2],
-                        "name": str(defs[defs["archetype"] == a].iloc[0]["PLAYER_NAME"]),
-                        "label": labels[a], "color": ARCH_COLORS_3D[a % len(ARCH_COLORS_3D)],
-                        "thumb": thumbs.get(pid, "")})
-
-    hull = ConvexHull(basis_3d)
-    edges = sorted({tuple(sorted((int(s[a]), int(s[b]))))
-                    for s in hull.simplices for a, b in [(0, 1), (1, 2), (2, 0)]})
-    return players, corners, [ARCH_COLORS_3D[a] for a in range(k)], [list(e) for e in edges]
+    for a in range(8):
+        def_row = defs.loc[defs["archetype"].astype(int) == a].iloc[0]
+        label_row = label_defs.loc[label_defs["archetype"].astype(int) == a].iloc[0]
+        pid = str(int(def_row["PLAYER_ID"]))
+        x, y, z = corner_xyz[a]
+        corners.append({
+            "arch": a,
+            "id": pid,
+            "x": float(x), "y": float(y), "z": float(z),
+            "name": str(label_row["exemplar"]),
+            "label": str(label_row["paper_label"]),
+            "color": ARCH_COLORS_3D[a],
+            "thumb": thumbs.get(pid, ""),
+            "one_liner": _compress_archetype_note(label_row["note"]),
+        })
+    return players, corners
 
 
 def _render_hull_3d(labels):
     import hull_3d_chart
-    players, corners, colors, edges = _build_hull_3d_payload()
+    players, corners = _build_hull_3d_payload()
     html = hull_3d_chart.build_hull_3d_html(
-        players, corners, colors, edges, height=640,
+        players, corners, height=1530,
         bg=BL_PAPER, ink=BL_INK, muted=BL_MUTED, line=BL_LINE, card_bg=BL_WHITE)
-    st.iframe(html, height=660)
+    st.iframe(html, height=1530)
 
 
 def render_intro_page(labels):
@@ -785,110 +881,10 @@ def render_intro_page(labels):
     然后当点击...可以列举出这个球员最具有高分比的球员".
     Reframed the page from "here is a team on the archetype map" to "here are
     the 8 types, embodied by real players - click one to see who else fits it".
-    The 8 corners are the exemplar players' headshots (badges), clicking a corner
-    lists that archetype's top-share players (all in hull_callout_chart), and the
-    Brooklyn roster table below - which only made sense when the page was team-
-    scoped - is gone.
+    The 8 corners are the exemplar players' headshots. Clicking a corner or any
+    interior player now drills down inside the same 3D iframe.
     Not AI: the reframing itself - the owner's own."""
     st.title("The 8 Player Types")
-
-    with st.container(border=True):
-        st.markdown("### What is an \"archetype\"?")
-        st.markdown(
-            "ADA finds the **8 most extreme real players** in the league and describes "
-            "everyone else as a blend of them - not abstract labels, real players. The 8 "
-            "colored corners are those archetypes; the grey cloud is every player who logged "
-            "300+ minutes this season, floating by how his game blends the corners. "
-            "**Drag to rotate the space, scroll to zoom, hover any point for the player.**"
-        )
-        st.caption("K = 8 - selected by the Phase 2 diagnostics and matching the NBA basis.")
-
-        # Always league-wide: the 8 archetype faces at the corners of the
-        # league's convex shape, every other player a point (a face when you
-        # zoom in) in between. The old "Who else fits each type?" strip was
-        # removed at the owner's request - hovering / zooming the 3D scene now
-        # IS how you see who fits where.
-        _render_hull_3d(labels)
-
-
-# AI-ASSISTED (Claude Code, chat) - Prompt: "当点击球员的头像时候在下面显示一个
-# table 可以把类似的球员展示在下面" - clicking an archetype face shows a table of
-# similar players below the chart.
-# Implemented Streamlit-side rather than inside the chart because the chart is an
-# st.iframe, whose sandbox blocks a click from calling back into the Streamlit
-# script - so the 8 exemplar faces are re-rendered here as st.button chips that
-# CAN drive a rerun, and the picked face renders the similar-player table below.
-# "Similar" = highest weight on that archetype: the players nearest that corner
-# in recipe space are exactly the ones the model reads as most that-type. The
-# in-chart badges keep their own quick-look panel; this is the fuller, sortable
-# view with headshots and teams.
-# Not AI: the interaction (click a face -> table of similar players below) - the
-# owner's own.
-def _render_similar_players_section(labels, top_n=12):
-    import hull_callout_chart as hc
-    proj = compute_hull_projection()
-    pop, P, defs = proj["pop"], proj["P"], proj["defs"]
-    arch_row = proj["archetype_row_idx"]
-    recipes, _k, _lab, _onc = load_static()
-    team_of = dict(zip(recipes["PLAYER_ID"].astype(int), recipes["TEAM_ABBREVIATION"]))
-
-    st.divider()
-    st.markdown("#### Who else fits each type?")
-    st.caption("Click a player to see the others whose game blends most toward that type.")
-
-    cols = st.columns(8)
-    for a, col in enumerate(cols):
-        pid = int(pop["PLAYER_ID"].values[arch_row[a]])
-        name = str(defs[defs["archetype"] == a].iloc[0]["PLAYER_NAME"])
-        photo = hc.get_headshot_data_uri(pid, name)
-        with col:
-            st.markdown(
-                f'<div style="text-align:center;margin-bottom:4px;">'
-                f'<img src="{photo}" style="width:48px;height:48px;border-radius:50%;'
-                f'object-fit:cover;object-position:top center;border:2px solid {BL_LINE};"></div>',
-                unsafe_allow_html=True,
-            )
-            if st.button(labels[a], key=f"intro_arch_btn_{a}", use_container_width=True):
-                st.session_state["intro_selected_arch"] = a
-
-    sel = st.session_state.get("intro_selected_arch")
-    if sel is None:
-        return
-
-    exemplar = str(defs[defs["archetype"] == sel].iloc[0]["PLAYER_NAME"])
-    order = np.argsort(-P[:, sel])[:top_n]
-    columns = [("", None), ("Player", "name"), ("Team", "team"), (f"% {labels[sel]}", "pct")]
-    rows_cells = []
-    for i in order:
-        i = int(i)
-        pid = int(pop["PLAYER_ID"].values[i]); nm = str(pop["PLAYER_NAME"].values[i])
-        pct = float(P[i, sel]) * 100
-        team = team_of.get(pid, "—")
-        img = (f'<img src="{hc.get_headshot_data_uri(pid, nm)}" style="width:34px;height:34px;'
-               f'border-radius:50%;object-fit:cover;object-position:top center;">')
-        rows_cells.append([
-            (img, None),
-            (f"<b>{nm}</b>", nm.lower()),
-            (str(team) if team else "—", str(team).lower() if team else ""),
-            (f"{pct:.0f}%", pct),
-        ])
-    st.markdown(f"**Players most like {labels[sel]}** — anchored by {exemplar}")
-    table_html, height = _build_sortable_table_html(f"similar_{sel}", columns, rows_cells, row_height=42)
-    st.iframe(table_html, height=height)
-
-    # Hidden for now per explicit request ("这部分内容先不显示 先comment掉" / "we
-    # don't need to show this image for now") - not removed, just commented
-    # out (as '#' lines, not a bare triple-quoted string, since a bare string
-    # here would trigger Streamlit's own "magic" auto-st.write() - see the
-    # AI_USAGE.md entry for the bug that caused earlier this session).
-    # st.divider()
-    # st.markdown("#### Explained variance vs. K")
-    # st.markdown(
-    #     "The player cloud's own boundary is fixed by the data - K only controls how many "
-    #     "corners are used to approximate it. This curve shows what each extra corner buys."
-    # )
-    # if K_SELECTION_PATH.exists():
-    #     k_summary = pd.read_csv(K_SELECTION_PATH)
-    #     st.plotly_chart(render_ev_vs_k_chart(k_summary, hull_k, height=280), width="stretch")
-    # else:
-    #     st.caption(f"{K_SELECTION_PATH} not found - run step1_archetype_model.phase1_select_k() first.")
+    # The top explainer/scene and the full-width table are visually separate,
+    # while one iframe keeps point clicks and table drill-down in sync.
+    _render_hull_3d(labels)

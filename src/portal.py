@@ -74,6 +74,42 @@ from step6_draft_class import SHOW_DRAFT_CLASS_PAGE, render_draft_class_page
 st.set_page_config(page_title="NBA Archetype Portal", layout="wide")
 
 
+_PLAYER_BREAKDOWN_NAV_BRIDGE = st.components.v2.component(
+    "ada_player_breakdown_nav_bridge",
+    html="""
+    <span aria-hidden="true"></span>
+    """,
+    css="""
+    :host { display: none; }
+    """,
+    js=r"""
+    export default function (component) {
+      const handler = (event) => {
+        const data = event.data
+        if (!data || data.type !== "ada-player-breakdown") return
+        const playerId = String(data.playerId || "").trim()
+        const team = String(data.team || "").trim()
+        if (!/^\d+$/.test(playerId) || !team || team.length > 32) return
+        const senderIsPortalFrame = Array.from(document.querySelectorAll("iframe"))
+          .some((frame) => frame.contentWindow === event.source)
+        if (!senderIsPortalFrame) return
+        const url = new URL(window.location.href)
+        url.searchParams.set("view", "player-breakdown")
+        url.searchParams.set("diag_pid", playerId)
+        url.searchParams.set("diag_team", team)
+        window.location.assign(url.toString())
+      }
+      window.addEventListener("message", handler)
+      document.documentElement.dataset.adaBreakdownBridge = "ready"
+      return () => {
+        window.removeEventListener("message", handler)
+        delete document.documentElement.dataset.adaBreakdownBridge
+      }
+    }
+    """,
+)
+
+
 st.markdown(
     f"""
     <style>
@@ -112,7 +148,11 @@ st.markdown(
     .stCaption, [data-testid="stCaptionContainer"] {{ color: {BL_MUTED} !important; font-size: 18px; }}
     [data-testid="stMarkdownContainer"] p, [data-testid="stMarkdownContainer"] span,
     [data-testid="stMarkdownContainer"] li {{ color: {BL_INK}; font-size: 18px; }}
-    h1 {{ font-size: 3rem !important; }}
+    /* Page titles shared by The 8 Player Types, Diagnostic Analysis,
+       NCAA Bridge, and Player Report. Keep them decisively above each
+       tab's internal section headings while still allowing narrow screens
+       to wrap the longer NCAA title cleanly. */
+    h1 {{ font-size: clamp(2.75rem, 4.25vw, 3.5rem) !important; line-height: 1.08 !important; }}
     h2 {{ font-size: 2rem !important; }}
     h3 {{ font-size: 1.75rem !important; }}
     h4 {{ font-size: 1.4rem !important; }}
@@ -163,13 +203,44 @@ st.markdown(
     div[role="radiogroup"] label {{ padding: 6px 4px; }}
     hr {{ border-color: {BL_LINE}; }}
     body, .stApp {{ font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
+    [data-testid="stMainBlockContainer"] {{
+        width: 100%; max-width: 90rem; margin-inline: auto;
+        padding-inline: clamp(1rem, 3vw, 3rem);
+    }}
+    [data-testid="stMainBlockContainer"] iframe {{ max-width: 100%; }}
+    div[data-testid="stTable"] {{ overflow-x: auto; -webkit-overflow-scrolling: touch; }}
+    @media (max-width: 64rem) {{
+        [data-testid="stMainBlockContainer"] {{ padding-inline: clamp(.8rem, 2.5vw, 1.5rem); }}
+        div[data-testid="stSelectbox"] {{ width: 100%; }}
+    }}
+    @media (max-width: 40rem) {{
+        [data-testid="stMainBlockContainer"] {{ padding-inline: .8rem; padding-bottom: 2rem; }}
+        h1 {{ font-size: clamp(2.35rem, 11vw, 2.75rem) !important; line-height: 1.1 !important; }}
+        h2 {{ font-size: 1.65rem !important; }}
+        h3 {{ font-size: 1.4rem !important; }}
+        .stCaption, [data-testid="stCaptionContainer"] {{ font-size: 1rem !important; }}
+        [data-testid="stMarkdownContainer"] p,
+        [data-testid="stMarkdownContainer"] span,
+        [data-testid="stMarkdownContainer"] li {{ font-size: 1.05rem; }}
+        button[data-baseweb="tab"] {{ min-width: max-content; }}
+    }}
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+# The 3D archetype space is intentionally isolated in st.iframe. Its sandbox
+# cannot navigate the top frame directly, so player-avatar clicks send a
+# narrowly scoped message here; this zero-size Component v2 bridge performs
+# the same-tab route by updating only the query parameters consumed below.
+_PLAYER_BREAKDOWN_NAV_BRIDGE(key="player-breakdown-nav-bridge")
 NETS_TEAM_ID = 1610612751
 TEAM_LOGO_URL = "https://cdn.nba.com/logos/nba/{team_id}/global/L/logo.png"
 NBA_LOGO_URL = "https://cdn.nba.com/logos/leagues/logo-nba.svg"
+PAPER_URL = (
+    "https://www.sloansportsconference.com/research-papers/"
+    "scouting-anyone-probabilistic-player-archetypes-for-any-league"
+)
 
 # AI-ASSISTED (Claude Code, chat) - Prompt: "我是想扩展到所有的NBA球员", scope
 # then confirmed by the owner as "彻底改成全联盟工具" (make it a genuinely
@@ -266,12 +337,13 @@ def resolve_team_frame(sel):
     return league[league["TEAM_ABBREVIATION"] == sel].reset_index(drop=True)
 
 
-# Nets first so the diagnostic pages open on a short, concrete, useful list (the
-# player picker is unusable at 433 names); every other team and the whole league
-# are one click away.
+# Keep the shared option order stable for Report. Player Breakdown explicitly
+# defaults to Brooklyn below so it opens on a short, concrete player list rather
+# than the unusable 433-player league list.
 # "Nets — current roster" dropped from the picker at owner request - the app is
 # league-wide now, and Brooklyn is still reachable via its "BKN" team code.
 DIAG_TEAM_OPTS = [ALL_TEAMS] + TEAM_CODES
+DEFAULT_DIAG_TEAM_INDEX = DIAG_TEAM_OPTS.index(NETS_ABBR)
 TEAM_PICK_HELP = "A team selects whoever logged minutes there this season; \"All 30 teams\" is the whole league."
 
 with st.sidebar:
@@ -286,7 +358,6 @@ with st.sidebar:
         ''',
         unsafe_allow_html=True,
     )
-    st.caption("Probabilistic Archetype Scouting Portal")
     st.divider()
 
     # AI-ASSISTED (Claude Code, chat)
@@ -337,8 +408,24 @@ with st.sidebar:
         nav_options.append("📄 Report")
     if SHOW_FUTURE_WORK_PAGE:
         nav_options.append("🚧 Future Work & Obstacles")
-    page = st.radio("Navigate", nav_options, label_visibility="collapsed")
+    # Cross-page links from sandboxed visualization iframes arrive as a
+    # one-shot query target. Hydrate the keyed nav widget before it renders,
+    # then clear only the routing key; diag_pid remains for Player Breakdown
+    # to consume after its team/player widgets have been synchronized.
+    query_view = st.query_params.get("view")
+    if query_view == "player-breakdown" and "🔍 Player Breakdown" in nav_options:
+        st.session_state["nav_page"] = "🔍 Player Breakdown"
+        del st.query_params["view"]
+    elif st.session_state.get("nav_page") not in nav_options:
+        st.session_state["nav_page"] = nav_options[0]
+    page = st.radio(
+        "Navigate", nav_options, key="nav_page", label_visibility="collapsed"
+    )
     st.divider()
+    st.markdown(
+        f'*Research basis: [“Scouting Anyone: Probabilistic Player Archetypes '
+        f'for Any League”]({PAPER_URL}), MIT Sloan Sports Analytics Conference 2026.*'
+    )
 
     # AI-ASSISTED (Claude Code, chat) - Prompt: "在Player Breakdown 添加一个
     # list可以选择球员 就像 Report Tab那样" (add a player-picker list to Player
@@ -367,8 +454,36 @@ with st.sidebar:
     if page in ("🔍 Player Breakdown",):
         # This page's OWN team picker (the sidebar no longer has a global one):
         # a 433-name player dropdown is not usable, so a team is chosen first.
-        diag_team = st.selectbox("Team", DIAG_TEAM_OPTS, index=0, key="diag_team_select",
-                                 help=TEAM_PICK_HELP)
+        # A linked player wins over the normal BKN default: infer his current
+        # team from the authoritative league frame before the Team widget is
+        # instantiated, so both sidebar dropdowns agree on the first render.
+        linked_diag_pid = st.query_params.get("diag_pid")
+        linked_diag_team = st.query_params.get("diag_team")
+        if linked_diag_team not in DIAG_TEAM_OPTS and linked_diag_pid is not None:
+            try:
+                linked_row = league.loc[
+                    league["PLAYER_ID"].astype(int) == int(linked_diag_pid)
+                ]
+                if len(linked_row):
+                    linked_diag_team = str(linked_row.iloc[0]["TEAM_ABBREVIATION"])
+            except (TypeError, ValueError):
+                linked_diag_team = None
+        if "diag_team" in st.query_params:
+            del st.query_params["diag_team"]
+        if linked_diag_team in DIAG_TEAM_OPTS:
+            # Initialize from one source only: clearing any prior widget state
+            # lets index select the linked team without Streamlit's
+            # "default plus Session State" warning or a clearable None state.
+            st.session_state.pop("diag_team_select", None)
+            diag_team_index = DIAG_TEAM_OPTS.index(linked_diag_team)
+        else:
+            if st.session_state.get("diag_team_select") not in DIAG_TEAM_OPTS:
+                st.session_state.pop("diag_team_select", None)
+            diag_team_index = DEFAULT_DIAG_TEAM_INDEX
+        diag_team = st.selectbox(
+            "Team", DIAG_TEAM_OPTS, index=diag_team_index,
+            key="diag_team_select", help=TEAM_PICK_HELP,
+        )
         roster = resolve_team_frame(diag_team)
         diag_names = sorted(roster["PLAYER_NAME"].tolist())
         pid_to_diag_name = dict(zip(roster["PLAYER_ID"].astype(int), roster["PLAYER_NAME"]))

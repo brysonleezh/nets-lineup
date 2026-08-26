@@ -97,17 +97,25 @@ K = 8
 
 
 @st.cache_data
-def _rookie_nba_ids() -> dict:
-    """{display_name: nba_player_id} from config.yaml - the same frozen input
-    Phase 6 used. Real NBA headshots exist for all three 2026 draftees; when
-    one is missing the shared helper degrades to an initials avatar on its
-    own, so this never has to guard."""
+def _rookie_config_rows() -> list[dict]:
+    """The frozen deployment roster from config.yaml.
+
+    Keeping identity, NBA id and current team behind one cached read prevents
+    the team filter and the cards from developing separate ideas of who these
+    projections belong to.
+    """
     import yaml
     try:
         cfg = yaml.safe_load((REPO_ROOT / "config.yaml").read_text())
-        return {r["display_name"]: r.get("nba_player_id") for r in cfg.get("rookies", [])}
+        return list(cfg.get("rookies", []))
     except Exception:
-        return {}
+        return []
+
+
+@st.cache_data
+def _rookie_nba_ids() -> dict:
+    """{display_name: nba_player_id} from the frozen deployment roster."""
+    return {r["display_name"]: r.get("nba_player_id") for r in _rookie_config_rows()}
 
 
 TRANSLATOR_DIR = REPO_ROOT / "data" / "translator"
@@ -141,6 +149,9 @@ REQUIRED_FILES = {
     "archetype_labels.csv": REPO_ROOT / "data" / "basis_2025_26" / "archetype_labels.csv",
     "rookie_projections_full.json": TRANSLATOR_DIR / "rookie_projections_full.json",
     "saturation_rule_evidence.csv": TRANSLATOR_DIR / "saturation_rule_evidence.csv",
+    "draft_picks_all.json": REPO_ROOT / "data" / "raw" / "cbbd" / "draft_picks_all.json",
+    "roster_2026.json": REPO_ROOT / "data" / "raw" / "cbbd" / "roster_2026.json",
+    "shared_features.parquet": REPO_ROOT / "data" / "college" / "shared_features.parquet",
 }
 
 
@@ -167,6 +178,146 @@ def load_frozen_record() -> dict:
 @st.cache_data
 def load_holdout_predictions() -> pd.DataFrame:
     return pd.read_csv(REQUIRED_FILES["holdout_predictions.csv"])
+
+
+@st.cache_data
+def load_2026_draft_projections() -> list[dict]:
+    """The complete 2026 draft class, with NCAA Bridge output where possible.
+
+    The earlier team browser accidentally used the 36-player *2025 holdout*.
+    That file is validation evidence, not the population being projected.  The
+    population here comes from CBBD's 60-row 2026 draft ledger.  Fifty-three
+    draftees have a 2025-26 NCAA recipe/shared-feature row and can pass through
+    the already-frozen deployment posterior; international players and any
+    other missing NCAA rows stay in the list with a clear unavailable status.
+
+    CBBD does not provide DOB for this class. Verified config birthdates are
+    retained for the three frozen players; otherwise age_at_draft is imputed
+    with the historical median for the same college-tenure year. No model is
+    fitted here and no artifact is written.
+    """
+    from datetime import date
+    import glob
+
+    import yaml
+    from nba_api.stats.static import teams as nba_teams
+    from phase6_step2_predict_rookies import (
+        apply_frozen_transform,
+        build_rookie_raw_row,
+        roster_min_start_by_athlete_id,
+    )
+
+    picks = [
+        p for p in json.loads(REQUIRED_FILES["draft_picks_all.json"].read_text())
+        if int(p.get("year", 0)) == 2026
+    ]
+    if len(picks) != 60:
+        raise ValueError(f"expected 60 players in the 2026 draft ledger, found {len(picks)}")
+
+    config = yaml.safe_load((REPO_ROOT / "config.yaml").read_text())
+    known = {int(r["cbbd_athlete_id"]): r for r in config.get("rookies", [])}
+    draft_date = date.fromisoformat(config["draft_date_2026"])
+    team_abbr = {t["full_name"]: t["abbreviation"] for t in nba_teams.get_teams()}
+    sf = pd.read_parquet(REQUIRED_FILES["shared_features.parquet"])
+    recipes = load_college_recipes()
+    starts = roster_min_start_by_athlete_id()
+    roster_2026 = json.loads(REQUIRED_FILES["roster_2026.json"].read_text())
+    espn_source_ids = {
+        int(player["id"]): str(player["sourceId"])
+        for team in roster_2026
+        for player in team.get("players", [])
+        if player.get("id") is not None and player.get("sourceId")
+    }
+
+    # Read the season-partitioned shooting cache once for the whole class.
+    # Calling the single-player helper 53 times would repeatedly parse the
+    # same conference files and make a cold page load needlessly slow.
+    shot_mix = {}
+    for path in sorted(glob.glob(str(REPO_ROOT / "data" / "raw" / "cbbd" / "shooting_2026_*.json"))):
+        for shot in json.loads(Path(path).read_text()):
+            aid = shot.get("athleteId")
+            tracked = shot.get("trackedShots") or 0
+            if aid is None or tracked <= 0:
+                continue
+            previous = shot_mix.get(int(aid))
+            if previous is not None and previous[0] >= tracked:
+                continue
+            rim = (shot["dunks"]["attempted"] + shot["layups"]["attempted"]
+                   + shot["tipIns"]["attempted"]) / tracked
+            three = shot["threePointJumpers"]["attempted"] / tracked
+            shot_mix[int(aid)] = (tracked, rim, three)
+
+    anchors = load_anchors()
+    tenure_age = anchors.groupby("years_in_college")["age_at_draft"].median().to_dict()
+    fallback_age = float(anchors["age_at_draft"].median())
+
+    rows, model_rows, model_targets = [], [], []
+    for pick in sorted(picks, key=lambda p: int(p["overall"])):
+        aid = pick.get("athleteId")
+        draft_team = str(pick["draftTeam"])
+        espn_source_id = espn_source_ids.get(int(aid)) if aid is not None else None
+        base = {
+            "display_name": str(pick["name"]),
+            "nba_player_id": known.get(int(aid), {}).get("nba_player_id") if aid is not None else None,
+            "draft_team": draft_team,
+            "draft_team_abbr": team_abbr.get(draft_team, draft_team),
+            "espn_source_id": espn_source_id,
+            "profile_image_url": (
+                "https://a.espncdn.com/i/headshots/mens-college-basketball/players/full/"
+                f"{espn_source_id}.png"
+                if espn_source_id else None
+            ),
+            # Kept temporarily for old card call sites; semantically this is
+            # the team that selected the player, not a rookie-season team.
+            "current_team": team_abbr.get(draft_team, draft_team),
+            "draft_pick_overall": int(pick["overall"]),
+            "position": pick.get("position"),
+            "college_team": f"{pick.get('sourceTeamLocation', '')} {pick.get('sourceTeamName', '')}".strip(),
+            "conference": pick.get("sourceTeamLeagueAffiliation") or "—",
+            "y_pred": None,
+            "comps": [],
+            "projection_status": "missing_ncaa_input",
+        }
+        rows.append(base)
+        if aid is None:
+            continue
+
+        rec = recipes[(recipes["player_id_source"] == aid) & (recipes["season"] == 2026)]
+        sf_row = sf[(sf["player_id_source"] == aid) & (sf["season"] == 2026)]
+        if len(rec) != 1 or len(sf_row) != 1 or starts.get(int(aid)) is None:
+            continue
+
+        years = int(2026 - starts[int(aid)] + 1)
+        cfg = {
+            "display_name": base["display_name"],
+            "cbbd_athlete_id": int(aid),
+            "draft_pick_overall": base["draft_pick_overall"],
+            "rim_finishing_share": shot_mix.get(int(aid), (None, None, None))[1],
+            "three_pt_jumper_share": shot_mix.get(int(aid), (None, None, None))[2],
+        }
+        if int(aid) in known and known[int(aid)].get("birthdate"):
+            cfg["birthdate"] = known[int(aid)]["birthdate"]
+            age_imputed = False
+        else:
+            cfg["age_at_draft"] = float(tenure_age.get(years, fallback_age))
+            age_imputed = True
+        raw = build_rookie_raw_row(cfg, sf, rec.iloc[0], starts, draft_date)
+        model_rows.append(raw)
+        model_targets.append((base, raw, age_imputed))
+
+    if model_rows:
+        X = apply_frozen_transform(model_rows, load_deployment_preprocessing())
+        B_samples, _ = load_deployment_posterior()
+        predictions = predict_mu_mean_numpy(X, B_samples)
+        for (base, raw, age_imputed), mix in zip(model_targets, predictions):
+            base.update({
+                "college_team": raw["college_team"],
+                "conference": raw["conference"],
+                "y_pred": [float(x) for x in mix],
+                "projection_status": "available",
+                "age_imputed": age_imputed,
+            })
+    return rows
 
 
 @st.cache_data
@@ -348,17 +499,15 @@ def fmt_top3(top3: list, labels: dict) -> str:
 # of this app's primary green (dark->light), others -> BL_INK at 10%. The
 # green ramp is the same one step2_intro.py already uses to mark projected
 # recipes, so "modelled, not measured" reads consistently across both pages.
-# TYPE: the handoff names Newsreader/IBM Plex Mono but defers to "the app's
-# existing font stack if it has one". Loading two webfonts would add an
-# external network dependency to a page that currently has none, so the
-# serif/mono CONTRAST the design depends on is kept via system stacks
-# instead of the named families.
+# TYPE: use the portal's system UI stack for names and section headings so
+# this page does not read as a separate microsite. Monospace remains limited
+# to compact numeric metadata, matching the rest of the portal.
 # Not AI: the design itself - layout, type scale, the donut-with-Others
 # encoding, and the decision to apply it to this section - all the owner's,
 # via the handoff.
 CARD_RAMP = ["#004b2b", "#3f7d5c", "#8fb3a1"]   # ramp-1/2/3, darkest = top archetype
 CARD_OTHERS = "rgba(32,36,42,0.10)"             # BL_INK at ~10%
-CARD_SERIF = "Georgia, 'Times New Roman', serif"
+CARD_SERIF = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 CARD_MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
 
 
@@ -372,7 +521,7 @@ def _legend_row_html(label: str, pct: int, swatch: str, color: str,
     # above it or the legend outshouts the card's own title.
     name_size = "15px" if emphasis else "12.5px"
     name_weight = "600" if emphasis else "400"
-    pct_size = "13px" if emphasis else "11px"
+    pct_size = "13px" if emphasis else "12px"
     pct_weight = "600" if emphasis else "500"
     dot = "10px" if emphasis else "8px"
     return (
@@ -430,9 +579,9 @@ def recipe_radar_chart(mix: np.ndarray, nba_labels: dict, r_max: float,
             # Plotly.js renders this HTML subset in categorical tick labels;
             # the category string doubles as the label, so the emphasis has
             # to live in the string itself.
-            labels.append(f'<b><span style="font-size:12.5px">{short}</span></b>')
+            labels.append(f'<b><span style="font-size:13px">{short}</span></b>')
         else:
-            labels.append(f'<span style="font-size:10px">{short}</span>')
+            labels.append(f'<span style="font-size:11.5px">{short}</span>')
 
     vals = [float(mix[j]) * 100 for j in range(K)]
     fig = go.Figure()
@@ -464,7 +613,7 @@ def recipe_radar_chart(mix: np.ndarray, nba_labels: dict, r_max: float,
 
 
 def rookie_profile_html(name: str, meta: str, photo_uri: str, top3: list,
-                        others: int) -> str:
+                        others: int, fallback_photo_uri: str | None = None) -> str:
     """The identity half of a rookie card: headshot, name, meta, and the
     recipe as a legend, with the radar rendered directly beneath it. Sized
     for a three-across layout, so every dimension here is smaller than the
@@ -478,17 +627,22 @@ def rookie_profile_html(name: str, meta: str, photo_uri: str, top3: list,
     )
     legend += _legend_row_html("Others", others, CARD_OTHERS, BL_MUTED, emphasis=False)
 
+    fallback_attr = (
+        f' onerror="this.onerror=null;this.src=\'{fallback_photo_uri}\';"'
+        if fallback_photo_uri else ""
+    )
     return (
         f'<div style="display:flex;flex-direction:column;align-items:center;text-align:center;'
         f'padding:20px 18px 4px;">'
         f'<div style="width:76px;height:76px;border-radius:50%;border:1px solid {BL_LINE};'
         f'padding:3px;flex:none;">'
-        f'<img src="{photo_uri}" alt="" style="width:100%;height:100%;border-radius:50%;'
+        f'<img src="{photo_uri}" alt="{name}"{fallback_attr} '
+        f'style="width:100%;height:100%;border-radius:50%;'
         f'object-fit:cover;object-position:top center;display:block;">'
         f'</div>'
         f'<div style="margin:12px 0 0;font-family:{CARD_SERIF};font-size:19px;font-weight:600;'
         f'letter-spacing:-0.01em;color:{BL_INK};line-height:1.2;">{name}</div>'
-        f'<div style="margin-top:5px;font:400 10.5px {CARD_MONO};color:{BL_MUTED};">{meta}</div>'
+        f'<div style="margin-top:5px;font:400 12px {CARD_MONO};color:{BL_MUTED};">{meta}</div>'
         f'<div style="width:100%;max-width:240px;margin-top:16px;display:flex;'
         f'flex-direction:column;gap:7px;">{legend}</div>'
         f'</div>'
@@ -507,7 +661,7 @@ def comp_card_html(name: str, sub: str, college_role: str, nba_role: str, pct: i
         f'<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">'
         f'<span style="font-family:{CARD_SERIF};font-size:15px;font-weight:600;'
         f'color:{BL_INK};line-height:1.2;">{name}</span>'
-        f'<span style="font:400 10px {CARD_MONO};color:{BL_MUTED};white-space:nowrap;">{sub}</span>'
+        f'<span style="font:400 11.5px {CARD_MONO};color:{BL_MUTED};white-space:nowrap;">{sub}</span>'
         f'</div>'
         # EVERY span carries an explicit font-size. This app's global CSS sets
         # `[data-testid="stMarkdownContainer"] span { font-size: 18px }`, so a
@@ -518,7 +672,7 @@ def comp_card_html(name: str, sub: str, college_role: str, nba_role: str, pct: i
         f'<span style="font-size:12.5px;color:{BL_MUTED};">{college_role}</span>'
         f'<span style="font-size:12.5px;color:{BL_GREEN};font-weight:700;padding:0 5px;">&rarr;</span>'
         f'<span style="font-size:12.5px;color:{BL_INK};font-weight:600;">{nba_role}</span> '
-        f'<span style="font:600 11.5px {CARD_MONO};color:{BL_INK};'
+        f'<span style="font:600 12px {CARD_MONO};color:{BL_INK};'
         f'font-variant-numeric:tabular-nums;">{pct}%</span>'
         f'</div>'
         f'</div>'
@@ -526,8 +680,7 @@ def comp_card_html(name: str, sub: str, college_role: str, nba_role: str, pct: i
 
 
 def render_act_header(index: str, title: str) -> None:
-    """The one heading style for all three acts: a mono index baseline-aligned
-    with a serif title.
+    """The one heading style for all acts, using the portal's type family.
 
     Acts 2 and 3 used `st.markdown("## ...")` until the owner asked for one
     consistent size - and that was never going to match by tweaking numbers,
@@ -535,9 +688,9 @@ def render_act_header(index: str, title: str) -> None:
     font-weight: 700 !important }`. Rendering all three through the same divs
     is what actually makes them identical."""
     st.markdown(
-        f'<div style="display:flex;align-items:baseline;gap:16px;margin-top:4px;">'
-        f'<span style="font:500 12px {CARD_MONO};letter-spacing:.2em;color:{BL_MUTED};">{index}</span>'
-        f'<span style="font-family:{CARD_SERIF};font-size:28px;font-weight:600;'
+        f'<div style="display:flex;align-items:baseline;gap:12px;margin-top:4px;">'
+        f'<span style="font:600 13px {CARD_MONO};letter-spacing:.12em;color:{BL_MUTED};">{index}</span>'
+        f'<span style="font-family:{CARD_SERIF};font-size:24px;font-weight:650;line-height:1.25;'
         f'letter-spacing:-0.01em;color:{BL_INK};">{title}</span>'
         f'</div>',
         unsafe_allow_html=True,
@@ -546,57 +699,86 @@ def render_act_header(index: str, title: str) -> None:
 
 def render_rookie_cards(projections: list, college_labels: dict, nba_labels: dict,
                         pick_numbers: dict) -> None:
-    """Three cards left to right, in draft order. Each is profile on top and
-    its 8-archetype radar directly beneath, with that player's comparable
-    college profiles collapsed under his own column."""
+    """Team-filtered 2026 draftee cards in draft order, wrapping after three."""
     nba_ids = _rookie_nba_ids()
 
-    # Fixed display order, by name, so the three always read Brown ->
-    # Bilodeau -> Jefferson regardless of how the source file happens to be
-    # ordered (it is a pipeline output, not a display artifact).
-    order = {"Mikel Brown Jr.": 0, "Tyler Bilodeau": 1, "Joshua Jefferson": 2}
-    ordered = sorted(projections, key=lambda r: order.get(r["display_name"], 99))
+    ordered = sorted(
+        [r for r in projections if r.get("y_pred") is not None],
+        key=lambda r: (r.get("draft_pick_overall", 999), r["display_name"]),
+    )
+    unavailable = sorted(
+        [r for r in projections if r.get("y_pred") is None],
+        key=lambda r: (r.get("draft_pick_overall", 999), r["display_name"]),
+    )
+    if not ordered and unavailable:
+        st.info("This team's draftees do not have NCAA input data, so NCAA Bridge cannot project them.")
+    elif not ordered:
+        st.info("No 2026 draftees are listed for this team.")
 
     # One radial scale for all three charts, computed across every rookie, so
     # a 55% lobe on one chart sits at the same distance from centre as a 55%
     # lobe on another. Per-player autoscaling would make three charts that
     # look comparable and are not.
-    peak = max(float(np.max(np.array(r["y_pred"]))) for r in ordered) * 100
-    r_max = float(np.ceil(peak / 10.0) * 10)
+    r_max = None
+    if ordered:
+        peak = max(float(np.max(np.array(r["y_pred"]))) for r in ordered) * 100
+        r_max = float(np.ceil(peak / 10.0) * 10)
 
-    for col, rookie in zip(st.columns(3, gap="medium"), ordered):
-        with col:
-            name = rookie["display_name"]
-            mix = np.array(rookie["y_pred"])
-            top3 = [(nba_labels.get(int(j), f"archetype {j}"), int(round(float(mix[j]) * 100)))
-                    for j in np.argsort(-mix)[:3]]
-            others = 100 - sum(p for _, p in top3)
-            meta = (f"{rookie['college_team']} ({rookie['conference']}) · "
-                    f"pick #{pick_numbers.get(name, '?')}")
-            photo = hull_callout_chart.get_headshot_data_uri(nba_ids.get(name), name)
+    # Recreate the columns for each row so a four-rookie team becomes 3 + 1,
+    # rather than silently dropping the fourth player or squeezing four cards.
+    for start in range(0, len(ordered), 3):
+        batch = ordered[start:start + 3]
+        for col, rookie in zip(st.columns(len(batch), gap="medium"), batch):
+            with col:
+                name = rookie["display_name"]
+                mix = np.array(rookie["y_pred"])
+                top3 = [
+                    (nba_labels.get(int(j), f"archetype {j}"),
+                     int(round(float(mix[j]) * 100)))
+                    for j in np.argsort(-mix)[:3]
+                ]
+                others = 100 - sum(p for _, p in top3)
+                pick = rookie.get("draft_pick_overall", pick_numbers.get(name, "?"))
+                meta = (f"{rookie['college_team']} ({rookie['conference']}) · "
+                        f"pick #{pick}")
+                player_id = rookie.get("nba_player_id", nba_ids.get(name))
+                fallback_photo = hull_callout_chart.get_headshot_data_uri(None, name)
+                photo = (
+                    hull_callout_chart.get_headshot_data_uri(player_id, name)
+                    if player_id is not None
+                    else rookie.get("profile_image_url") or fallback_photo
+                )
 
-            with st.container(border=True):
-                st.markdown(rookie_profile_html(name, meta, photo, top3, others),
-                            unsafe_allow_html=True)
-                st.plotly_chart(recipe_radar_chart(mix, nba_labels, r_max),
-                                width="stretch", key=f"s1_radar_{name}")
+                with st.container(border=True):
+                    st.markdown(rookie_profile_html(
+                        name, meta, photo, top3, others, fallback_photo
+                    ),
+                                unsafe_allow_html=True)
+                    st.plotly_chart(recipe_radar_chart(mix, nba_labels, r_max),
+                                    width="stretch", key=f"s1_radar_{name}")
 
-            with st.expander("Similar college profiles — what they became"):
-                for c in rookie["comps"]:
-                    nba_j, nba_w = c["true_rookie_top2"][0]
-                    st.markdown(
-                        comp_card_html(
-                            # display-only: a few comp names carry a double
-                            # space in the source data ("Antonio  Reeves")
-                            " ".join(str(c["name"]).split()),
-                            f"{c['draft_year']} · #{c['pick']} · {c['college']}",
-                            clean_label(college_labels.get(int(c["college_top_archetype"]),
-                                                           "—")),
-                            nba_labels.get(int(nba_j), f"archetype {nba_j}"),
-                            int(round(float(nba_w) * 100)),
-                        ),
-                        unsafe_allow_html=True,
-                    )
+                comps = rookie.get("comps", [])
+                if comps:
+                    with st.expander("Similar college profiles — what they became"):
+                        for c in comps:
+                            nba_j, nba_w = c["true_rookie_top2"][0]
+                            st.markdown(
+                                comp_card_html(
+                                    " ".join(str(c["name"]).split()),
+                                    f"{c['draft_year']} · #{c['pick']} · {c['college']}",
+                                    clean_label(college_labels.get(
+                                        int(c["college_top_archetype"]), "—")),
+                                    nba_labels.get(int(nba_j), f"archetype {nba_j}"),
+                                    int(round(float(nba_w) * 100)),
+                                ),
+                                unsafe_allow_html=True,
+                            )
+
+    if unavailable:
+        missing = " · ".join(
+            f"#{r['draft_pick_overall']} {r['display_name']}" for r in unavailable
+        )
+        st.caption(f"No NCAA Bridge input available: {missing}.")
 
 
 def render_section1_projections(projections: list, college_labels: dict, nba_labels: dict,
@@ -962,11 +1144,11 @@ def _role_panel_html(kicker: str, role: str, pct: str, accent: str, dim: bool = 
     return (
         f'<div style="background:{BL_WHITE};border:1px solid {BL_LINE};border-left:3px solid {accent};'
         f'border-radius:8px;padding:12px 14px;height:100%;">'
-        f'<div style="font:500 9.5px {CARD_MONO};letter-spacing:.14em;text-transform:uppercase;'
+        f'<div style="font:600 11px {CARD_MONO};letter-spacing:.10em;text-transform:uppercase;'
         f'color:{BL_MUTED};">{kicker}</div>'
         f'<div style="margin-top:6px;font-family:{CARD_SERIF};font-size:17px;font-weight:600;'
         f'line-height:1.25;color:{body};">{role}</div>'
-        f'<div style="margin-top:3px;font:500 11.5px {CARD_MONO};color:{BL_MUTED};'
+        f'<div style="margin-top:3px;font:500 12px {CARD_MONO};color:{BL_MUTED};'
         f'font-variant-numeric:tabular-nums;">{pct}</div>'
         f'</div>'
     )
@@ -1006,8 +1188,8 @@ def recipe_radar_compare(y_pred: np.ndarray, y_true: np.ndarray, nba_labels: dic
     labels = []
     for j in range(K):
         short = player_report.abbreviate_archetype(nba_labels.get(j, f"archetype {j}"))
-        labels.append(f'<b><span style="font-size:12.5px">{short}</span></b>' if j in top3
-                      else f'<span style="font-size:10.5px">{short}</span>')
+        labels.append(f'<b><span style="font-size:13px">{short}</span></b>' if j in top3
+                      else f'<span style="font-size:11.5px">{short}</span>')
 
     fig = go.Figure()
     for name, vec, colour, fill in (
@@ -1068,7 +1250,7 @@ def render_player_transition(college_labels: dict, nba_labels: dict) -> None:
             f'margin:0 auto;">'
             f'<div style="margin-top:12px;font-family:{CARD_SERIF};font-size:20px;font-weight:600;'
             f'color:{BL_INK};line-height:1.2;">{r["player_name"]}</div>'
-            f'<div style="margin-top:5px;font:400 10.5px {CARD_MONO};color:{BL_MUTED};">'
+            f'<div style="margin-top:5px;font:400 12px {CARD_MONO};color:{BL_MUTED};">'
             f'{r["college_team"] if pd.notna(r["college_team"]) else "—"} · '
             f'{int(r["draft_year"])} pick #{int(r["overall"])}</div>'
             f'</div>',
@@ -1222,7 +1404,7 @@ def render_section6_frozen_record(frozen: dict, manifest: dict) -> None:
 # --- main entry point ---------------------------------------------------------
 
 def render_rookie_projections_page() -> None:
-    st.title("NCAA Bridge — Rookie Archetype Projections")
+    st.title("NCAA Bridge — 2026 Draft Archetype Projections")
 
     missing = check_required_files()
     if missing:
@@ -1237,6 +1419,7 @@ def render_rookie_projections_page() -> None:
     try:
         projections_df = load_rookie_projections()
         projections_full = load_rookie_projections_full()
+        draft_projections = load_2026_draft_projections()
         frozen = load_frozen_record()
         holdout_df = load_holdout_predictions()
         baseline_df = load_baseline_comparison()
@@ -1293,8 +1476,35 @@ def render_rookie_projections_page() -> None:
 
     # --- ACT 1: what the model says -----------------------------------------
     render_act_header("1", "What the model says")
-    st.caption("Projections from college data — not observed NBA seasons.")
-    render_section1_projections(projections_full, college_labels, nba_labels, archetypoids, pick_numbers)
+    projection_teams = sorted({r["draft_team"] for r in draft_projections})
+    if not projection_teams:
+        st.error("This page can't render: the 2026 draft class has no team mapping.")
+        return
+
+    filter_col, context_col = st.columns([0.34, 0.66], gap="medium",
+                                         vertical_alignment="bottom")
+    with filter_col:
+        default_team = (
+            "Brooklyn Nets" if "Brooklyn Nets" in projection_teams else projection_teams[0]
+        )
+        selected_team = st.selectbox(
+            "Team",
+            projection_teams,
+            index=projection_teams.index(default_team),
+            key="ncaa_bridge_team",
+            help="Shows the players this team selected in the 2026 NBA Draft. International players without NCAA data are listed but cannot be projected by NCAA Bridge.",
+        )
+    team_projections = [r for r in draft_projections
+                        if r["draft_team"] == selected_team]
+    with context_col:
+        player_word = "draftee" if len(team_projections) == 1 else "draftees"
+        projected_count = sum(r.get("y_pred") is not None for r in team_projections)
+        st.caption(
+            f"{len(team_projections)} {player_word} selected by {selected_team} · "
+            f"{projected_count} with 2025–26 NCAA data available for projection."
+        )
+    render_section1_projections(team_projections, college_labels, nba_labels,
+                                archetypoids, pick_numbers)
 
     if SHOW_PICK_SLOT_COUNTERFACTUAL:
         with st.expander("Try a different draft slot — same player, different opportunity"):

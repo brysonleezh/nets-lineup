@@ -76,7 +76,10 @@ def roster_min_start_by_athlete_id() -> dict[int, int]:
 def shot_type_mix_for(athlete_id: int, season: int) -> tuple[float | None, float | None]:
     import glob
     best = None
-    for f in sorted(glob.glob(str(RAW_CBBD_DIR / "shooting_*.json"))):
+    # Files are already partitioned by season and conference. Restricting the
+    # glob first avoids reparsing every 2017-2025 shooting file for each 2026
+    # draftee in the league-wide browser.
+    for f in sorted(glob.glob(str(RAW_CBBD_DIR / f"shooting_{season}_*.json"))):
         for p in json.loads(Path(f).read_text()):
             if p.get("athleteId") == athlete_id and p.get("season") == season:
                 tracked = p.get("trackedShots") or 0
@@ -98,14 +101,30 @@ def build_rookie_raw_row(rookie_cfg: dict, sf: pd.DataFrame, recipes_row: pd.Ser
     assert len(sf_row) == 1, f"{rookie_cfg['display_name']}: expected 1 shared_features row, got {len(sf_row)}"
     sf_row = sf_row.iloc[0]
 
-    birthdate = date.fromisoformat(rookie_cfg["birthdate"])
-    age_at_draft = (draft_date - birthdate).days / 365.25
+    # The three originally frozen Nets rows carry verified birthdates.  The
+    # league-wide 2026 draft browser reuses this pure row builder for the rest
+    # of the class, whose CBBD roster records do not expose DOB.  In that case
+    # the caller supplies an explicitly imputed age_at_draft; accepting it here
+    # keeps the feature construction identical without pretending an inferred
+    # date is an observed birthdate.
+    if rookie_cfg.get("birthdate"):
+        birthdate = date.fromisoformat(rookie_cfg["birthdate"])
+        age_at_draft = (draft_date - birthdate).days / 365.25
+    else:
+        assert rookie_cfg.get("age_at_draft") is not None, (
+            f"{rookie_cfg['display_name']}: birthdate or age_at_draft is required"
+        )
+        age_at_draft = float(rookie_cfg["age_at_draft"])
 
     min_start = roster_starts.get(aid)
     assert min_start is not None, f"{rookie_cfg['display_name']}: no roster startSeason found"
     years_in_college = season - min_start + 1
 
-    rim_share, three_share = shot_type_mix_for(aid, season)
+    if "rim_finishing_share" in rookie_cfg or "three_pt_jumper_share" in rookie_cfg:
+        rim_share = rookie_cfg.get("rim_finishing_share")
+        three_share = rookie_cfg.get("three_pt_jumper_share")
+    else:
+        rim_share, three_share = shot_type_mix_for(aid, season)
 
     row = {c: sf_row[c] for c in Z_FEATURE_COLS}  # already the correct season-relative z-scores
     row["overall"] = rookie_cfg["draft_pick_overall"]
