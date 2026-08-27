@@ -45,12 +45,19 @@ DIAGNOSTICS_README.md
 # step5_rookie_projections.REQUIRED_FILES) - about 7.7MB. Dropping any of these
 # does not shrink the repo meaningfully but does break the deployed page, so
 # they are tracked deliberately rather than by accident.
-data/raw/
+# Keep the raw cache out of the deployment, except for the two compact
+# ledgers the live NCAA Bridge reads to build the 2026 draft-class browser.
+data/raw/*
+!data/raw/cbbd/
+data/raw/cbbd/*
+!data/raw/cbbd/draft_picks_all.json
+!data/raw/cbbd/roster_2026.json
 data/nba_historical/
 logs/
 
 data/college/*
 !data/college/recipes.csv
+!data/college/shared_features.parquet
 
 data/translator/*
 !data/translator/holdout_predictions.csv

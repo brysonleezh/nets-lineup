@@ -5,6 +5,7 @@ no-write-path guard."""
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from unittest.mock import patch
@@ -103,6 +104,34 @@ def test_missing_required_file_reports_clearly_not_exception():
 def test_check_required_files_empty_when_all_present():
     import step5_rookie_projections as page
     assert page.check_required_files() == []
+
+
+def test_live_runtime_inputs_are_not_gitignored():
+    """A git-based deploy must receive every input used by the live page.
+
+    These files can exist locally while still being absent from Streamlit
+    Community Cloud if a broad data-directory rule ignores them.  Exercise
+    Git's own ignore matcher so nested-directory negation semantics are part
+    of the regression check.
+    """
+    if not (REPO_ROOT / ".git").exists():
+        pytest.skip("source archive has no Git metadata")
+
+    runtime_inputs = [
+        "data/raw/cbbd/draft_picks_all.json",
+        "data/raw/cbbd/roster_2026.json",
+        "data/college/shared_features.parquet",
+    ]
+    ignored = [
+        path
+        for path in runtime_inputs
+        if subprocess.run(
+            ["git", "check-ignore", "--no-index", "-q", path],
+            cwd=REPO_ROOT,
+            check=False,
+        ).returncode == 0
+    ]
+    assert ignored == [], f"live runtime inputs are excluded from deployment: {ignored}"
 
 
 def test_what_the_model_says_uses_2026_draft_class_not_2025_holdout():
