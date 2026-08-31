@@ -2734,8 +2734,19 @@ def render_player_report(player_id, recipes, k, labels, bio, exposure_cache):
     render_section_d(player_id, fit, k, labels, recipes_all)
 
 
-def render_diagnostic_analysis(recipes, k, labels, oncourt, bio, roster, sidebar_pid=None):
+def render_diagnostic_analysis(
+    recipes,
+    k,
+    labels,
+    oncourt,
+    bio,
+    roster,
+    sidebar_pid=None,
+    context_note=None,
+):
     st.title("Diagnostic Analysis")
+    if context_note:
+        st.caption(context_note)
 
     roster_ids = roster["PLAYER_ID"].astype(int).tolist()
     exposure_cache = load_exposure_cache(recipes, k, SEASON)

@@ -51,6 +51,9 @@ from portal_shared import (
     BL_LINE,
     BL_GREEN,
     DEFAULT_DIAG_PLAYER_ID,
+    DEFAULT_PELICANS_PLAYER_ID,
+    PELICANS_CURRENT_ROSTER,
+    current_roster_recipe_frame,
     load_static,
     load_player_bio,
     load_nets_roster,
@@ -69,8 +72,6 @@ from step3_player_breakdown import (
 from step4_report import SHOW_PLAYER_REPORT_PAGE, render_player_report_page
 from step5_rookie_projections import SHOW_ROOKIE_PROJECTIONS_PAGE, render_rookie_projections_page
 from step6_draft_class import SHOW_DRAFT_CLASS_PAGE, render_draft_class_page
-
-
 st.set_page_config(page_title="NBA Archetype Portal", layout="wide")
 
 
@@ -296,6 +297,11 @@ nets_roster = nets_roster.dropna(subset=[arch_cols_all[0]]).reset_index(drop=Tru
 nets_roster["dominant_arch"] = nets_roster[arch_cols_all].values.argmax(axis=1)
 nets_roster["role"] = nets_roster["dominant_arch"].map(labels)
 
+# A current-roster context is separate from TEAM_ABBREVIATION in the frozen
+# recipe file.  That column describes where a player logged his 2025-26
+# minutes; this curated frame describes who is on New Orleans' 2026-27 roster.
+pelicans_current_roster = current_roster_recipe_frame(recipes, k, labels)
+
 NETS_ABBR = "BKN"
 ALL_TEAMS = "All 30 teams"
 NETS_CURATED = "Nets — current roster"
@@ -334,17 +340,23 @@ def resolve_team_frame(sel):
         return league
     if sel == NETS_CURATED:
         return nets_roster
+    if sel == PELICANS_CURRENT_ROSTER:
+        return pelicans_current_roster
     return league[league["TEAM_ABBREVIATION"] == sel].reset_index(drop=True)
 
 
 # Keep the shared option order stable for Report. Player Breakdown explicitly
-# defaults to Brooklyn below so it opens on a short, concrete player list rather
-# than the unusable 433-player league list.
+# defaults to the current Pelicans roster so the call-ready flow opens on one
+# concrete team rather than the unusable 433-player league list.
 # "Nets — current roster" dropped from the picker at owner request - the app is
 # league-wide now, and Brooklyn is still reachable via its "BKN" team code.
-DIAG_TEAM_OPTS = [ALL_TEAMS] + TEAM_CODES
-DEFAULT_DIAG_TEAM_INDEX = DIAG_TEAM_OPTS.index(NETS_ABBR)
-TEAM_PICK_HELP = "A team selects whoever logged minutes there this season; \"All 30 teams\" is the whole league."
+DIAG_TEAM_OPTS = [ALL_TEAMS, PELICANS_CURRENT_ROSTER] + TEAM_CODES
+DEFAULT_DIAG_TEAM_INDEX = DIAG_TEAM_OPTS.index(PELICANS_CURRENT_ROSTER)
+TEAM_PICK_HELP = (
+    "A team code selects whoever logged minutes there in 2025-26. "
+    "The Pelicans current-roster option uses the curated 2026-27 roster; "
+    "\"All 30 teams\" is the whole league."
+)
 
 with st.sidebar:
     st.markdown(
@@ -417,7 +429,7 @@ with st.sidebar:
         st.session_state["nav_page"] = "🔍 Player Breakdown"
         del st.query_params["view"]
     elif st.session_state.get("nav_page") not in nav_options:
-        st.session_state["nav_page"] = nav_options[0]
+        st.session_state["nav_page"] = "🔍 Player Breakdown"
     page = st.radio(
         "Navigate", nav_options, key="nav_page", label_visibility="collapsed"
     )
@@ -451,10 +463,11 @@ with st.sidebar:
     # since by construction it's never stale on the render pass it's read.
     # Not AI: the requirement itself, and "like the Report tab" as the
     # explicit placement/style precedent - given directly.
+    diag_context_note = None
     if page in ("🔍 Player Breakdown",):
         # This page's OWN team picker (the sidebar no longer has a global one):
         # a 433-name player dropdown is not usable, so a team is chosen first.
-        # A linked player wins over the normal BKN default: infer his current
+        # A linked player wins over the normal Pelicans default: infer his current
         # team from the authoritative league frame before the Team widget is
         # instantiated, so both sidebar dropdowns agree on the first render.
         linked_diag_pid = st.query_params.get("diag_pid")
@@ -484,10 +497,24 @@ with st.sidebar:
             "Team", DIAG_TEAM_OPTS, index=diag_team_index,
             key="diag_team_select", help=TEAM_PICK_HELP,
         )
+        if diag_team == PELICANS_CURRENT_ROSTER:
+            diag_context_note = (
+                "Current roster context: New Orleans Pelicans, 2026–27. "
+                "Recipes, minutes and performance diagnostics remain frozen to "
+                "the 2025–26 regular season; a new addition's prior team may "
+                "therefore appear in his season profile."
+            )
         roster = resolve_team_frame(diag_team)
         diag_names = sorted(roster["PLAYER_NAME"].tolist())
         pid_to_diag_name = dict(zip(roster["PLAYER_ID"].astype(int), roster["PLAYER_NAME"]))
-        default_diag_match = roster.loc[roster["PLAYER_ID"] == DEFAULT_DIAG_PLAYER_ID, "PLAYER_NAME"]
+        default_diag_player_id = (
+            DEFAULT_PELICANS_PLAYER_ID
+            if diag_team == PELICANS_CURRENT_ROSTER
+            else DEFAULT_DIAG_PLAYER_ID
+        )
+        default_diag_match = roster.loc[
+            roster["PLAYER_ID"] == default_diag_player_id, "PLAYER_NAME"
+        ]
         default_diag_name = default_diag_match.iloc[0] if len(default_diag_match) else diag_names[0]
 
         prior_quadrant = st.session_state.get("screening_quadrant")
@@ -538,7 +565,16 @@ elif page == "📖 The 8 Player Types":
     # team view, which is the entire reason its team filter was removed.
     render_intro_page(labels)
 elif page == "🔍 Player Breakdown":
-    render_diagnostic_analysis(recipes, k, labels, oncourt, bio, roster, sidebar_pid=selected_diag_pid)
+    render_diagnostic_analysis(
+        recipes,
+        k,
+        labels,
+        oncourt,
+        bio,
+        roster,
+        sidebar_pid=selected_diag_pid,
+        context_note=diag_context_note,
+    )
 elif page == "🏀 Roster Construction":
     # Team-composition page (currently gated off); keeps its Nets default.
     render_roster_construction(nets_roster, recipes, k, labels)

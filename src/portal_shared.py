@@ -57,12 +57,15 @@ BL_CORAL = "#ee735f"
 BL_GOLD = "#f6bd2e"
 
 BASIS_DIR = DATA_DIR / "basis_2025_26"
+PELICANS_CURRENT_ROSTER_PATH = DATA_DIR / "team_snapshots" / "nop_2026_27.csv"
+PELICANS_CURRENT_ROSTER = "Pelicans — 2026–27 roster"
 SEASON = "2025-26"
 # AI-ASSISTED (Claude Code, chat) - Prompt: "一开始加载默认选择的Michael Porter
 # Jr." (default the Diagnostic Analysis page to Michael Porter Jr. on
 # initial load). Not AI: the choice of player - the user's own call (he's
 # also this project's recurring worked-example case study, per CLAUDE.md).
 DEFAULT_DIAG_PLAYER_ID = 1629008  # Michael Porter Jr.
+DEFAULT_PELICANS_PLAYER_ID = 1629627  # Zion Williamson
 
 # NBA.com's own public static CDN - the standard headshot/logo paths used
 # throughout the nba_api community for exactly this purpose. PNG, not SVG -
@@ -81,6 +84,63 @@ def load_static():
     labels = load_archetype_labels(BASIS_DIR)
     oncourt = load_player_oncourt_netrating(season=SEASON)
     return recipes, k, labels, oncourt
+
+
+@st.cache_data
+def load_pelicans_current_roster() -> pd.DataFrame:
+    """Load the curated current Pelicans roster used by Player Breakdown."""
+    roster = pd.read_csv(PELICANS_CURRENT_ROSTER_PATH)
+    roster["player_id"] = roster["player_id"].astype(int)
+    return roster.sort_values("display_order").reset_index(drop=True)
+
+
+def current_roster_recipe_frame(
+    recipes: pd.DataFrame,
+    k: int,
+    labels: dict[int, str],
+) -> pd.DataFrame:
+    """Return current Pelicans who have a frozen 2025-26 recipe.
+
+    The team field represents the current roster context. ``model_team``
+    preserves the 2025-26 team behind each player's diagnostic data.
+    """
+    arch_cols = [f"arch_{i}" for i in range(k)]
+    recipe_cols = [
+        "PLAYER_ID",
+        "PLAYER_NAME",
+        "TEAM_ABBREVIATION",
+        "MIN",
+        *arch_cols,
+    ]
+    current = load_pelicans_current_roster().merge(
+        recipes[recipe_cols],
+        left_on="player_id",
+        right_on="PLAYER_ID",
+        how="left",
+        validate="one_to_one",
+    )
+    eligible = current[arch_cols].notna().all(axis=1)
+    current = current.loc[eligible].copy()
+    current["model_team"] = current["TEAM_ABBREVIATION"]
+    current["PLAYER_ID"] = current["player_id"].astype(int)
+    current["PLAYER_NAME"] = current["player_name"]
+    current["TEAM_ABBREVIATION"] = "NOP"
+    current["dominant_arch"] = (
+        current[arch_cols].to_numpy(dtype=float).argmax(axis=1)
+    )
+    current["role"] = current["dominant_arch"].map(labels)
+    return current[
+        [
+            "PLAYER_ID",
+            "PLAYER_NAME",
+            "TEAM_ABBREVIATION",
+            "MIN",
+            *arch_cols,
+            "dominant_arch",
+            "role",
+            "model_team",
+        ]
+    ].reset_index(drop=True)
 
 
 
