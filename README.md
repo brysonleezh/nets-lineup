@@ -1,4 +1,4 @@
-# The Archetype Portal for the Brooklyn Nets
+# NBA Archetype Portal
 
 **Live app:** [nets-lineup.streamlit.app](https://nets-lineup.streamlit.app)
 
@@ -6,76 +6,96 @@
 
 ## Why this idea
 
-The idea comes from *"Scouting Anyone: Probabilistic Player Archetypes for Any League"* ([MIT Sloan Sports Analytics Conference 2026](https://www.sloansportsconference.com/research-papers/scouting-anyone-probabilistic-player-archetypes-for-any-league)). Traditional basketball labels players as guard/forward/center, or positions 1–5. Unsupervised learning can do better — but standard clustering (K-means, GMM) describes players by **cluster centers**: average types. That's backwards for basketball. A stretch big who occasionally posts up, like Chet Holmgren or Jaren Jackson Jr., fits no single average role. Real basketball roles live at the **extremes**, not the middle.
+The idea comes from *“Scouting Anyone: Probabilistic Player Archetypes for Any League”* ([MIT Sloan Sports Analytics Conference 2026](https://www.sloansportsconference.com/research-papers/scouting-anyone-probabilistic-player-archetypes-for-any-league)). Traditional basketball language reduces players to guard/forward/center or positions 1–5. Standard clustering improves on that, but still describes players through average cluster centers. Basketball roles are often easier to understand from the extremes: the real players whose statistical profiles define the boundaries of the league.
 
-Archetypoid Analysis (ADA) fixes this. It finds the K most **extreme real players** — the corners of the player cloud — and describes everyone else as a blend of them: "31% 3&D Wing + 21% Traditional Playmaker + ...". Every archetype is an actual player, so the output reads like scouting language, not a black-box cluster label.
+Archetypoid Analysis (ADA) finds those **extreme real players** and describes everyone else as a convex blend of them. Instead of assigning one opaque label, the portal can describe a player as, for example, `48% Perimeter Defender + 26% Inside Scoring Big + ...`. The weights sum to 100%, and each corner is anchored by an actual player, so the output reads like a scouting recipe rather than a black-box classification.
 
 ## What the portal answers
 
-Two questions, in sequence, both built on ADA recipes:
+Four questions, connected through the same eight-part NBA archetype language:
 
-1. **How do we describe a player?** — an ADA-derived role language (Tab 1: The 8 Player Types).
-2. **Is a player being used correctly for his role?** — a per-player diagnosis (Tab 2: Player Breakdown).
+1. **What types of players define the league?** — an interactive 3D vocabulary of the eight archetypes and all 433 recipe-eligible players.
+2. **How should we describe and investigate one player?** — roster screening followed by a five-part individual diagnosis.
+3. **What NBA role might a 2026 draftee play?** — a separately trained NCAA-to-NBA archetype translator, filtered by the team that selected him.
+4. **How do we carry the analysis into a meeting?** — a two-page player report generated from the same computed evidence shown in the portal.
+
+The default presentation flow opens on **Player Breakdown**, scoped to the curated **New Orleans Pelicans 2026–27 roster**, with **Zion Williamson** selected. This is a call-ready case-study entry point, not a Pelicans-only model: the user can switch to all 30 teams or another team at any time.
 
 ## Step 0 — Data
 
-Four data layers, all pulled and validated from primary sources.
+Five validated data layers support the portal.
 
-**1. Player-feature table (the ADA input).** Three sources joined per player-season: NBA.com box and advanced stats (via `nba_api`), Basketball-Reference shot-location profiles (FGA share by distance, corner-3 rate, % of FG assisted), and NBA.com Synergy play-type shares (9 categories). After preprocessing — per-100 rates, a MIN ≥ 300 floor, accent-insensitive name matching — each player-season becomes a **29-dimensional feature vector**, covering 2023-24 through 2025-26 (~430 players per season). All joins run on NBA player IDs; names are used once at the initial handoff, then never again.
+**1. NBA player-feature table (the ADA input).** Three sources are joined per player-season: NBA.com box and advanced statistics (via `nba_api`), Basketball-Reference shot-location profiles, and NBA.com Synergy play-type shares. After preprocessing — per-100 rates, a MIN ≥ 300 floor, and accent-insensitive name matching — each player-season becomes a **29-dimensional feature vector**. The data covers 2023–24 through 2025–26, with roughly 430 eligible players per season. All downstream joins use NBA player IDs.
 
-**2. Lineup and on-court tables.** NBA.com lineup data at 2–5 man group sizes (shared minutes, net ratings), plus per-player on-court net rating and team on/off splits. These power the teammate-environment diagnostics.
+**2. Lineup and on-court tables.** NBA.com lineup data at 2–5 player group sizes, per-player on-court net rating, and team on/off splits support the teammate-environment diagnostics.
 
-**3. Possession-level stint table (built from scratch).** The standard parser (`pbpstats`) broke — its NBA.com endpoint stopped serving data in 2025-26 — so we built our own on the current v3 endpoints. It walks every play-by-play event, tracks the 10 players on court through substitutions (in/out direction inferred from on-court state, since "SUB: A FOR B" has no fixed word order), cross-checks period openings against observed actions (some between-period lineup changes are never logged), and counts possessions from real events rather than the FGA + 0.44×FTA estimate. Output: **75,587 directed stints** (5 offense + 5 defense IDs, possessions, points) across all **1,230 games**, cached per game and fully resumable.
+**3. Possession-level stint table.** When the standard `pbpstats` NBA.com endpoint stopped serving the required 2025–26 data, the project added a parser for the current v3 play-by-play endpoints. It tracks the ten players on court through substitutions, reconciles period openings, and counts possessions from real events. The result is **75,587 directed stints** across all **1,230 games**. Every game exactly matches its real final score; the documented residual is that possession totals run about 5% low because of ambiguous substitution sequences.
 
-Validation: 1,230/1,230 games parsed, and **100% of games exactly match their real final scores**. Getting there surfaced two real bugs — 5 games with malformed home/away text, and ~3% of points silently dropped when substitutions happen between free throws. Every row passes the 5-distinct-offense + 5-distinct-defense check. One documented residual: possession counts run ~5% low (from ambiguous substitutions), which shifts the scale but not the relative comparisons the portal uses.
+**4. Event-to-stint attribution.** Each shot, rebound, turnover, and free throw is linked back to its stint. This allows the diagnostic page to measure a player's own usage inside different lineup contexts instead of relying only on team totals.
 
-**4. Event-to-stint attribution.** A per-game table linking each play-by-play event (shooter, rebounder, turnover, free throws) to its stint, validated by reconciling per-stint scoring sums. This lets the portal measure an *individual's* usage inside specific lineup contexts (Tab 2's elasticity), not just team totals.
+**5. NCAA-to-NBA translation data.** A separate college table contains **29,312 player-seasons** from 2016–17 through 2025–26 in a 12-feature space available consistently on the college side. Model development used **237 drafted players** with both a complete final college season and at least 300 NBA rookie minutes. The 2025 draft class — another 36 players — was held out until final evaluation; only after that test was complete was the deployment model refit on all **273 historical anchors**. Current 2026 draft selections and team assignments are loaded separately so the portal can show the complete draft class by full team name, including players for whom NCAA projection inputs are unavailable.
 
 ## Step 1 — Fit ADA
 
-- Fit once on 2025-26 (433 players, K = 8). K is chosen the paper's own way — intra-archetype variance (Section 4.3), not the plain RSS elbow, which the paper flags as misleading here. Our own K sweep on this season's real data shows the same diminishing-returns shape. The 8 archetypoids are real players (e.g. Nicolas Batum, Clint Capela, Shai Gilgeous-Alexander); every other player gets a **recipe** — mixture weights over the 8, summing to 1. Cross-checked against the paper's own NBA archetype table: 6 of 8 are strong matches, 2 are partial matches, reported as such rather than forced.
-- Historical seasons (2023-24, 2024-25) are **projected onto the same fixed basis** — never refit — so recipes stay comparable across seasons.
+- The NBA basis is fit once on the 2025–26 regular season: **433 players, K = 8**. K follows the paper's intra-archetype-variance diagnostic rather than a plain RSS elbow. The eight archetypoids are real players: Nicolas Batum, Jonas Valančiūnas, Clint Capela, D'Angelo Russell, Ryan Kalkbrenner, Tim Hardaway Jr., Shai Gilgeous-Alexander, and Bez Mbeng.
+- The resulting labels are **3&D Wing, Inside Scoring Big, Rim Protector / Roll Man, Combo Guard, Play-Finishing Big, Shooting Specialist, Offensive Engine,** and **Perimeter Defender**. Six are strong matches to the paper's NBA types; two are deliberately relabeled from the fitted feature profiles rather than forced into a paper label that the data does not support.
+- Historical NBA seasons are projected onto the same frozen 2025–26 basis, never refit, so player recipes remain comparable over time.
+- The 3D scene is a visualization of those recipes, not a second model. The eight corners are assigned to a balanced square antiprism, and every player's position is the same convex combination of the corners as his eight recipe weights. This gives every archetype equal visual importance while preserving the blend relationship.
+- NCAA basketball uses its own independent eight-archetype space because college data lacks the NBA's shot-location and play-type dimensions. A Bayesian Dirichlet regression then learns the mapping from a player's college recipe and draft/college context to his likely rookie NBA recipe.
 
 ## Step 2 — Build the portal
 
-**Tab 1: The 8 Player Types.** The vocabulary. A convex-hull view of the league with the 8 archetypoids as corners, plus the full Nets roster described in recipe terms.
+**Tab 1: The 8 Player Types.** The league-wide vocabulary page. The eight exemplar headshots define the corners of an auto-rotating 3D space; the neutral-grey interior cloud represents every 2025–26 player with 300+ minutes. Archetype color encodes position family — guards, wings, and bigs — while shade distinguishes types inside each family. Hovering a type isolates its players. Zooming into the space reveals selected player portraits, and clicking a corner or player opens the relevant archetype or similarity result. The layout collapses to a single-column mobile view without changing the underlying camera, geometry, or recipe positions.
 
-**Tab 2: Player Breakdown.** One player, five diagnostics:
+**Tab 2: Player Breakdown (`Diagnostic Analysis`).** The page begins with a team-scoped screening chart and sortable player table; selecting a chart point or sidebar player updates the same analysis. Player links from the 3D page enter this flow in the current browser tab. It then answers five questions:
 
-- **Who is he?** — recipe + purity/entropy: what type he is, and how specialized or hybrid that identity is.
-- **What makes him different from his role?** — where he deviates from his own archetype's typical profile.
-- **How has his role changed?** — season-over-season drift, its league percentile, and the features driving it.
-- **How does his environment shape him?** — what teammate types he gets vs. the norm for his style, what has actually worked, and whether his own usage grows or shrinks depending on who shares the floor (elasticity, from play-by-play event attribution).
-- **Is he being used the way he produces?** — two partial recipes (deployment-only features vs. outcome-only features) projected onto the same basis; the gap between them flags miscasting.
+- **Who is he?** — profile, eight-part recipe, purity, and entropy: whether the player is specialized or hybrid.
+- **What makes him different from his role?** — the player's largest feature-level deviations from statistically similar recipe neighbors.
+- **How has his role changed?** — season-over-season recipe drift, its league percentile, and the features behind the change.
+- **How does his environment shape him?** — which teammate archetypes he receives, what has worked, and how his own usage changes across lineup contexts.
+- **Is he being used the way he produces?** — deployment-only and outcome-only recipes projected onto the same basis; their gap is a descriptive flag for possible miscasting.
 
-Michael Porter Jr. as a real example: **67% Shooting Specialist**, purity in the **88th percentile** (unusually pure, not a hybrid), miscast score **High** (0.539 JS distance; a bigger usage-production gap than 74% of the league), and **Elastic** (a 6.9pp usage swing depending on lineup). The diagnosis: his deployment sits well below his production as an Offensive Engine — a +20.3pp untapped gap, backed by an assist rate that runs ahead of his usage.
+For the Pelicans presentation preset, the team selector uses the curated 2026–27 roster while every recipe, minute total, and performance diagnostic remains frozen to the 2025–26 regular season. A new addition may therefore display his prior team's season context. Players without enough 2025–26 NBA data are not assigned fabricated recipes.
 
-**Tab 3: Report.** A one-click, 2-page PDF of the same diagnosis — same computed values, nothing recomputed, so the portal and the exported report can never silently disagree.
+**Tab 3: NCAA Bridge — 2026 Draft Archetype Projections.** This page is about **2026 draftees**, not current NBA rookies. A full-name team filter shows the players selected by that team, with profile images, college context, and a projected three-part NBA archetype receipt when NCAA input data is available. Each projection can be opened to see statistically similar college profiles and what those players actually became as NBA rookies. A second section provides measured college-to-rookie transitions for historical players, plus the complete sortable set of 273 historical anchors.
+
+The translator was evaluated once on the untouched 2025 class. It identified the exact top rookie archetype **52.8%** of the time and placed the correct archetype in its top two **69.4%** of the time. It materially beat both the league-average guess and a direct college-to-NBA structural relabeling baseline. Its posterior intervals failed calibration, so the portal does not display them; real historical comparables provide the uncertainty context instead.
+
+**Tab 4: Player Report.** A one-click two-page PDF built from the same selected player's diagnostic results. The page and export share the same computed values, preventing a report from silently disagreeing with the interactive analysis.
 
 ## Conclusion
 
-What the portal and its report actually give a coaching staff or front office:
+The portal gives a coaching staff, front office, or scouting group:
 
-- **A shared role language.** Eight archetypes, each anchored to a real player, and every player on the roster described as a readable recipe — so "what kind of player is he" has one measurable answer instead of five opinions.
-- **A five-question diagnosis for any player.** Who is he, what makes him different from his role, how his role has changed, how his environment shapes him, and whether he's being used the way he produces. For Michael Porter Jr., that chain surfaces a concrete, checkable claim: deployed as a pure shooter, producing like an offensive engine — a specific usage gap the staff can test on the floor.
-- **A portable report.** The same diagnosis exports as a two-page PDF with identical numbers, so what's discussed in a meeting is exactly what the portal shows.
+- **A shared role language.** Eight real-player anchors and one readable recipe for every eligible NBA player.
+- **A navigable league map.** The 3D space makes “everyone is a blend” visible, then supports direct drill-down from archetype to player to comparable-player evidence.
+- **A five-question individual diagnosis.** Identity, differentiation, development, environment, and deployment-versus-production are presented as one connected flow.
+- **A draft translation tool.** NCAA roles are translated into likely rookie NBA roles with a frozen model whose held-out track record and limitations are disclosed.
+- **A portable report.** The same evidence can leave the portal as a meeting-ready PDF.
+- **A focused presentation path.** The Pelicans/Zion default provides one concrete case study for a conversation without changing the portal's league-wide scope.
 
-Each claim in the portal is backed by real validated data, and the model was tested at every level before use. The result of those tests draws a clear line: archetypes are reliable for describing players and diagnosing usage, while predicting outcomes remains the job of talent. The portal respects this boundary on every page — which means when it does flag something, like the Porter gap, that flag is worth a conversation.
+The model is intentionally descriptive. It is strongest when organizing evidence, defining roles, and identifying questions worth investigating. Talent evaluation, scheme decisions, health, personality, and outcome prediction remain human decisions.
 
 ## Obstacles
 
-We also built the ambitious version: a possession-level, skill-weighted archetype-RAPM — the 75,587-stint table above, prior-season skill terms (to avoid circularity), 56 archetype-pair interaction terms, ridge regression, validated leave-one-team-out.
+The project also tested a more ambitious possession-level, skill-weighted archetype-RAPM: 75,587 stints, prior-season skill controls, 56 archetype-pair interactions, ridge regression, and leave-one-team-out validation.
 
-**It failed our own gate.** GATE 2 required out-of-sample correlation ≥ 0.3 against real lineup net ratings; Brooklyn came in at 0.116 (n = 5). Rather than stop there, we escalated step by step — each a specific hypothesis tested against real data:
+**It failed its pre-committed gate.** The required out-of-sample correlation against real lineup net ratings was at least 0.30; the initial Brooklyn result was 0.116. The investigation then expanded rather than hiding the failure:
 
-- **30-team leave-one-team-out** (n = 1,317 real lineups, ruling out "Brooklyn is just unlucky"): still weak — corr = 0.21, R² ≈ 0.04.
-- **Ablations**, each ruled out in turn: dropping to 8 features with no interactions (worse, 0.13); sweeping the possession floor from 1 to 12 (flat at 0.20–0.22); removing skill-weighting (no change, 0.20); pooling 3 seasons instead of 1 (no change, 0.20); swapping the target to eFG%/TOV% (same range).
-- **Split-half reliability — the decisive test.** Split each lineup's own possessions randomly in half and correlate the two halves. This is the empirical ceiling: it just asks whether the target agrees with itself. It came in **at or below zero**. A lineup's own net rating, at this sample size, doesn't even correlate with an independent half of its own possessions. Our model's ~0.21 isn't below some hidden ceiling — it *is* the ceiling.
-- **Team-season aggregation** (the least noisy test — 90 team-seasons over 3 years, checked against official NET_RATING): full model **r = 0.770** vs. a talent-only baseline **r = 0.767**. Statistically indistinguishable — and talent-only wins outright in 2 of 3 seasons.
+- **Thirty-team leave-one-team-out validation** on 1,317 real lineups remained weak at approximately `r = 0.21`, `R² = 0.04`.
+- **Ablations** — fewer features, different possession floors, no skill weighting, three pooled seasons, and alternate targets such as eFG% and TOV% — did not materially improve the result.
+- **Split-half reliability** was the decisive test. Independent halves of the same lineup's possessions correlated at or below zero, showing that lineup outcomes at this sample size were not stable enough to support the intended model.
+- **Team-season aggregation** produced `r = 0.770` for the full model versus `r = 0.767` for a talent-only baseline. The archetype interactions added no defensible predictive value.
+
+The failed model is not used to rank lineups or recommend transactions in the visible portal. The validated archetype recipes remain because they answer a different, descriptive question that the evidence supports.
 
 ## Limitations
 
-- Archetypes describe **style, not quality** — nothing here is a talent rating.
-- K = 8 is a defensible choice rather than a provably optimal one, and earlier seasons are projected onto the 2025-26 fit rather than independently re-fit.
-- Small-sample estimates (e.g., under 100 shared minutes) are flagged in the portal and should be read as noise, not signal.
-- No salary, contract, or trade modeling — roster outputs are fit and composition flags, never trade advice.
+- Archetypes describe **style, not quality**. A large weight is not a talent rating.
+- K = 8 is a defensible modeling choice, not a uniquely provable answer.
+- The current Pelicans selector is a roster context layered over frozen 2025–26 evidence; it is not a 2026–27 performance forecast.
+- Players without the required NBA minutes do not receive an NBA recipe. The portal shows missing coverage rather than inventing one.
+- Small lineup samples are explicitly flagged and should not be treated as stable causal evidence.
+- NCAA Bridge answers **“what role might he play if he earns minutes?”**, not whether he will play, how good he will be, or how his team will deploy him.
+- College data cannot fully observe NBA shot-location, play-type, coaching, scheme, medical, and roster-context effects.
+- No salary, contract, trade, or win-projection model is included.
